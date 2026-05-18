@@ -245,9 +245,9 @@ export default function Home() {
             African travellers.
           </p>
 
-          <button className="mt-7 rounded-full bg-[#ef4056] px-10 py-4 text-lg font-black text-white shadow-lg">
+          <a href="/list-hotel" className="mt-7 inline-block rounded-full bg-[#ef4056] px-10 py-4 text-lg font-black text-white shadow-lg">
             List your property
-          </button>
+          </a>
         </div>
       </section>
 
