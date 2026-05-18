@@ -120,13 +120,15 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#F8F7F5] text-black">
-      <section className="relative min-h-[760px] overflow-hidden border-b border-black/10">
-        <img
-          key={slide.image}
-          src={slide.image}
-          alt={slide.title}
-          className="absolute inset-0 h-full w-full object-cover"
-        />
+      <section className="relative min-h-[760px] border-b border-black/10">
+        <div className="absolute inset-0 overflow-hidden">
+          <img
+            key={slide.image}
+            src={slide.image}
+            alt={slide.title}
+            className="h-full w-full object-cover"
+          />
+        </div>
 
         <div className="absolute inset-0 bg-gradient-to-r from-[#F8F7F5]/95 via-[#F8F7F5]/55 to-transparent" />
 
@@ -208,7 +210,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="stays" className="mx-auto max-w-7xl px-8 pb-14 pt-28 md:px-14">
+      <section id="stays" className="mx-auto max-w-7xl px-8 pb-14 pt-24 md:px-14">
         <p className="text-sm font-black uppercase tracking-[0.18em] text-[#ef4056]">
           Destinations
         </p>
