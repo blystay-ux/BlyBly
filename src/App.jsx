@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import Navbar from './components/Navbar'
 import Home from './pages/Home'
@@ -9,10 +9,13 @@ import ListHotel from './pages/ListHotel'
 import Admin from './pages/Admin'
 import ManageHotel from './pages/ManageHotel'
 
-export default function App() {
+function Layout() {
+  const location = useLocation()
+  const hideNav = location.pathname === '/'
+
   return (
-    <AuthProvider>
-      <Navbar />
+    <>
+      {!hideNav && <Navbar />}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/search" element={<Search />} />
@@ -22,6 +25,14 @@ export default function App() {
         <Route path="/admin" element={<Admin />} />
         <Route path="/manage-hotel" element={<ManageHotel />} />
       </Routes>
+    </>
+  )
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <Layout />
     </AuthProvider>
   )
 }

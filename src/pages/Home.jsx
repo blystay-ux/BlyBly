@@ -70,12 +70,7 @@ const destinations = [
     image:
       "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=85",
   },
-  {
-    name: "Marloth Park",
-    slogan: "Neighbours? Zebras.",
-    image:
-      "https://images.unsplash.com/photo-1547970810-dc1eac37d174?auto=format&fit=crop&w=900&q=85",
-  },
+
 ];
 
 function Logo() {
