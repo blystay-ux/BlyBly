@@ -1,0 +1,209 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Bly CI — South African Launch ── */
+
+:root {
+  --bg:          #EDEAE5;
+  --bg-dark:     #111111;
+  --bg-pink:     #FCEDF0;
+  --bg-card:     #FFFFFF;
+  --text:        #111111;
+  --text-muted:  #6B6B6B;
+  --text-inv:    #FFFFFF;
+  --accent:      #E8415A;
+  --accent-light:#FCEDF0;
+  --border:      #E0DDD8;
+  --border-dark: #2A2A2A;
+  --nav-height:  64px;
+  --radius:      16px;
+--font-display:'Plus Jakarta Sans', sans-serif;
+--font-body:   'Plus Jakarta Sans', sans-serif;
+  --max-w:       1280px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  min-height: 100vh;
+}
+
+a { color: inherit; text-decoration: none; }
+button { cursor: pointer; border: none; background: none; font-family: var(--font-body); }
+input, select, textarea { font-family: var(--font-body); outline: none; border: none; background: none; }
+img { display: block; max-width: 100%; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── Animations ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.fade-up  { animation: fadeUp  0.55s cubic-bezier(.22,1,.36,1) both; }
+.fade-in  { animation: fadeIn  0.4s ease both; }
+
+/* ── CI Utility Classes ── */
+.ci-section {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 80px 40px;
+}
+
+.ci-tag {
+  display: inline-flex;
+  align-items: center;
+  background: var(--accent-light);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: 7px 16px;
+  border-radius: 99px;
+}
+
+.ci-headline {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(40px, 5.5vw, 72px);
+  line-height: 1.03;
+  letter-spacing: -2.5px;
+  color: var(--text);
+}
+
+.ci-headline-inv {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(36px, 5vw, 64px);
+  line-height: 1.04;
+  letter-spacing: -2px;
+  color: #fff;
+}
+
+.ci-sub {
+  font-size: 17px;
+  color: var(--text-muted);
+  line-height: 1.65;
+  font-weight: 300;
+}
+
+.ci-sub-inv {
+  font-size: 15px;
+  color: rgba(255,255,255,0.6);
+  line-height: 1.6;
+  font-weight: 300;
+}
+
+/* ── CI Buttons ── */
+.ci-btn-dark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border-radius: 99px;
+  background: #111;
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  border: none;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.ci-btn-dark:hover { opacity: .85; }
+
+.ci-btn-white {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border-radius: 99px;
+  background: #fff;
+  color: #111;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  border: none;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.ci-btn-white:hover { opacity: .9; }
+
+.ci-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 26px;
+  border-radius: 99px;
+  background: none;
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  border: 1.5px solid rgba(255,255,255,0.3);
+  cursor: pointer;
+  transition: border-color .15s;
+}
+.ci-btn-outline:hover { border-color: rgba(255,255,255,.7); }
+
+/* ── X marker (pain points) ── */
+.ci-x {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ── Check marker ── */
+.ci-check {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.7);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+/* ── BLY wordmark for sections ── */
+.ci-wordmark {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: -1px;
+  display: inline-flex;
+  align-items: center;
+}
+.ci-wordmark-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-left: 2px;
+  flex-shrink: 0;
+}
