@@ -112,7 +112,6 @@ export default function Home() {
           <div className="max-w-2xl">
             <h1 className="text-6xl font-black leading-[0.92] tracking-[-0.07em] md:text-8xl">
               Bly waar<br />dit saak maak<span className="text-[#ef4056]">.</span>
-              Bly where it matters<span className="text-[#ef4056]">.</span>
             </h1>
           </div>
         </div>
