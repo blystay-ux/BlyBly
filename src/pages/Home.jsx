@@ -1,10 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { supabase } from '../lib/supabase'
 
-const CITIES = [
-  'Cape Town', 'Johannesburg', 'Durban', 'Hermanus',
-  'Franschhoek', 'Stellenbosch', 'Knysna', 'Sabi Sand',
+const MAJOR_CITIES = [
+  'Cape Town', 'Johannesburg', 'Pretoria', 'Durban', 'Gqeberha',
+  'Bloemfontein', 'East London', 'Nelspruit', 'Polokwane', 'Kimberley',
+  'George', 'Hermanus', 'Franschhoek', 'Stellenbosch', 'Knysna',
+  'Mossel Bay', 'Plettenberg Bay', 'Oudtshoorn', 'Hazyview', 'White River',
+  'Hoedspruit', 'Hartbeespoort', 'Magaliesburg', 'Clarens', 'Paternoster',
+  'Langebaan', 'Paarl', 'Somerset West', 'Umhlanga', 'Ballito',
+  'St Lucia', "Jeffrey's Bay", 'Pilanesberg', 'Sun City', 'Bela-Bela',
+  'Sabi Sand', 'Marloth Park', 'Upington', 'Springbok', 'Tzaneen',
 ]
 
 const heroSlides = [
@@ -67,7 +74,7 @@ const destinations = [
   },
   {
     name: 'Port Elizabeth',
-    city: 'Port Elizabeth',
+    city: 'Gqeberha',
     slogan: 'Sea breeze and easy living.',
     image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=85',
   },
@@ -95,24 +102,44 @@ function DestinationCard({ destination, onClick }) {
 
 export default function Home() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user }  = useAuth()
+  const isAdmin   = user?.email === import.meta.env.VITE_ADMIN_EMAIL
 
-  const today = new Date().toISOString().split('T')[0]
+  const today     = new Date().toISOString().split('T')[0]
   const threeDays = new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0]
 
   const [activeSlide, setActiveSlide] = useState(0)
-  const [city, setCity] = useState('Cape Town')
-  const [checkIn, setCheckIn] = useState(today)
-  const [checkOut, setCheckOut] = useState(threeDays)
-  const [guests, setGuests] = useState(2)
+  const [cities,      setCities]      = useState(MAJOR_CITIES)
+  const [city,        setCity]        = useState('Cape Town')
+  const [checkIn,     setCheckIn]     = useState(today)
+  const [checkOut,    setCheckOut]    = useState(threeDays)
+  const [guests,      setGuests]      = useState(2)
 
   const slide = useMemo(() => heroSlides[activeSlide], [activeSlide])
 
+  // Auto-advance hero
   useEffect(() => {
     const timer = setInterval(() => {
-      setActiveSlide(current => (current + 1) % heroSlides.length)
+      setActiveSlide(c => (c + 1) % heroSlides.length)
     }, 4500)
     return () => clearInterval(timer)
+  }, [])
+
+  // Merge major cities with listed hotel cities from Supabase
+  useEffect(() => {
+    async function fetchListedCities() {
+      const { data } = await supabase
+        .from('hotels')
+        .select('city')
+        .not('city', 'is', null)
+
+      if (data) {
+        const listed = data.map(h => h.city).filter(Boolean)
+        const merged = Array.from(new Set([...MAJOR_CITIES, ...listed])).sort()
+        setCities(merged)
+      }
+    }
+    fetchListedCities()
   }, [])
 
   const goSearch = (overrides = {}) => {
@@ -122,12 +149,8 @@ export default function Home() {
 
   const handleKey = (e) => { if (e.key === 'Enter') goSearch() }
 
-  // Destination card click — guests must sign in to book
   const handleDestination = (dest) => {
-    if (!user) {
-      navigate('/auth')
-      return
-    }
+    if (!user) { navigate('/auth'); return }
     const params = new URLSearchParams({ city: dest.city, checkIn, checkOut, guests })
     navigate(`/search?${params}`)
   }
@@ -138,7 +161,6 @@ export default function Home() {
       {/* ── Hero ── */}
       <section className="relative min-h-[760px] border-b border-black/10">
 
-        {/* Background image */}
         <div className="absolute inset-0 overflow-hidden">
           <img
             key={slide.image}
@@ -148,10 +170,9 @@ export default function Home() {
           />
         </div>
 
-        {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#F8F7F5]/95 via-[#F8F7F5]/55 to-transparent" />
 
-        {/* Hero headline */}
+        {/* Headline */}
         <div className="relative z-10 mx-auto flex min-h-[760px] max-w-7xl items-center px-8 pt-10 md:px-14">
           <div className="max-w-2xl">
             <h1 className="text-6xl font-black leading-[0.92] tracking-[-0.07em] md:text-8xl">
@@ -162,7 +183,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Next slide arrow */}
+        {/* Next slide */}
         <button
           onClick={() => setActiveSlide((activeSlide + 1) % heroSlides.length)}
           className="absolute right-7 top-1/2 z-30 flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full bg-white text-3xl text-black shadow-xl"
@@ -170,38 +191,30 @@ export default function Home() {
           →
         </button>
 
-        {/* Slide dots */}
+        {/* Dots */}
         <div className="absolute bottom-28 left-1/2 z-20 flex -translate-x-1/2 gap-4">
-          {heroSlides.map((_, index) => (
+          {heroSlides.map((_, i) => (
             <button
-              key={index}
-              onClick={() => setActiveSlide(index)}
-              className={`h-3 w-3 rounded-full ${
-                activeSlide === index ? 'bg-[#ef4056]' : 'bg-white/80'
-              }`}
+              key={i}
+              onClick={() => setActiveSlide(i)}
+              className={`h-3 w-3 rounded-full ${i === activeSlide ? 'bg-[#ef4056]' : 'bg-white/80'}`}
             />
           ))}
         </div>
 
-        {/* ── Search bar — no Search button, fields are wired up ── */}
-        <div
-          id="search"
-          className="absolute -bottom-10 left-1/2 z-30 w-[90%] max-w-5xl -translate-x-1/2"
-        >
+        {/* ── Search bar ── */}
+        <div className="absolute -bottom-10 left-1/2 z-30 w-[90%] max-w-5xl -translate-x-1/2">
           <div className="grid items-center gap-0 rounded-full bg-white shadow-2xl md:grid-cols-[1.4fr_1fr_1fr_1fr]">
 
-            {/* Where */}
+            {/* Where — auto-searches on city change */}
             <div className="flex items-center gap-3 border-r border-black/10 px-6 py-4">
               <span className="text-lg">📍</span>
               <select
                 className="w-full bg-transparent text-sm font-medium text-black outline-none appearance-none cursor-pointer"
                 value={city}
-                onChange={e => {
-                  setCity(e.target.value)
-                  goSearch({ city: e.target.value })
-                }}
+                onChange={e => { setCity(e.target.value); goSearch({ city: e.target.value }) }}
               >
-                {CITIES.map(c => <option key={c}>{c}</option>)}
+                {cities.map(c => <option key={c}>{c}</option>)}
               </select>
             </div>
 
@@ -211,8 +224,7 @@ export default function Home() {
               <input
                 type="date"
                 className="w-full bg-transparent text-sm font-medium text-black outline-none cursor-pointer"
-                value={checkIn}
-                min={today}
+                value={checkIn} min={today}
                 onChange={e => setCheckIn(e.target.value)}
                 onKeyDown={handleKey}
               />
@@ -224,22 +236,19 @@ export default function Home() {
               <input
                 type="date"
                 className="w-full bg-transparent text-sm font-medium text-black outline-none cursor-pointer"
-                value={checkOut}
-                min={checkIn}
+                value={checkOut} min={checkIn}
                 onChange={e => setCheckOut(e.target.value)}
                 onKeyDown={handleKey}
               />
             </div>
 
-            {/* Guests — press Enter to search */}
+            {/* Guests */}
             <div className="flex items-center gap-3 px-6 py-4">
               <span className="text-lg">👥</span>
               <input
                 type="number"
                 className="w-14 bg-transparent text-sm font-medium text-black outline-none"
-                value={guests}
-                min={1}
-                max={20}
+                value={guests} min={1} max={20}
                 onChange={e => setGuests(e.target.value)}
                 onKeyDown={handleKey}
               />
@@ -261,7 +270,6 @@ export default function Home() {
           Where will you bly<span className="text-[#ef4056]">?</span>
         </h2>
 
-        {/* Sign-in nudge for guests */}
         {!user && (
           <p className="mt-3 text-sm text-black/50">
             <button
@@ -302,15 +310,23 @@ export default function Home() {
             List your property
           </a>
 
-          {/* Extranet access for existing hotel partners */}
-          <div className="mt-6 border-t border-black/10 pt-6">
+          {/* Partner & Admin access */}
+          <div className="mt-6 border-t border-black/10 pt-6 flex flex-col items-center gap-3">
             <p className="text-sm text-black/50">Already listed with us?</p>
-            <a
-              href="/auth?mode=extranet"
-              className="mt-2 inline-flex items-center gap-2 rounded-full border border-black/20 px-7 py-3 text-sm font-bold text-black hover:border-black transition"
-            >
-              🔑 Access Extranet
-            </a>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <a
+                href="/auth?mode=extranet"
+                className="inline-flex items-center gap-2 rounded-full border border-black/20 px-7 py-3 text-sm font-bold text-black hover:border-black transition"
+              >
+                🔑 Access Extranet
+              </a>
+              <a
+                href="/admin"
+                className="inline-flex items-center gap-2 rounded-full border border-black/10 px-7 py-3 text-sm font-semibold text-black/40 hover:border-black/30 hover:text-black/60 transition"
+              >
+                ⚙️ Admin Login
+              </a>
+            </div>
           </div>
         </div>
       </section>
