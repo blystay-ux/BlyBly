@@ -95,13 +95,13 @@ const s = {
   stepDot: (active, done) => ({
     width: 32, height: 32, borderRadius: '50%', margin: '0 auto 8px',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    background: done ? 'var(--accent)' : active ? 'var(--text)' : 'var(--border)',
+    background: done ? '#ef4056' : active ? '#000000' : 'var(--border)',
     color: done || active ? '#fff' : 'var(--text-muted)',
     fontWeight: 700, fontSize: 13, position: 'relative', zIndex: 1,
   }),
   stepLine: (done) => ({
     position: 'absolute', top: 16, left: '50%', right: '-50%',
-    height: 2, background: done ? 'var(--accent)' : 'var(--border)', zIndex: 0,
+    height: 2, background: done ? '#ef4056' : 'var(--border)', zIndex: 0,
   }),
   stepLabel: (active) => ({
     fontSize: 11, fontWeight: active ? 700 : 400,
@@ -112,7 +112,7 @@ const s = {
     boxShadow: '0 4px 40px rgba(0,0,0,0.07)',
   },
   sectionTitle: {
-    fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 26,
+    fontFamily: 'Poppins, Inter, var(--font-display)', fontWeight: 800, fontSize: 26,
     letterSpacing: '-0.5px', marginBottom: 6,
   },
   sectionSub: { fontSize: 14, color: 'var(--text-muted)', marginBottom: 28 },
@@ -124,10 +124,10 @@ const s = {
   chipGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 8 },
   chip: (on) => ({
     padding: '9px 14px', borderRadius: 99, border: '1.5px solid',
-    borderColor: on ? 'var(--accent)' : 'var(--border)',
-    background: on ? 'var(--accent)' : 'none', color: on ? '#fff' : 'var(--text)',
+    borderColor: on ? '#000000' : 'var(--border)',
+    background: on ? '#000000' : 'none', color: on ? '#fff' : 'var(--text)',
     fontSize: 13, fontWeight: 500, cursor: 'pointer',
-    fontFamily: 'var(--font-body)', textAlign: 'center', transition: 'all 0.15s',
+    fontFamily: 'Inter, var(--font-body)', textAlign: 'center', transition: 'all 0.15s',
   }),
   label: {
     display: 'block', fontSize: 12, fontWeight: 700, letterSpacing: '0.06em',
@@ -194,8 +194,8 @@ const s = {
     color: '#fff', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 15, border: 'none', cursor: 'pointer',
   },
   btnSubmit: {
-    flex: 2, padding: '14px 0', borderRadius: 99, background: 'var(--accent)',
-    color: '#fff', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 15, border: 'none', cursor: 'pointer',
+    flex: 2, padding: '14px 0', borderRadius: 99, background: '#ef4056',
+    color: '#fff', fontFamily: 'Poppins, Inter, var(--font-display)', fontWeight: 700, fontSize: 15, border: 'none', cursor: 'pointer',
   },
   reviewSection: { marginBottom: 24 },
   reviewSectionTitle: {
@@ -210,14 +210,14 @@ const s = {
   reviewVal: { color: 'var(--text)', fontWeight: 600, textAlign: 'right', maxWidth: '65%' },
   chipsMini: { display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 },
   chipMini: {
-    padding: '4px 10px', borderRadius: 99, background: 'var(--accent-light)',
-    color: 'var(--accent)', fontSize: 12, fontWeight: 600,
+    padding: '4px 10px', borderRadius: 99, background: '#F5D6DE',
+    color: '#000000', fontSize: 12, fontWeight: 600,
   },
   rateReviewRow: {
     display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 16,
     padding: '10px 0', borderBottom: '1px solid var(--border)', fontSize: 13, alignItems: 'center',
   },
-  error: { background: '#fff0f0', color: '#cc0000', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 16 },
+  error: { background: '#F5D6DE', color: '#000000', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 16, border: '1px solid #ef4056' },
   successPage: { textAlign: 'center', padding: '48px 0' },
   successIcon: { fontSize: 56, marginBottom: 16 },
   successTitle: { fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 28, marginBottom: 10 },
@@ -324,8 +324,8 @@ export default function ListHotel() {
 
         {/* STEP 0 */}
         {step === 0 && <>
-          <div style={s.sectionTitle}>Your details</div>
-          <div style={s.sectionSub}>Tell us about the person listing this property.</div>
+          <div style={s.sectionTitle}>Verdien meer. Betaal minder kommissie.</div>
+          <div style={s.sectionSub}>Jou eiendom, jou reëls. Vul jou besonderhede in om te begin.</div>
           <label style={s.label}>Your name</label>
           <input style={s.input} value={form.contactName}
             onChange={e => set('contactName', e.target.value)} placeholder="Jane Smith" />
@@ -393,7 +393,7 @@ export default function ListHotel() {
           <div style={s.sectionSub}>
             Select everything available at your property.
             {form.facilities.length > 0 && (
-              <span style={{ marginLeft: 8, color: 'var(--accent)', fontWeight: 700 }}>
+              <span style={{ marginLeft: 8, color: '#ef4056', fontWeight: 700 }}>
                 {form.facilities.length} selected
               </span>
             )}
@@ -522,7 +522,7 @@ export default function ListHotel() {
                 <div key={i} style={s.rateReviewRow}>
                   <span style={{ fontWeight: 500 }}>{r.label || `Period ${i + 1}`}</span>
                   <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>{formatDate(r.start)} → {formatDate(r.end)}</span>
-                  <span style={{ fontWeight: 700, color: 'var(--accent)' }}>R{Number(r.price || 0).toLocaleString()}</span>
+                  <span style={{ fontWeight: 700, color: '#ef4056' }}>R{Number(r.price || 0).toLocaleString()}</span>
                 </div>
               ))}
             </div>
