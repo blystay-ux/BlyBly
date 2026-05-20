@@ -1,101 +1,124 @@
-import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 
-const styles = {
-  nav: {
-    position: 'sticky', top: 0, zIndex: 100,
-    background: 'var(--bg)', borderBottom: '1px solid var(--border)',
-    height: 'var(--nav-height)', display: 'flex', alignItems: 'center',
-    padding: '0 40px',
+const MAJOR_CITIES = [
+  'Cape Town', 'Johannesburg', 'Pretoria', 'Durban', 'Gqeberha',
+  'Bloemfontein', 'East London', 'Nelspruit', 'Polokwane', 'Kimberley',
+  'George', 'Hermanus', 'Franschhoek', 'Stellenbosch', 'Knysna',
+  'Mossel Bay', 'Plettenberg Bay', 'Oudtshoorn', 'Hazyview', 'White River',
+  'Hoedspruit', 'Hartbeespoort', 'Magaliesburg', 'Clarens', 'Paternoster',
+  'Langebaan', 'Paarl', 'Somerset West', 'Umhlanga', 'Ballito',
+  'St Lucia', "Jeffrey's Bay", 'Pilanesberg', 'Sun City', 'Bela-Bela',
+  'Sabi Sand', 'Marloth Park', 'Upington', 'Springbok', 'Tzaneen',
+]
+
+const s = {
+  wrapper: {
+    background: '#fff', borderRadius: 99,
+    padding: '8px 24px', display: 'flex', alignItems: 'center',
+    gap: 0, boxShadow: '0 2px 24px rgba(0,0,0,0.07)',
+    width: '100%', maxWidth: 860,
   },
-  inner: {
-    width: '100%', maxWidth: 1280, margin: '0 auto',
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+  field: {
+    display: 'flex', alignItems: 'center', gap: 10,
+    flex: 1, padding: '10px 20px',
+    borderRight: '1px solid #E2DFDB', cursor: 'pointer',
   },
-  logo: {
-    fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 28,
-    letterSpacing: '-1px', color: 'var(--text)',
-    display: 'flex', alignItems: 'center', gap: 2,
-    textDecoration: 'none',
+  fieldLast: {
+    display: 'flex', alignItems: 'center', gap: 10,
+    flex: 1, padding: '10px 20px', cursor: 'pointer',
   },
-  dot: {
-    display: 'inline-block', width: 8, height: 8, borderRadius: '50%',
-    background: 'var(--accent)', marginLeft: 2, marginBottom: -2,
-  },
-  actions: { display: 'flex', alignItems: 'center', gap: 12 },
-  staysBtn: {
-    padding: '9px 20px', borderRadius: 99,
-    border: '1.5px solid var(--accent)',
-    fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: 14,
-    color: 'var(--accent)', cursor: 'pointer', background: 'none',
-    transition: 'all 0.15s',
-  },
-  btnOutline: {
-    padding: '9px 20px', borderRadius: 99, border: '1.5px solid var(--text)',
-    fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: 14,
-    color: 'var(--text)', cursor: 'pointer', background: 'none',
-  },
-  btnFill: {
-    padding: '9px 20px', borderRadius: 99, background: 'var(--text)',
-    color: '#fff', fontFamily: 'var(--font-body)', fontWeight: 600,
-    fontSize: 14, cursor: 'pointer', border: 'none',
-  },
-  avatar: {
-    width: 34, height: 34, borderRadius: '50%',
-    background: 'var(--accent)', color: '#fff',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontWeight: 700, fontSize: 13, cursor: 'pointer', border: 'none',
+  icon: { fontSize: 18 },
+  input: {
+    border: 'none', outline: 'none', background: 'none',
+    fontSize: 15, color: '#111', width: '100%', cursor: 'pointer',
     fontFamily: 'var(--font-body)',
+  },
+  select: {
+    border: 'none', outline: 'none', background: 'none',
+    fontSize: 15, color: '#111', width: '100%', cursor: 'pointer',
+    appearance: 'none', fontFamily: 'var(--font-body)',
   },
 }
 
-export default function Navbar() {
+export default function SearchBar() {
   const navigate = useNavigate()
-  const { user, signOut } = useAuth()
+  const today     = new Date().toISOString().split('T')[0]
+  const threeDays = new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0]
 
-  const isAdmin = user?.email === import.meta.env.VITE_ADMIN_EMAIL
-  const initial = user?.email?.[0]?.toUpperCase()
+  const [cities,   setCities]   = useState(MAJOR_CITIES)
+  const [city,     setCity]     = useState('Cape Town')
+  const [checkIn,  setCheckIn]  = useState(today)
+  const [checkOut, setCheckOut] = useState(threeDays)
+  const [guests,   setGuests]   = useState(2)
+
+  // Merge major cities with any additional cities from listed hotels
+  useEffect(() => {
+    async function fetchListedCities() {
+      const { data } = await supabase
+        .from('hotels')
+        .select('city')
+        .not('city', 'is', null)
+
+      if (data) {
+        const listed = data.map(h => h.city).filter(Boolean)
+        const merged = Array.from(new Set([...MAJOR_CITIES, ...listed])).sort()
+        setCities(merged)
+      }
+    }
+    fetchListedCities()
+  }, [])
+
+  const go = (overrides = {}) => {
+    const params = new URLSearchParams({ city, checkIn, checkOut, guests, ...overrides })
+    navigate(`/search?${params}`)
+  }
+
+  const handleKey = (e) => { if (e.key === 'Enter') go() }
 
   return (
-    <nav style={styles.nav}>
-      <div style={styles.inner}>
+    <div style={s.wrapper}>
 
-        {/* Logo */}
-        <Link to="/" style={styles.logo}>
-          Bly<span style={styles.dot} />
-        </Link>
-
-        {/* Right-side actions — role based */}
-        <div style={styles.actions}>
-          {user ? (
-            <>
-              {/* Guests see Stays → bookings; admin does not */}
-              {!isAdmin && (
-                <button style={styles.staysBtn} onClick={() => navigate('/my-bookings')}>
-                  Stays
-                </button>
-              )}
-              <button style={styles.avatar} title={user.email}>{initial}</button>
-              <button style={styles.btnOutline} onClick={() => { signOut(); navigate('/') }}>
-                Sign out
-              </button>
-            </>
-          ) : (
-            <>
-              <button style={styles.staysBtn} onClick={() => navigate('/')}>
-                Stays
-              </button>
-              <button style={styles.btnOutline} onClick={() => navigate('/auth')}>
-                Sign in
-              </button>
-              <button style={styles.btnFill} onClick={() => navigate('/auth')}>
-                Book now
-              </button>
-            </>
-          )}
-        </div>
-
+      {/* Location — auto-searches on city change */}
+      <div style={s.field}>
+        <span style={s.icon}>📍</span>
+        <select
+          style={s.select}
+          value={city}
+          onChange={e => { setCity(e.target.value); go({ city: e.target.value }) }}
+        >
+          {cities.map(c => <option key={c}>{c}</option>)}
+        </select>
       </div>
-    </nav>
+
+      {/* Check-in */}
+      <div style={s.field}>
+        <span style={s.icon}>📅</span>
+        <input type="date" style={s.input} value={checkIn} min={today}
+          onChange={e => setCheckIn(e.target.value)} onKeyDown={handleKey} />
+      </div>
+
+      {/* Check-out */}
+      <div style={s.field}>
+        <span style={s.icon}>📅</span>
+        <input type="date" style={s.input} value={checkOut} min={checkIn}
+          onChange={e => setCheckOut(e.target.value)} onKeyDown={handleKey} />
+      </div>
+
+      {/* Guests */}
+      <div style={s.fieldLast}>
+        <span style={s.icon}>👥</span>
+        <input
+          type="number" style={{ ...s.input, maxWidth: 40 }}
+          value={guests} min={1} max={20}
+          onChange={e => setGuests(e.target.value)} onKeyDown={handleKey}
+        />
+        <span style={{ fontSize: 13, color: '#888', marginLeft: 4 }}>
+          {guests == 1 ? 'guest' : 'guests'} · ↵
+        </span>
+      </div>
+
+    </div>
   )
 }
