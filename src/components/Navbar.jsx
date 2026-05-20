@@ -50,33 +50,53 @@ export default function Navbar() {
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
 
+  const isAdmin = user?.email === import.meta.env.VITE_ADMIN_EMAIL
   const initial = user?.email?.[0]?.toUpperCase()
 
   return (
     <nav style={styles.nav}>
       <div style={styles.inner}>
+
+        {/* Logo */}
         <Link to="/" style={styles.logo}>
           Bly<span style={styles.dot} />
         </Link>
+
+        {/* Centre nav links — role-based */}
         <div style={styles.links}>
-          <Link to="/" style={styles.link}>Stays</Link>
-          <Link to="/search" style={styles.link}>Search</Link>
-          <Link to="/list-hotel" style={styles.link}>List your hotel</Link>
-{user?.email === import.meta.env.VITE_ADMIN_EMAIL && (
-  <Link to="/admin" style={{ ...styles.link, color: 'var(--accent)' }}>Admin</Link>
-)}
+          {/* Stays: guests see booking history; visitors see home */}
+          <Link
+            to={user && !isAdmin ? '/my-bookings' : '/'}
+            style={styles.link}
+          >
+            Stays
+          </Link>
+
+          {/* Admin only */}
+          {isAdmin && (
+            <Link
+              to="/admin"
+              style={{ ...styles.link, color: 'var(--accent)' }}
+            >
+              Admin
+            </Link>
+          )}
         </div>
+
+        {/* Right actions */}
         <div style={styles.actions}>
           {user ? (
-  <>
-    <button style={styles.avatar} title={user.email}>{initial}</button>
-    <button style={styles.btnOutline} onClick={() => navigate('/manage-hotel')}>
-      My hotel
-    </button>
-    <button style={styles.btnOutline} onClick={() => { signOut(); navigate('/') }}>
-      Sign out
-    </button>
-  </>
+            <>
+              <button style={styles.avatar} title={user.email}>
+                {initial}
+              </button>
+              <button
+                style={styles.btnOutline}
+                onClick={() => { signOut(); navigate('/') }}
+              >
+                Sign out
+              </button>
+            </>
           ) : (
             <>
               <button style={styles.btnOutline} onClick={() => navigate('/auth')}>
@@ -88,6 +108,7 @@ export default function Navbar() {
             </>
           )}
         </div>
+
       </div>
     </nav>
   )
