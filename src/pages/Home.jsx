@@ -189,7 +189,7 @@ export default function Home() {
       <section id="stays" className="mx-auto max-w-7xl px-8 pb-14 pt-24 md:px-14">
         <p className="text-sm font-black uppercase tracking-[0.18em] text-[#ef4056]">Destinations</p>
         <h2 className="mt-3 text-4xl font-black tracking-[-0.06em] md:text-5xl">
-          Where will you Bly<span className="text-[#ef4056]">?</span>
+          Where will you ... Bly<span className="text-[#ef4056]">?</span>
         </h2>
         {!user && (
           <p className="mt-3 text-sm text-black/50">
