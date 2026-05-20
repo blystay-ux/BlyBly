@@ -1,13 +1,16 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-const CITIES = ['Cape Town', 'Johannesburg', 'Durban', 'Hermanus', 'Franschhoek', 'Stellenbosch', 'Knysna', 'Sabi Sand']
+const CITIES = [
+  'Cape Town', 'Johannesburg', 'Durban', 'Hermanus',
+  'Franschhoek', 'Stellenbosch', 'Knysna', 'Sabi Sand',
+]
 
 const s = {
   wrapper: {
     background: '#fff',
     borderRadius: 99,
-    padding: '8px 8px 8px 24px',
+    padding: '8px 24px',
     display: 'flex',
     alignItems: 'center',
     gap: 0,
@@ -20,7 +23,7 @@ const s = {
     alignItems: 'center',
     gap: 10,
     flex: 1,
-    padding: '0 20px',
+    padding: '10px 20px',
     borderRight: '1px solid #E2DFDB',
     cursor: 'pointer',
   },
@@ -29,7 +32,7 @@ const s = {
     alignItems: 'center',
     gap: 10,
     flex: 1,
-    padding: '0 20px',
+    padding: '10px 20px',
     cursor: 'pointer',
   },
   icon: { fontSize: 18 },
@@ -41,6 +44,7 @@ const s = {
     color: '#111',
     width: '100%',
     cursor: 'pointer',
+    fontFamily: 'var(--font-body)',
   },
   select: {
     border: 'none',
@@ -51,23 +55,7 @@ const s = {
     width: '100%',
     cursor: 'pointer',
     appearance: 'none',
-  },
-  searchBtn: {
-    background: '#111',
-    color: '#fff',
-    borderRadius: 99,
-    padding: '14px 28px',
     fontFamily: 'var(--font-body)',
-    fontWeight: 600,
-    fontSize: 15,
-    border: 'none',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    whiteSpace: 'nowrap',
-    flexShrink: 0,
-    transition: 'opacity 0.15s',
   },
 }
 
@@ -81,17 +69,32 @@ export default function SearchBar() {
   const [checkOut, setCheckOut] = useState(threeDays)
   const [guests, setGuests] = useState(2)
 
-  const handleSearch = () => {
-    const params = new URLSearchParams({ city, checkIn, checkOut, guests })
+  const go = (overrides = {}) => {
+    const params = new URLSearchParams({
+      city, checkIn, checkOut, guests, ...overrides,
+    })
     navigate(`/search?${params}`)
+  }
+
+  // Trigger search on Enter key for date/guest inputs
+  const handleKey = (e) => {
+    if (e.key === 'Enter') go()
   }
 
   return (
     <div style={s.wrapper}>
-      {/* Location */}
+
+      {/* Location — auto-searches on city change */}
       <div style={s.field}>
         <span style={s.icon}>📍</span>
-        <select style={s.select} value={city} onChange={e => setCity(e.target.value)}>
+        <select
+          style={s.select}
+          value={city}
+          onChange={e => {
+            setCity(e.target.value)
+            go({ city: e.target.value })
+          }}
+        >
           {CITIES.map(c => <option key={c}>{c}</option>)}
         </select>
       </div>
@@ -105,6 +108,7 @@ export default function SearchBar() {
           value={checkIn}
           min={today}
           onChange={e => setCheckIn(e.target.value)}
+          onKeyDown={handleKey}
         />
       </div>
 
@@ -117,10 +121,11 @@ export default function SearchBar() {
           value={checkOut}
           min={checkIn}
           onChange={e => setCheckOut(e.target.value)}
+          onKeyDown={handleKey}
         />
       </div>
 
-      {/* Guests */}
+      {/* Guests — press Enter to search */}
       <div style={s.fieldLast}>
         <span style={s.icon}>👥</span>
         <input
@@ -130,12 +135,13 @@ export default function SearchBar() {
           min={1}
           max={20}
           onChange={e => setGuests(e.target.value)}
+          onKeyDown={handleKey}
         />
+        <span style={{ fontSize: 13, color: '#888', marginLeft: 4 }}>
+          {guests === 1 ? 'guest' : 'guests'} · press ↵
+        </span>
       </div>
 
-      <button style={s.searchBtn} onClick={handleSearch}>
-        🔍 Search
-      </button>
     </div>
   )
 }
