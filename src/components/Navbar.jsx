@@ -16,17 +16,20 @@ const styles = {
     fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 28,
     letterSpacing: '-1px', color: 'var(--text)',
     display: 'flex', alignItems: 'center', gap: 2,
+    textDecoration: 'none',
   },
   dot: {
     display: 'inline-block', width: 8, height: 8, borderRadius: '50%',
     background: 'var(--accent)', marginLeft: 2, marginBottom: -2,
   },
-  links: {
-    display: 'flex', alignItems: 'center', gap: 36,
-    position: 'absolute', left: '50%', transform: 'translateX(-50%)',
-  },
-  link: { fontWeight: 500, fontSize: 15, color: 'var(--text)', cursor: 'pointer' },
   actions: { display: 'flex', alignItems: 'center', gap: 12 },
+  staysBtn: {
+    padding: '9px 20px', borderRadius: 99,
+    border: '1.5px solid var(--accent)',
+    fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: 14,
+    color: 'var(--accent)', cursor: 'pointer', background: 'none',
+    transition: 'all 0.15s',
+  },
   btnOutline: {
     padding: '9px 20px', borderRadius: 99, border: '1.5px solid var(--text)',
     fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: 14,
@@ -62,43 +65,26 @@ export default function Navbar() {
           Bly<span style={styles.dot} />
         </Link>
 
-        {/* Centre nav links — role-based */}
-        <div style={styles.links}>
-          {/* Stays: guests see booking history; visitors see home */}
-          <Link
-            to={user && !isAdmin ? '/my-bookings' : '/'}
-            style={styles.link}
-          >
-            Stays
-          </Link>
-
-          {/* Admin only */}
-          {isAdmin && (
-            <Link
-              to="/admin"
-              style={{ ...styles.link, color: 'var(--accent)' }}
-            >
-              Admin
-            </Link>
-          )}
-        </div>
-
-        {/* Right actions */}
+        {/* Right-side actions — role based */}
         <div style={styles.actions}>
           {user ? (
             <>
-              <button style={styles.avatar} title={user.email}>
-                {initial}
-              </button>
-              <button
-                style={styles.btnOutline}
-                onClick={() => { signOut(); navigate('/') }}
-              >
+              {/* Guests see Stays → bookings; admin does not */}
+              {!isAdmin && (
+                <button style={styles.staysBtn} onClick={() => navigate('/my-bookings')}>
+                  Stays
+                </button>
+              )}
+              <button style={styles.avatar} title={user.email}>{initial}</button>
+              <button style={styles.btnOutline} onClick={() => { signOut(); navigate('/') }}>
                 Sign out
               </button>
             </>
           ) : (
             <>
+              <button style={styles.staysBtn} onClick={() => navigate('/')}>
+                Stays
+              </button>
               <button style={styles.btnOutline} onClick={() => navigate('/auth')}>
                 Sign in
               </button>
