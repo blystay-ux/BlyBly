@@ -107,22 +107,18 @@ export default function Home() {
         </div>
         <div className="absolute inset-0 bg-gradient-to-r from-[#F8F7F5]/95 via-[#F8F7F5]/55 to-transparent" />
 
-       {/* Headline */}
-<div className="relative z-10 mx-auto flex min-h-[760px] max-w-7xl items-center px-8 pt-10 md:px-14">
-  <div className="max-w-2xl">
-    
-    <h1 className="text-6xl font-black leading-[0.92] tracking-[-0.07em] md:text-8xl">
-      Bly waar<br />
-      dit saak maak
-      <span className="text-[#ef4056]">.</span>
-    </h1>
-
-    {/* Small tagline */}
-    <p className="mt-4 ml-1 text-sm md:text-base font-medium tracking-wide text-black/70">
-      Bly<span className="text-[#ef4056]">.</span> where it matters
-    </p>
-
-  </div>
+        {/* Headline */}
+        <div className="relative z-10 mx-auto flex min-h-[760px] max-w-7xl items-center px-8 pt-10 md:px-14">
+          <div className="max-w-2xl">
+            <h1 className="text-6xl font-black leading-[0.92] tracking-[-0.07em] md:text-8xl">
+              Bly waar<br />dit saak maak<span className="text-[#ef4056]">.</span>
+            </h1>
+            <div className="mt-5 flex items-center gap-3">
+              <div className="h-[3px] w-16 bg-black rounded-full" />
+              <p className="text-base font-semibold tracking-wide text-black/70">Bly<span className="text-[#ef4056] font-black">.</span> where it matters</p>
+            </div>
+          </div>
+        </div>
 
         {/* Next slide arrow */}
         <button
