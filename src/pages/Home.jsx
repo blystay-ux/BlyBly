@@ -115,7 +115,7 @@ export default function Home() {
             </h1>
             <div className="mt-5 flex items-center gap-3">
               <div className="h-[3px] w-16 bg-black rounded-full" />
-              <p className="text-base font-semibold tracking-wide text-black/70">Bly<span className="text-[#ef4056] font-black">.</span> where it matters</p>
+              <p className="text-sm font-bold uppercase tracking-[0.18em] text-black">Bly where it matters</p>
             </div>
           </div>
         </div>
