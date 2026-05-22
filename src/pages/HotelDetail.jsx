@@ -24,8 +24,8 @@ const s = {
   img: { width: '100%', height: 420, objectFit: 'cover', display: 'block' },
   imgRow: { display: 'flex', gap: 12 },
   imgThumb: { flex: 1, height: 140, objectFit: 'cover', borderRadius: 12 },
-  badge: { display: 'inline-block', background: 'var(--accent-light)', color: 'var(--accent)', fontSize: 12, fontWeight: 600, padding: '4px 12px', borderRadius: 99, textTransform: 'capitalize', marginBottom: 12 },
-  name: { fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 36, letterSpacing: '-1px', color: 'var(--text)', marginBottom: 8, lineHeight: 1.1 },
+  badge: { display: 'inline-block', background: '#F5D6DE', color: '#000000', fontSize: 12, fontWeight: 600, padding: '4px 12px', borderRadius: 99, textTransform: 'capitalize', marginBottom: 12 },
+  name: { fontFamily: 'Poppins, Inter, var(--font-display)', fontWeight: 800, fontSize: 36, letterSpacing: '-1px', color: 'var(--text)', marginBottom: 8, lineHeight: 1.1 },
   meta: { display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20, fontSize: 14, color: 'var(--text-muted)' },
   desc: { fontSize: 16, color: 'var(--text-muted)', lineHeight: 1.7, marginBottom: 28, fontWeight: 300 },
   amenitiesTitle: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16, marginBottom: 12 },
@@ -34,9 +34,9 @@ const s = {
   roomsSection: { marginTop: 36 },
   roomsSectionTitle: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, marginBottom: 16, letterSpacing: '-0.3px' },
   roomCard: (selected) => ({
-    border: selected ? '2px solid var(--text)' : '1.5px solid var(--border)',
+    border: selected ? '2px solid #000000' : '1.5px solid var(--border)',
     borderRadius: 16, padding: '18px 20px', marginBottom: 12,
-    cursor: 'pointer', background: selected ? '#fafafa' : '#fff',
+    cursor: 'pointer', background: selected ? '#F8F7F5' : '#fff',
     transition: 'all 0.15s',
   }),
   roomTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 },
@@ -49,8 +49,9 @@ const s = {
   availBadge: (n) => ({
     display: 'inline-flex', alignItems: 'center', gap: 5,
     padding: '3px 10px', borderRadius: 99, fontSize: 11, fontWeight: 600,
-    background: n > 3 ? '#e6f9ee' : n > 0 ? '#fff8e6' : '#fff0f0',
-    color: n > 3 ? '#1a7a40' : n > 0 ? '#a06000' : '#cc0000',
+    background: n > 3 ? '#F5D6DE' : n > 0 ? '#F5D6DE' : '#F8F7F5',
+    color: n > 3 ? '#000000' : n > 0 ? '#ef4056' : '#6B6B6B',
+    border: n === 0 ? '1px solid #e0ddd9' : 'none',
   }),
   selectedTick: { width: 20, height: 20, borderRadius: '50%', background: 'var(--text)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0 },
   card: { background: '#fff', borderRadius: 20, padding: 28, boxShadow: '0 4px 32px rgba(0,0,0,0.08)', position: 'sticky', top: 84 },
@@ -62,12 +63,12 @@ const s = {
   selectedRoom: { background: 'var(--bg)', borderRadius: 12, padding: '12px 16px', marginBottom: 16, border: '1.5px solid var(--border)' },
   selectedRoomLabel: { fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 4 },
   selectedRoomName: { fontWeight: 600, fontSize: 14, color: 'var(--text)' },
-  bookBtn: { width: '100%', padding: '16px 0', borderRadius: 99, background: 'var(--accent)', color: '#fff', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16, border: 'none', cursor: 'pointer' },
-  loginBtn: { width: '100%', padding: '16px 0', borderRadius: 99, background: 'var(--text)', color: '#fff', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16, border: 'none', cursor: 'pointer' },
+  bookBtn: { width: '100%', padding: '16px 0', borderRadius: 99, background: '#ef4056', color: '#fff', fontFamily: 'Poppins, Inter, var(--font-display)', fontWeight: 700, fontSize: 16, border: 'none', cursor: 'pointer' },
+  loginBtn: { width: '100%', padding: '16px 0', borderRadius: 99, background: '#000000', color: '#fff', fontFamily: 'Poppins, Inter, var(--font-display)', fontWeight: 700, fontSize: 16, border: 'none', cursor: 'pointer' },
   disabledBtn: { width: '100%', padding: '16px 0', borderRadius: 99, background: 'var(--border)', color: 'var(--text-muted)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16, border: 'none', cursor: 'not-allowed' },
   totalRow: { display: 'flex', justifyContent: 'space-between', marginTop: 12, fontSize: 14, color: 'var(--text-muted)' },
   totalRowBold: { display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 15, fontWeight: 700, color: 'var(--text)', paddingTop: 8, borderTop: '1px solid var(--border)' },
-  errorBox: { background: '#fff0f0', color: '#cc0000', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 12 },
+  errorBox: { background: '#F5D6DE', color: '#000000', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 12, border: '1px solid #ef4056' },
   successBox: { textAlign: 'center', padding: '16px 0' },
   successIcon: { fontSize: 48, marginBottom: 12 },
   successTitle: { fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 22, marginBottom: 8 },
@@ -280,7 +281,7 @@ export default function HotelDetail() {
                 </div>
 
                 {roomTypes.length > 0 && !selectedRoom && (
-                  <div style={{ background: '#fff8e6', borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#a06000', marginBottom: 14 }}>
+                  <div style={{ background: '#F5D6DE', borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#000000', marginBottom: 14, border: '1px solid #ef4056' }}>
                     ☝️ Select a room type above to continue
                   </div>
                 )}

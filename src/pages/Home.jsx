@@ -113,6 +113,10 @@ export default function Home() {
             <h1 className="text-6xl font-black leading-[0.92] tracking-[-0.07em] md:text-8xl">
               Bly waar<br />dit saak maak<span className="text-[#ef4056]">.</span>
             </h1>
+            <div className="mt-5 flex items-center gap-3">
+              <div className="h-[3px] w-16 bg-black rounded-full" />
+              <p className="text-sm font-bold uppercase tracking-[0.18em] text-black">Bly where it matters</p>
+            </div>
           </div>
         </div>
 
