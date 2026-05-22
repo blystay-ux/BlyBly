@@ -1,261 +1,242 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
+import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 
-const MAJOR_CITIES = [
-  'Cape Town', 'Johannesburg', 'Pretoria', 'Durban', 'Gqeberha',
-  'Bloemfontein', 'East London', 'Nelspruit', 'Polokwane', 'Kimberley',
-  'George', 'Hermanus', 'Franschhoek', 'Stellenbosch', 'Knysna',
-  'Mossel Bay', 'Plettenberg Bay', 'Oudtshoorn', 'Hazyview', 'White River',
-  'Hoedspruit', 'Hartbeespoort', 'Magaliesburg', 'Clarens', 'Paternoster',
-  'Langebaan', 'Paarl', 'Somerset West', 'Umhlanga', 'Ballito',
-  'St Lucia', "Jeffrey's Bay", 'Pilanesberg', 'Sun City', 'Bela-Bela',
-  'Sabi Sand', 'Marloth Park', 'Upington', 'Springbok', 'Tzaneen',
-]
+export default function ComingSoon() {
+  const [form, setForm] = useState({
+    firstName: '', lastName: '', propertyName: '',
+    propertyType: '', email: '', phone: '', city: '', notes: ''
+  })
+  const [error, setError]     = useState('')
+  const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
 
-const heroSlides = [
-  { title: 'Cape Town',     image: 'https://images.unsplash.com/photo-1580060839134-75a5edca2e99?auto=format&fit=crop&w=1800&q=85' },
-  { title: 'Johannesburg',  image: 'https://images.unsplash.com/photo-1576485290814-1c72aa4bbb8e?auto=format&fit=crop&w=1800&q=85' },
-  { title: 'Durban',        image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1800&q=85' },
-  { title: 'Drakensberg',   image: 'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=1800&q=85' },
-  { title: 'Port Elizabeth', image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1800&q=85' },
-  { title: 'Marloth Park',  image: 'https://images.unsplash.com/photo-1547970810-dc1eac37d174?auto=format&fit=crop&w=1800&q=85' },
-]
+  const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
 
-const destinations = [
-  { name: 'KaapStad',      city: 'Cape Town',    slogan: 'Mooi genoeg om jou ex jealous te maak',     image: 'https://images.unsplash.com/photo-1580060839134-75a5edca2e99?auto=format&fit=crop&w=900&q=85' },
-  { name: 'Johannesburg',  city: 'Johannesburg',  slogan: 'More than gold. More than business.',        image: 'https://images.unsplash.com/photo-1576485290814-1c72aa4bbb8e?auto=format&fit=crop&w=900&q=85' },
-  { name: 'Pretoria',      city: 'Pretoria',      slogan: 'Come for the Jacarandas, stay for the braai!', image: 'https://images.unsplash.com/photo-1523430410476-0185cb1f6ff9?auto=format&fit=crop&w=900&q=85' },
-  { name: 'Durban',        city: 'Durban',        slogan: 'Beach, bunny chow en repeat!',              image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=85' },
-  { name: 'Drakensberg',   city: 'Drakensberg',   slogan: 'Leave the city for the Berg.',              image: 'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=900&q=85' },
-  { name: 'Port Elizabeth', city: 'Gqeberha',     slogan: 'Sea breeze and easy living.',               image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=85' },
-]
+  const scrollToForm = (e) => {
+    e.preventDefault()
+    document.getElementById('list').scrollIntoView({ behavior: 'smooth' })
+  }
 
-function DestinationCard({ destination, onClick }) {
+  const submit = async () => {
+    setError('')
+    const required = [
+      ['firstName', 'First Name'], ['lastName', 'Surname'],
+      ['propertyName', 'Property Name'], ['propertyType', 'Property Type'],
+      ['email', 'Email Address'], ['phone', 'Phone Number'], ['city', 'City / Town']
+    ]
+    for (const [field, label] of required) {
+      if (!form[field].trim()) { setError(`Please fill in your ${label}.`); return }
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      setError('Please enter a valid email address.'); return
+    }
+
+    setLoading(true)
+    const { error: sbError } = await supabase.from('property_leads').insert({
+      first_name:    form.firstName.trim(),
+      last_name:     form.lastName.trim(),
+      property_name: form.propertyName.trim(),
+      property_type: form.propertyType.trim(),
+      email:         form.email.trim(),
+      phone:         form.phone.trim(),
+      city:          form.city.trim(),
+      notes:         form.notes.trim(),
+    })
+    setLoading(false)
+
+    if (sbError) { setError('Something went wrong. Please try again.'); return }
+    setSuccess(true)
+  }
+
   return (
-    <article
-      onClick={onClick}
-      className="group relative h-[310px] overflow-hidden rounded-3xl bg-black shadow-xl cursor-pointer"
-    >
-      <img
-        src={destination.image} alt={destination.name}
-        className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent" />
-      <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
-        <h3 className="text-2xl font-black tracking-[-0.04em]">{destination.name}</h3>
-        <p className="mt-1 text-sm leading-snug text-white/90">{destination.slogan}</p>
+    <main style={{ fontFamily: "'Inter', sans-serif", background: '#F8F7F5', color: '#000', minHeight: '100vh', overflowX: 'hidden' }}>
+
+      {/* Google Fonts */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=Inter:wght@400;500;600&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        .blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.35; pointer-events: none; animation: drift 12s ease-in-out infinite alternate; }
+        .blob-1 { width: 600px; height: 600px; background: #F5D6DE; top: -100px; right: -150px; }
+        .blob-2 { width: 400px; height: 400px; background: #ffd6d6; bottom: 0; left: -100px; animation-delay: -4s; }
+        .blob-3 { width: 300px; height: 300px; background: #F5D6DE; top: 40%; right: 20%; animation-delay: -8s; }
+        @keyframes drift { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-40px) scale(1.08); } }
+        @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(0.8); } }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+        .fadeUp-1 { animation: fadeUp 0.6s 0.0s ease both; }
+        .fadeUp-2 { animation: fadeUp 0.6s 0.1s ease both; }
+        .fadeUp-3 { animation: fadeUp 0.6s 0.2s ease both; }
+        .fadeUp-4 { animation: fadeUp 0.6s 0.3s ease both; }
+        .fadeUp-5 { animation: fadeUp 0.6s 0.4s ease both; }
+        .pulse-dot { animation: pulse 1.5s ease-in-out infinite; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: #ef4056 !important; box-shadow: 0 0 0 3px rgba(239,64,86,0.1); }
+        @media (max-width: 768px) {
+          .hero-inner { padding: 100px 20px 60px !important; }
+          .form-grid { grid-template-columns: 1fr !important; gap: 48px !important; padding: 70px 20px !important; }
+          .form-row { grid-template-columns: 1fr !important; }
+          .form-card { padding: 28px 20px !important; }
+          .trust-strip { padding: 20px !important; gap: 16px !important; }
+          nav { padding: 16px 20px !important; }
+        }
+      `}</style>
+
+      {/* ── NAV ── */}
+      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, padding: '20px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#F8F7F5', borderBottom: '1px solid rgba(0,0,0,0.07)' }}>
+        <span style={{ fontFamily: 'Poppins', fontWeight: 900, fontSize: 24, letterSpacing: '-0.05em' }}>
+          Bly<span style={{ color: '#ef4056' }}>.</span>
+        </span>
+        <a href="#list" onClick={scrollToForm} style={{ background: '#000', color: '#fff', fontFamily: 'Poppins', fontWeight: 700, fontSize: 13, padding: '10px 22px', borderRadius: 99, textDecoration: 'none' }}>
+          List your property
+        </a>
+      </nav>
+
+      {/* ── HERO ── */}
+      <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+        <div className="blob blob-1" />
+        <div className="blob blob-2" />
+        <div className="blob blob-3" />
+
+        <div className="hero-inner" style={{ position: 'relative', zIndex: 2, maxWidth: 900, padding: '120px 40px 80px' }}>
+
+          {/* Pill */}
+          <div className="fadeUp-1" style={{ display: 'inline-flex', alignItems: 'center', background: '#000', color: '#fff', fontFamily: 'Poppins', fontWeight: 700, fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', padding: '8px 18px', borderRadius: 99, marginBottom: 32 }}>
+            <span className="pulse-dot" style={{ width: 7, height: 7, borderRadius: '50%', background: '#ef4056', display: 'inline-block', marginRight: 10 }} />
+            Coming Soon
+          </div>
+
+          {/* Headline */}
+          <h1 className="fadeUp-2" style={{ fontFamily: 'Poppins', fontWeight: 900, fontSize: 'clamp(52px, 9vw, 110px)', lineHeight: 0.9, letterSpacing: '-0.06em', marginBottom: 28 }}>
+            Bly waar<br />dit saak<br />maak<span style={{ color: '#ef4056' }}>.</span>
+          </h1>
+
+          <p className="fadeUp-3" style={{ fontSize: 'clamp(16px, 2vw, 20px)', color: '#6B6B6B', maxWidth: 520, lineHeight: 1.6, marginBottom: 44 }}>
+            South Africa's new way to discover and book local stays — direct, simple, and better value. We're launching soon.
+          </p>
+
+          <div className="fadeUp-4" style={{ display: 'flex', flexWrap: 'wrap', gap: 14, alignItems: 'center' }}>
+            <a href="#list" onClick={scrollToForm} style={{ background: '#ef4056', color: '#fff', fontFamily: 'Poppins', fontWeight: 800, fontSize: 15, padding: '16px 36px', borderRadius: 99, textDecoration: 'none', boxShadow: '0 8px 32px rgba(239,64,86,0.35)' }}>
+              Want to list your property? →
+            </a>
+          </div>
+
+          {/* Tagline */}
+          <div className="fadeUp-5" style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 60 }}>
+            <div style={{ height: 2, width: 48, background: '#000', borderRadius: 2 }} />
+            <p style={{ fontFamily: 'Poppins', fontWeight: 700, fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase' }}>
+              Bly<span style={{ color: '#ef4056' }}>.</span> where it matters
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── TRUST STRIP ── */}
+      <div className="trust-strip" style={{ display: 'flex', flexWrap: 'wrap', gap: 24, alignItems: 'center', padding: '24px 40px', borderTop: '1px solid rgba(0,0,0,0.07)', background: '#F8F7F5' }}>
+        {[['🏷️','Better direct rates'],['❤️','Support local stays'],['🛡️','Secure & simple booking'],['🇿🇦','100% South African']].map(([icon, label]) => (
+          <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 500, color: '#6B6B6B' }}>
+            <span style={{ fontSize: 18 }}>{icon}</span> {label}
+          </div>
+        ))}
       </div>
-    </article>
+
+      {/* ── FORM SECTION ── */}
+      <section id="list" style={{ background: '#000', color: '#fff', position: 'relative', scrollMarginTop: 72 }}>
+        <div style={{ height: 3, background: '#ef4056' }} />
+        <div className="form-grid" style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, padding: '100px 40px', alignItems: 'start' }}>
+
+          {/* Left pitch */}
+          <div>
+            <h2 style={{ fontFamily: 'Poppins', fontWeight: 900, fontSize: 'clamp(36px, 5vw, 60px)', lineHeight: 0.95, letterSpacing: '-0.05em', marginBottom: 20 }}>
+              Verdien meer<span style={{ color: '#ef4056' }}>.</span><br />Betaal minder<span style={{ color: '#ef4056' }}>.</span>
+            </h2>
+            <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 16, lineHeight: 1.7, marginBottom: 36 }}>
+              Jou eiendom, jou reëls. Be among the first properties on BLY. and reach a new generation of South African travellers — without the heavy OTA commissions.
+            </p>
+            {[
+              ['💰', 'Keep more revenue',         'Lower commission than any major OTA'],
+              ['🎯', 'Direct guest relationships', 'Own your bookings and your data'],
+              ['🚀', 'Early access advantage',     'First-listed properties get priority placement at launch'],
+              ['🤝', 'Local support',              'A South African team that actually picks up the phone'],
+            ].map(([icon, title, sub]) => (
+              <div key={title} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 20 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(245,214,222,0.12)', border: '1px solid rgba(245,214,222,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{icon}</div>
+                <div>
+                  <strong style={{ display: 'block', fontFamily: 'Poppins', fontWeight: 700, fontSize: 14, marginBottom: 2 }}>{title}</strong>
+                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>{sub}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Right form */}
+          <div className="form-card" style={{ background: '#F8F7F5', color: '#000', borderRadius: 24, padding: 40, boxShadow: '0 40px 80px rgba(0,0,0,0.4)' }}>
+            {!success ? (
+              <>
+                <h3 style={{ fontFamily: 'Poppins', fontWeight: 800, fontSize: 22, marginBottom: 6, letterSpacing: '-0.03em' }}>Register your property</h3>
+                <p style={{ fontSize: 13, color: '#6B6B6B', marginBottom: 28 }}>Fill in your details and we'll be in touch before we go live.</p>
+
+                <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                  <Field label="First Name"  value={form.firstName}    onChange={set('firstName')}    placeholder="e.g. Johan" />
+                  <Field label="Surname"     value={form.lastName}     onChange={set('lastName')}     placeholder="e.g. van der Merwe" />
+                </div>
+                <Field label="Property Name" value={form.propertyName} onChange={set('propertyName')} placeholder="e.g. Sea Breeze Guest House" />
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#6B6B6B', marginBottom: 6 }}>Property Type</label>
+                  <select value={form.propertyType} onChange={set('propertyType')} style={inputStyle}>
+                    <option value="">Select a type...</option>
+                    {['Guest House','Boutique Hotel','Self-catering Unit','B&B','Lodge / Safari','Villa / Private Home','Backpackers','Other'].map(o => <option key={o}>{o}</option>)}
+                  </select>
+                </div>
+                <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                  <Field label="Email Address" value={form.email} onChange={set('email')} placeholder="you@example.com" type="email" />
+                  <Field label="Phone Number"  value={form.phone} onChange={set('phone')} placeholder="082 000 0000" type="tel" />
+                </div>
+                <Field label="City / Town" value={form.city} onChange={set('city')} placeholder="e.g. Hermanus, Cape Town..." />
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#6B6B6B', marginBottom: 6 }}>Anything else? (optional)</label>
+                  <textarea value={form.notes} onChange={set('notes')} placeholder="Tell us about your property, number of rooms, special features..." style={{ ...inputStyle, minHeight: 90, resize: 'vertical' }} />
+                </div>
+
+                {error && <div style={{ color: '#ef4056', fontSize: 13, fontWeight: 600, marginBottom: 12 }}>{error}</div>}
+
+                <button onClick={submit} disabled={loading} style={{ width: '100%', padding: '16px 0', background: '#ef4056', color: '#fff', fontFamily: 'Poppins', fontWeight: 800, fontSize: 15, border: 'none', borderRadius: 99, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, boxShadow: '0 8px 24px rgba(239,64,86,0.35)', marginTop: 8 }}>
+                  {loading ? 'Submitting...' : 'Register my property 🏨'}
+                </button>
+              </>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#F5D6DE', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>✓</div>
+                <h4 style={{ fontFamily: 'Poppins', fontWeight: 800, fontSize: 20, marginBottom: 8 }}>You're on the list!</h4>
+                <p style={{ fontSize: 14, color: '#6B6B6B' }}>We'll be in touch before BLY. goes live. Welcome to the family.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer style={{ background: '#000', borderTop: '1px solid rgba(255,255,255,0.07)', padding: '28px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+        <span style={{ fontFamily: 'Poppins', fontWeight: 900, fontSize: 18, letterSpacing: '-0.05em', color: '#fff' }}>
+          Bly<span style={{ color: '#ef4056' }}>.</span>
+        </span>
+        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>© 2026 BLY. — Bly waar dit saak maak.</p>
+      </footer>
+
+    </main>
   )
 }
 
-export default function Home() {
-  const navigate = useNavigate()
-  const { user }  = useAuth()
+const inputStyle = {
+  width: '100%', padding: '13px 16px',
+  border: '1.5px solid rgba(0,0,0,0.12)', borderRadius: 12,
+  fontFamily: 'Inter, sans-serif', fontSize: 14,
+  background: '#F8F7F5', color: '#000',
+  appearance: 'none',
+}
 
-  const today     = new Date().toISOString().split('T')[0]
-  const threeDays = new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0]
-
-  const [activeSlide, setActiveSlide] = useState(0)
-  const [cities,      setCities]      = useState(MAJOR_CITIES)
-  const [city,        setCity]        = useState('Cape Town')
-  const [checkIn,     setCheckIn]     = useState(today)
-  const [checkOut,    setCheckOut]    = useState(threeDays)
-  const [guests,      setGuests]      = useState(2)
-
-  const slide = useMemo(() => heroSlides[activeSlide], [activeSlide])
-
-  useEffect(() => {
-    const timer = setInterval(() => setActiveSlide(c => (c + 1) % heroSlides.length), 4500)
-    return () => clearInterval(timer)
-  }, [])
-
-  useEffect(() => {
-    async function fetchListedCities() {
-      const { data } = await supabase.from('hotels').select('city').not('city', 'is', null)
-      if (data) {
-        const listed = data.map(h => h.city).filter(Boolean)
-        const merged = Array.from(new Set([...MAJOR_CITIES, ...listed])).sort()
-        setCities(merged)
-      }
-    }
-    fetchListedCities()
-  }, [])
-
-  const goSearch = () => {
-    const params = new URLSearchParams({ city, checkIn, checkOut, guests })
-    navigate(`/search?${params}`)
-  }
-
-  const handleDestination = (dest) => {
-    if (!user) { navigate('/auth'); return }
-    const params = new URLSearchParams({ city: dest.city, checkIn, checkOut, guests })
-    navigate(`/search?${params}`)
-  }
-
+function Field({ label, value, onChange, placeholder, type = 'text' }) {
   return (
-    <main className="min-h-screen bg-[#F8F7F5] text-black">
-
-      {/* ── Hero ── */}
-      <section className="relative min-h-[760px] border-b border-black/10">
-
-        <div className="absolute inset-0 overflow-hidden">
-          <img key={slide.image} src={slide.image} alt={slide.title}
-            className="h-full w-full object-cover transition-opacity duration-700" />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-r from-[#F8F7F5]/95 via-[#F8F7F5]/55 to-transparent" />
-
-        {/* Headline */}
-        <div className="relative z-10 mx-auto flex min-h-[760px] max-w-7xl items-center px-8 pt-10 md:px-14">
-          <div className="max-w-2xl">
-            <h1 className="text-6xl font-black leading-[0.92] tracking-[-0.07em] md:text-8xl">
-              Bly waar<br />dit saak maak<span className="text-[#ef4056]">.</span>
-            </h1>
-            <div className="mt-5 flex items-center gap-3">
-              <div className="h-[3px] w-16 bg-black rounded-full" />
-              <p className="text-sm font-bold uppercase tracking-[0.18em] text-black">Bly where it matters</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Next slide arrow */}
-        <button
-          onClick={() => setActiveSlide((activeSlide + 1) % heroSlides.length)}
-          className="absolute right-7 top-1/2 z-30 flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full bg-white text-3xl text-black shadow-xl"
-        >→</button>
-
-        {/* Dots */}
-        <div className="absolute bottom-28 left-1/2 z-20 flex -translate-x-1/2 gap-4">
-          {heroSlides.map((_, i) => (
-            <button key={i} onClick={() => setActiveSlide(i)}
-              className={`h-3 w-3 rounded-full ${i === activeSlide ? 'bg-[#ef4056]' : 'bg-white/80'}`} />
-          ))}
-        </div>
-
-        {/* ── Search bar ── */}
-        <div className="absolute -bottom-10 left-1/2 z-30 w-[90%] max-w-5xl -translate-x-1/2">
-          <div className="flex items-center rounded-full bg-white shadow-2xl overflow-hidden">
-
-            {/* City */}
-            <div className="flex flex-1 items-center gap-3 border-r border-black/10 px-6 py-4">
-              <span className="text-base flex-shrink-0">📍</span>
-              <select
-                className="w-full bg-transparent text-sm font-medium text-black outline-none appearance-none cursor-pointer"
-                value={city}
-                onChange={e => setCity(e.target.value)}
-              >
-                {cities.map(c => <option key={c}>{c}</option>)}
-              </select>
-            </div>
-
-            {/* Check-in */}
-            <div className="flex flex-1 items-center gap-3 border-r border-black/10 px-6 py-4">
-              <span className="text-base flex-shrink-0">📅</span>
-              <input type="date"
-                className="w-full bg-transparent text-sm font-medium text-black outline-none cursor-pointer"
-                value={checkIn} min={today} onChange={e => setCheckIn(e.target.value)} />
-            </div>
-
-            {/* Check-out */}
-            <div className="flex flex-1 items-center gap-3 border-r border-black/10 px-6 py-4">
-              <span className="text-base flex-shrink-0">📅</span>
-              <input type="date"
-                className="w-full bg-transparent text-sm font-medium text-black outline-none cursor-pointer"
-                value={checkOut} min={checkIn} onChange={e => setCheckOut(e.target.value)} />
-            </div>
-
-            {/* Guests */}
-            <div className="flex items-center gap-2 border-r border-black/10 px-6 py-4">
-              <span className="text-base flex-shrink-0">👥</span>
-              <input type="number"
-                className="w-10 bg-transparent text-sm font-medium text-black outline-none"
-                value={guests} min={1} max={20} onChange={e => setGuests(e.target.value)} />
-              <span className="text-xs text-black/40 whitespace-nowrap">
-                {guests == 1 ? 'guest' : 'guests'}
-              </span>
-            </div>
-
-            {/* Search button */}
-            <button
-              onClick={goSearch}
-              className="flex items-center gap-2 bg-black text-white font-bold text-sm px-8 py-5 hover:bg-[#ef4056] transition-colors duration-200 whitespace-nowrap"
-            >
-              🔍 Search
-            </button>
-
-          </div>
-        </div>
-      </section>
-
-      {/* ── Destinations ── */}
-      <section id="stays" className="mx-auto max-w-7xl px-8 pb-14 pt-24 md:px-14">
-        <p className="text-sm font-black uppercase tracking-[0.18em] text-[#ef4056]">Destinations</p>
-        <h2 className="mt-3 text-4xl font-black tracking-[-0.06em] md:text-5xl">
-          Where will you ... Bly<span className="text-[#ef4056]">?</span>
-        </h2>
-        {!user && (
-          <p className="mt-3 text-sm text-black/50">
-            <button onClick={() => navigate('/auth')}
-              className="underline font-semibold text-black/70 hover:text-[#ef4056] transition">
-              Sign in
-            </button>{' '}to start booking.
-          </p>
-        )}
-        <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {destinations.map(dest => (
-            <DestinationCard key={dest.name} destination={dest} onClick={() => handleDestination(dest)} />
-          ))}
-        </div>
-      </section>
-
-      {/* ── List your property ── */}
-      <section className="mx-auto max-w-7xl px-8 py-8 md:px-14">
-        <div className="rounded-[2rem] bg-white/75 p-10 text-center shadow-sm md:p-14">
-          <div className="mb-5 text-6xl">🏨</div>
-          <h2 className="text-4xl font-black tracking-[-0.06em] md:text-5xl">Own a stay? Get seen.</h2>
-          <p className="mx-auto mt-4 max-w-xl text-lg text-black/60">
-            List your property on BLY. and reach a new generation of South African travellers.
-          </p>
-          <a href="/list-hotel"
-            className="mt-7 inline-block rounded-full bg-[#ef4056] px-10 py-4 text-lg font-black text-white shadow-lg">
-            List your property
-          </a>
-
-          {/* Partner & Admin access */}
-          <div className="mt-6 border-t border-black/10 pt-6 flex flex-col items-center gap-3">
-            <p className="text-sm text-black/50">Already listed with us?</p>
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              <a href="/auth?mode=extranet"
-                className="inline-flex items-center gap-2 rounded-full border border-black/20 px-7 py-3 text-sm font-bold text-black hover:border-black transition">
-                🔑 Access Extranet
-              </a>
-              <a href="/admin"
-                className="inline-flex items-center gap-2 rounded-full border border-black/10 px-7 py-3 text-sm font-semibold text-black/40 hover:border-black/30 hover:text-black/60 transition">
-                ⚙️ Admin Login
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Trust badges ── */}
-      <section className="mx-auto grid max-w-7xl gap-6 px-8 pb-16 pt-8 md:grid-cols-3 md:px-14">
-        <div className="flex items-center gap-5 rounded-3xl bg-white/60 p-7">
-          <div className="text-4xl">🏷️</div>
-          <div><h3 className="text-xl font-black">Better rates</h3><p className="text-black/60">Book direct. Save more.</p></div>
-        </div>
-        <div className="flex items-center gap-5 rounded-3xl bg-white/60 p-7">
-          <div className="text-4xl">❤️</div>
-          <div><h3 className="text-xl font-black">Local stays</h3><p className="text-black/60">Support local. Stay local.</p></div>
-        </div>
-        <div className="flex items-center gap-5 rounded-3xl bg-white/60 p-7">
-          <div className="text-4xl">🛡️</div>
-          <div><h3 className="text-xl font-black">Secure & simple</h3><p className="text-black/60">Safe booking. Zero hassle.</p></div>
-        </div>
-      </section>
-
-    </main>
+    <div style={{ marginBottom: 16 }}>
+      <label style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#6B6B6B', marginBottom: 6 }}>{label}</label>
+      <input type={type} value={value} onChange={onChange} placeholder={placeholder} style={inputStyle} />
+    </div>
   )
 }
