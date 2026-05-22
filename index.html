@@ -1,19 +1,189 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bly. — South African stays. Curated sharp.</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-  href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800&display=swap"
-  rel="stylesheet"
-/>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BLY. — Coming Soon</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --black: #000000; --white: #F8F7F5; --pink: #F5D6DE; --red: #ef4056; --grey: #6B6B6B; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Inter', sans-serif; background: var(--white); color: var(--black); min-height: 100vh; overflow-x: hidden; }
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 20px 40px; display: flex; align-items: center; justify-content: space-between; background: var(--white); border-bottom: 1px solid rgba(0,0,0,0.07); }
+  .logo { font-family: 'Poppins', sans-serif; font-weight: 900; font-size: 24px; letter-spacing: -0.05em; color: var(--black); text-decoration: none; }
+  .logo span { color: var(--red); }
+  .nav-cta { background: var(--black); color: var(--white); font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 13px; padding: 10px 22px; border-radius: 99px; text-decoration: none; transition: background 0.2s; }
+  .nav-cta:hover { background: var(--red); }
+  .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 120px 40px 80px; position: relative; overflow: hidden; }
+  .blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.35; pointer-events: none; animation: drift 12s ease-in-out infinite alternate; }
+  .blob-1 { width: 600px; height: 600px; background: var(--pink); top: -100px; right: -150px; animation-delay: 0s; }
+  .blob-2 { width: 400px; height: 400px; background: #ffd6d6; bottom: 0; left: -100px; animation-delay: -4s; }
+  .blob-3 { width: 300px; height: 300px; background: var(--pink); top: 40%; right: 20%; animation-delay: -8s; }
+  @keyframes drift { from { transform: translate(0, 0) scale(1); } to { transform: translate(30px, -40px) scale(1.08); } }
+  .hero-inner { position: relative; z-index: 2; max-width: 900px; }
+  .coming-pill { display: inline-flex; align-items: center; background: var(--black); color: var(--white); font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; padding: 8px 18px; border-radius: 99px; margin-bottom: 32px; animation: fadeUp 0.6s ease both; }
+  .coming-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); display: inline-block; margin-right: 8px; animation: pulse 1.5s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.8); } }
+  h1 { font-family: 'Poppins', sans-serif; font-weight: 900; font-size: clamp(52px, 9vw, 110px); line-height: 0.9; letter-spacing: -0.06em; margin-bottom: 28px; animation: fadeUp 0.7s 0.1s ease both; }
+  h1 .accent { color: var(--red); }
+  .hero-sub { font-size: clamp(16px, 2vw, 20px); color: var(--grey); max-width: 520px; line-height: 1.6; margin-bottom: 44px; animation: fadeUp 0.7s 0.2s ease both; }
+  .hero-actions { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; animation: fadeUp 0.7s 0.3s ease both; }
+  .btn-primary { background: var(--red); color: var(--white); font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 15px; padding: 16px 36px; border-radius: 99px; text-decoration: none; box-shadow: 0 8px 32px rgba(239,64,86,0.35); transition: transform 0.2s, box-shadow 0.2s; display: inline-block; }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(239,64,86,0.45); }
+  .btn-secondary { color: var(--black); font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; text-decoration: none; display: flex; align-items: center; gap: 6px; }
+  .btn-secondary::after { content: '→'; transition: transform 0.2s; }
+  .btn-secondary:hover::after { transform: translateX(4px); }
+  .tagline-bar { display: flex; align-items: center; gap: 12px; margin-top: 60px; animation: fadeUp 0.7s 0.4s ease both; }
+  .tagline-bar .line { height: 2px; width: 48px; background: var(--black); border-radius: 2px; }
+  .tagline-bar p { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--black); }
+  .trust-strip { display: flex; flex-wrap: wrap; gap: 24px; align-items: center; padding: 24px 40px; border-top: 1px solid rgba(0,0,0,0.07); background: var(--white); position: relative; z-index: 2; }
+  .trust-item { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; color: var(--grey); }
+  .trust-item span { font-size: 18px; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+  .form-section { background: var(--black); color: var(--white); padding: 100px 40px; position: relative; overflow: hidden; scroll-margin-top: 72px; }
+  .form-section::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--red); }
+  .form-grid { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+  .form-left h2 { font-family: 'Poppins', sans-serif; font-weight: 900; font-size: clamp(36px, 5vw, 60px); line-height: 0.95; letter-spacing: -0.05em; margin-bottom: 20px; }
+  .form-left h2 .accent { color: var(--red); }
+  .form-left p { color: rgba(255,255,255,0.55); font-size: 16px; line-height: 1.7; margin-bottom: 36px; }
+  .benefit { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 20px; }
+  .benefit-icon { width: 40px; height: 40px; border-radius: 12px; background: rgba(245,214,222,0.12); border: 1px solid rgba(245,214,222,0.2); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .benefit-text strong { display: block; font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 14px; margin-bottom: 2px; }
+  .benefit-text span { font-size: 13px; color: rgba(255,255,255,0.45); }
+  .form-card { background: var(--white); color: var(--black); border-radius: 24px; padding: 40px; box-shadow: 0 40px 80px rgba(0,0,0,0.4); }
+  .form-card h3 { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 22px; margin-bottom: 6px; letter-spacing: -0.03em; }
+  .form-card p { font-size: 13px; color: var(--grey); margin-bottom: 28px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--grey); margin-bottom: 6px; }
+  .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 13px 16px; border: 1.5px solid rgba(0,0,0,0.12); border-radius: 12px; font-family: 'Inter', sans-serif; font-size: 14px; background: var(--white); color: var(--black); outline: none; transition: border-color 0.2s, box-shadow 0.2s; appearance: none; }
+  .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(239,64,86,0.1); }
+  .form-group textarea { resize: vertical; min-height: 90px; }
+  .form-submit { width: 100%; padding: 16px; background: var(--red); color: var(--white); font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 15px; border: none; border-radius: 99px; cursor: pointer; margin-top: 8px; box-shadow: 0 8px 24px rgba(239,64,86,0.35); transition: transform 0.2s, box-shadow 0.2s; }
+  .form-submit:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(239,64,86,0.45); }
+  .success-state { display: none; text-align: center; padding: 20px 0; }
+  .success-icon { width: 64px; height: 64px; border-radius: 50%; background: var(--pink); margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+  .success-state h4 { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 20px; margin-bottom: 8px; }
+  .success-state p { font-size: 14px; color: var(--grey); }
+  footer { background: var(--black); border-top: 1px solid rgba(255,255,255,0.07); padding: 28px 40px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  footer .logo { color: var(--white); font-size: 18px; }
+  footer p { font-size: 12px; color: rgba(255,255,255,0.3); }
+  @media (max-width: 768px) { nav { padding: 16px 20px; } .hero { padding: 100px 20px 60px; } .trust-strip { padding: 20px; gap: 16px; } .form-section { padding: 70px 20px; } .form-grid { grid-template-columns: 1fr; gap: 48px; } .form-row { grid-template-columns: 1fr; } .form-card { padding: 28px 20px; } footer { padding: 24px 20px; } }
+</style>
+</head>
+<body>
+<nav>
+  <a class="logo" href="#">Bly<span>.</span></a>
+  <a class="nav-cta" href="#list">List your property</a>
+</nav>
+<section class="hero">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="hero-inner">
+    <div class="coming-pill"><span class="dot"></span> Coming Soon</div>
+    <h1>Bly waar<br />dit saak<br />maak<span class="accent">.</span></h1>
+    <p class="hero-sub">South Africa's new way to discover and book local stays — direct, simple, and better value. We're launching soon.</p>
+    <div class="hero-actions">
+      <a href="#list" class="btn-primary">Want to list your property? →</a>
+      <a href="#list" class="btn-secondary">Learn more</a>
+    </div>
+    <div class="tagline-bar">
+      <div class="line"></div>
+      <p>Bly<span style="color:var(--red)">.</span> where it matters</p>
+    </div>
+  </div>
+</section>
+<div class="trust-strip">
+  <div class="trust-item"><span>🏷️</span> Better direct rates</div>
+  <div class="trust-item"><span>❤️</span> Support local stays</div>
+  <div class="trust-item"><span>🛡️</span> Secure & simple booking</div>
+  <div class="trust-item"><span>🇿🇦</span> 100% South African</div>
+</div>
+<section class="form-section" id="list">
+  <div class="form-grid">
+    <div class="form-left">
+      <h2>Verdien meer<span class="accent">.</span><br />Betaal minder<span class="accent">.</span></h2>
+      <p>Jou eiendom, jou reëls. Be among the first properties on BLY. and reach a new generation of South African travellers — without the heavy OTA commissions.</p>
+      <div class="benefit"><div class="benefit-icon">💰</div><div class="benefit-text"><strong>Keep more revenue</strong><span>Lower commission than any major OTA</span></div></div>
+      <div class="benefit"><div class="benefit-icon">🎯</div><div class="benefit-text"><strong>Direct guest relationships</strong><span>Own your bookings and your data</span></div></div>
+      <div class="benefit"><div class="benefit-icon">🚀</div><div class="benefit-text"><strong>Early access advantage</strong><span>First-listed properties get priority placement at launch</span></div></div>
+      <div class="benefit"><div class="benefit-icon">🤝</div><div class="benefit-text"><strong>Local support</strong><span>A South African team that actually picks up the phone</span></div></div>
+    </div>
+    <div class="form-card">
+      <h3>Register your property</h3>
+      <p>Fill in your details and we'll be in touch before we go live.</p>
+      <div id="form-body">
+        <div class="form-row">
+          <div class="form-group"><label>First Name</label><input type="text" id="firstName" placeholder="e.g. Johan" /></div>
+          <div class="form-group"><label>Surname</label><input type="text" id="lastName" placeholder="e.g. van der Merwe" /></div>
+        </div>
+        <div class="form-group"><label>Property Name</label><input type="text" id="propertyName" placeholder="e.g. Sea Breeze Guest House" /></div>
+        <div class="form-group"><label>Property Type</label><select id="propertyType"><option value="">Select a type...</option><option>Guest House</option><option>Boutique Hotel</option><option>Self-catering Unit</option><option>B&B</option><option>Lodge / Safari</option><option>Villa / Private Home</option><option>Backpackers</option><option>Other</option></select></div>
+        <div class="form-row">
+          <div class="form-group"><label>Email Address</label><input type="email" id="email" placeholder="you@example.com" /></div>
+          <div class="form-group"><label>Phone Number</label><input type="tel" id="phone" placeholder="e.g. 082 000 0000" /></div>
+        </div>
+        <div class="form-group"><label>City / Town</label><input type="text" id="city" placeholder="e.g. Hermanus, Cape Town..." /></div>
+        <div class="form-group"><label>Anything else? (optional)</label><textarea id="notes" placeholder="Tell us about your property, number of rooms, special features..."></textarea></div>
+        <div id="form-error" style="display:none; color:var(--red); font-size:13px; margin-bottom:12px; font-weight:600;"></div>
+        <button class="form-submit" onclick="submitForm()">Register my property 🏨</button>
+      </div>
+      <div class="success-state" id="success-state">
+        <div class="success-icon">✓</div>
+        <h4>You're on the list!</h4>
+        <p>We'll be in touch before BLY. goes live. Welcome to the family.</p>
+      </div>
+    </div>
+  </div>
+</section>
+<footer>
+  <a class="logo" href="#">Bly<span>.</span></a>
+  <p>© 2026 BLY. — Bly waar dit saak maak.</p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://sfzinvadnmrbxgttnygj.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_rFZvouPzX2YERa5jqAx6kw_cNRLSMY9';
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  async function submitForm() {
+    const fields = [
+      { id: 'firstName', label: 'First Name' },
+      { id: 'lastName', label: 'Surname' },
+      { id: 'propertyName', label: 'Property Name' },
+      { id: 'propertyType', label: 'Property Type' },
+      { id: 'email', label: 'Email Address' },
+      { id: 'phone', label: 'Phone Number' },
+      { id: 'city', label: 'City / Town' },
+    ];
+    const errorEl = document.getElementById('form-error');
+    errorEl.style.display = 'none';
+    for (const f of fields) {
+      const val = document.getElementById(f.id).value.trim();
+      if (!val) { errorEl.textContent = `Please fill in your ${f.label}.`; errorEl.style.display = 'block'; document.getElementById(f.id).focus(); return; }
+    }
+    const email = document.getElementById('email').value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errorEl.textContent = 'Please enter a valid email address.'; errorEl.style.display = 'block'; return; }
+    const btn = document.querySelector('.form-submit');
+    btn.textContent = 'Submitting...'; btn.disabled = true;
+    const { error } = await supabase.from('property_leads').insert({
+      first_name: document.getElementById('firstName').value.trim(),
+      last_name: document.getElementById('lastName').value.trim(),
+      property_name: document.getElementById('propertyName').value.trim(),
+      property_type: document.getElementById('propertyType').value.trim(),
+      email: email,
+      phone: document.getElementById('phone').value.trim(),
+      city: document.getElementById('city').value.trim(),
+      notes: document.getElementById('notes').value.trim(),
+    });
+    if (error) { errorEl.textContent = 'Something went wrong. Please try again.'; errorEl.style.display = 'block'; btn.textContent = 'Register my property 🏨'; btn.disabled = false; return; }
+    document.getElementById('form-body').style.display = 'none';
+    document.getElementById('success-state').style.display = 'block';
+  }
+  document.querySelectorAll('a[href="#list"]').forEach(a => {
+    a.addEventListener('click', e => { e.preventDefault(); document.getElementById('list').scrollIntoView({ behavior: 'smooth' }); });
+  });
+</script>
+</body>
 </html>
