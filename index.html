@@ -142,12 +142,13 @@
   <a class="logo" href="#">Bly<span>.</span></a>
   <p>© 2026 BLY. — Bly waar dit saak maak.</p>
 </footer>
-<script src="https://cdn.jsdelivr.net/npm/@sbClient/sbClient-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  const sbClient_URL = 'https://sfzinvadnmrbxgttnygj.sbClient.co';
-  const sbClient_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmemludmFkbm1yYnhndHRueWdqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NjgxODQsImV4cCI6MjA5NDI0NDE4NH0.GSmAeyZtACODuC7KfMdEh4NTNjI-KYaKcL2AzZGUF88';
-  const sbClient = window.sbClient.createClient(sbClient_URL, sbClient_ANON_KEY);
   async function submitForm() {
+    const sbClient = window.supabase.createClient(
+      'https://sfzinvadnmrbxgttnygj.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmemludmFkbm1yYnhndHRueWdqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NjgxODQsImV4cCI6MjA5NDI0NDE4NH0.GSmAeyZtACODuC7KfMdEh4NTNjI-KYaKcL2AzZGUF88'
+    );
     const fields = [
       { id: 'firstName', label: 'First Name' },
       { id: 'lastName', label: 'Surname' },
