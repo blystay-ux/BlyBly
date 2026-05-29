@@ -38,7 +38,7 @@
   }
   .logo {
     font-family: 'Poppins', sans-serif;
-    font-weight: 900; font-size: 24px;
+    font-weight: 900; font-size: 32px;
     letter-spacing: -0.05em;
     color: var(--black);
     text-decoration: none;
@@ -71,8 +71,8 @@
   /* ── HERO ── */
   .hero {
     min-height: 100vh;
-    display: flex; flex-direction: column; justify-content: center;
-    padding: 120px 40px 80px;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    padding: 120px 40px 80px; text-align: center;
     position: relative; overflow: hidden;
   }
   .blob {
@@ -87,7 +87,7 @@
     from { transform: translate(0, 0) scale(1); }
     to   { transform: translate(30px, -40px) scale(1.08); }
   }
-  .hero-inner { position: relative; z-index: 2; max-width: 900px; }
+  .hero-inner { position: relative; z-index: 2; max-width: 900px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
   .coming-pill {
     display: inline-flex; align-items: center;
     background: var(--black); color: var(--white);
@@ -114,11 +114,11 @@
   h1 .accent { color: var(--red); }
   .hero-sub {
     font-size: clamp(16px, 2vw, 20px); color: var(--grey);
-    max-width: 520px; line-height: 1.6; margin-bottom: 44px;
+    max-width: 520px; line-height: 1.6; margin-bottom: 44px; margin-left: auto; margin-right: auto; text-align: center;
     animation: fadeUp 0.7s 0.2s ease both;
   }
   .hero-actions {
-    display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+    display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: center;
     animation: fadeUp 0.7s 0.3s ease both;
   }
   .btn-primary {
@@ -138,7 +138,7 @@
   .btn-secondary::after { content: '→'; transition: transform 0.2s; }
   .btn-secondary:hover::after { transform: translateX(4px); }
   .tagline-bar {
-    display: flex; align-items: center; gap: 12px; margin-top: 60px;
+    display: flex; align-items: center; gap: 12px; margin-top: 60px; justify-content: center;
     animation: fadeUp 0.7s 0.4s ease both;
   }
   .tagline-bar .line { height: 2px; width: 48px; background: var(--black); border-radius: 2px; }
