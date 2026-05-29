@@ -787,12 +787,14 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+  if (typeof window._blyInitialised === 'undefined') {
+  window._blyInitialised = true;
   const SUPABASE_URL = 'https://sfzinvadnmrbxgttnygj.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_rFZvouPzX2YERa5jqAx6kw_cNRLSMY9';
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const blyDb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   /* ── TRAVELLER WAITLIST ── */
-  async function submitWaitlist() {
+  window.submitWaitlist = async function() {
     const emailEl = document.getElementById('waitlistEmail');
     const errorEl = document.getElementById('waitlist-error');
     const email = emailEl.value.trim();
@@ -808,7 +810,7 @@
     btn.textContent = '...';
     btn.disabled = true;
     try {
-      const { data, error } = await supabase.from('traveller_waitlist').insert([{ email }]).select();
+      const { data, error } = await blyDb.from('traveller_waitlist').insert([{ email }]).select();
       if (error) {
         if (error.code === '23505' || (error.message && error.message.includes('duplicate'))) {
           errorEl.textContent = "You're already on the list!";
@@ -831,7 +833,7 @@
   }
 
   /* ── PROPERTY FORM ── */
-  async function submitForm() {
+  window.submitForm = async function() {
     const fields = [
       { id: 'firstName', label: 'First Name' },
       { id: 'lastName', label: 'Surname' },
@@ -861,7 +863,7 @@
     const btn = document.querySelector('.form-submit');
     btn.textContent = 'Submitting...';
     btn.disabled = true;
-    const { error } = await supabase.from('property_leads').insert({
+    const { error } = await blyDb.from('property_leads').insert({
       first_name:    document.getElementById('firstName').value.trim(),
       last_name:     document.getElementById('lastName').value.trim(),
       property_name: document.getElementById('propertyName').value.trim(),
@@ -889,23 +891,23 @@
     { email: 'pending@test.com', password: 'test123', name: 'Pending User', status: 'pending' },
   ];
 
-  function openPortal() {
+  window.openPortal = function() {
     document.getElementById('staffModal').classList.add('open');
     document.body.style.overflow = 'hidden';
     setTimeout(() => document.getElementById('staffEmail').focus(), 300);
   }
-  function closePortal() {
+  window.closePortal = function() {
     document.getElementById('staffModal').classList.remove('open');
     document.body.style.overflow = '';
   }
-  function handleOverlayClick(e) {
+  window.handleOverlayClick = function(e) {
     if (e.target === document.getElementById('staffModal')) closePortal();
   }
-  function showView(id) {
+  window.showView = function(id) {
     document.querySelectorAll('.portal-view').forEach(v => v.classList.remove('active'));
     document.getElementById('view-' + id).classList.add('active');
   }
-  function doLogin() {
+  window.doLogin = function() {
     const email = document.getElementById('staffEmail').value.trim().toLowerCase();
     const password = document.getElementById('staffPassword').value;
     const errorEl = document.getElementById('login-error');
@@ -931,7 +933,7 @@
     document.getElementById('dash-name').textContent = account.name;
     showView('dashboard');
   }
-  function doLogout() {
+  window.doLogout = function() {
     document.getElementById('staffEmail').value = '';
     document.getElementById('staffPassword').value = '';
     document.getElementById('login-error').style.display = 'none';
@@ -954,6 +956,7 @@
       document.getElementById('list').scrollIntoView({ behavior: 'smooth' });
     });
   });
+  } // end _blyInitialised guard
 </script>
 
 </body>
