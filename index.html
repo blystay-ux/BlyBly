@@ -222,7 +222,7 @@
   }
   .waitlist-success h4 { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 18px; color: var(--white); margin-bottom: 6px; }
   .waitlist-success p { font-size: 13px; color: rgba(255,255,255,0.45); }
-  #waitlist-error { display: none; color: var(--red); font-size: 12px; margin-top: 8px; font-weight: 600; }
+  #waitlist-error { color: var(--red); font-size: 13px; margin-top: 10px; font-weight: 600; min-height: 18px; }
 
   /* ── PROPERTY FORM SECTION ── */
   .form-section {
@@ -797,6 +797,7 @@
     const errorEl = document.getElementById('waitlist-error');
     const email = emailEl.value.trim();
     errorEl.style.display = 'none';
+    errorEl.textContent = '';
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       errorEl.textContent = 'Please enter a valid email address.';
       errorEl.style.display = 'block';
@@ -806,16 +807,27 @@
     const btn = document.querySelector('.waitlist-btn');
     btn.textContent = '...';
     btn.disabled = true;
-    const { error } = await supabase.from('traveller_waitlist').insert({ email });
-    if (error) {
-      errorEl.textContent = error.code === '23505' ? 'You\'re already on the list!' : 'Something went wrong. Please try again.';
+    try {
+      const { data, error } = await supabase.from('traveller_waitlist').insert([{ email }]).select();
+      if (error) {
+        if (error.code === '23505' || (error.message && error.message.includes('duplicate'))) {
+          errorEl.textContent = "You're already on the list!";
+        } else {
+          errorEl.textContent = 'Error: ' + (error.message || error.code || 'Unknown error');
+        }
+        errorEl.style.display = 'block';
+        btn.textContent = 'Join →';
+        btn.disabled = false;
+        return;
+      }
+      document.getElementById('waitlist-form-body').style.display = 'none';
+      document.getElementById('waitlist-success').style.display = 'block';
+    } catch (e) {
+      errorEl.textContent = 'Network error: ' + e.message;
       errorEl.style.display = 'block';
       btn.textContent = 'Join →';
       btn.disabled = false;
-      return;
     }
-    document.getElementById('waitlist-form-body').style.display = 'none';
-    document.getElementById('waitlist-success').style.display = 'block';
   }
 
   /* ── PROPERTY FORM ── */
