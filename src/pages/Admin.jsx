@@ -212,7 +212,7 @@ function MembersTab({ memberships, names, onApprove, onReject, onRevoke }) {
       <table style={s.table}>
         <thead>
           <tr>
-            {['Member', 'Applied', 'Status', 'Payment', 'Expires', 'Actions'].map(h => (
+            {['Member', 'Employer', 'Applied', 'Status', 'Payment', 'Expires', 'Actions'].map(h => (
               <th key={h} style={s.th}>{h}</th>
             ))}
           </tr>
@@ -221,8 +221,16 @@ function MembersTab({ memberships, names, onApprove, onReject, onRevoke }) {
           {memberships.map(m => (
             <tr key={m.id}>
               <td style={s.td}>
-                <div style={{ fontWeight: 700 }}>{names[m.user_id] || 'Member'}</div>
+                <div style={{ fontWeight: 700 }}>
+                  {[m.title, m.first_name, m.surname].filter(Boolean).join(' ') || names[m.user_id] || 'Member'}
+                </div>
                 <div style={{ fontSize: 12, color: '#aaa' }}>{m.user_id.slice(0, 8)}</div>
+              </td>
+              <td style={s.td}>
+                <div>{m.employer_name || '—'}</div>
+                <div style={{ fontSize: 12, color: '#888' }}>
+                  {[m.employer_segment, m.country].filter(Boolean).join(' · ')}
+                </div>
               </td>
               <td style={{ ...s.td, fontSize: 12, color: '#888' }}>
                 {new Date(m.created_at).toLocaleDateString('en-ZA')}
