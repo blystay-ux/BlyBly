@@ -51,9 +51,9 @@ const styles = {
 
 export default function Navbar() {
   const navigate = useNavigate()
-  const { user, signOut } = useAuth()
+  const { user, role, signOut } = useAuth()
 
-  const isAdmin = user?.email === import.meta.env.VITE_ADMIN_EMAIL
+  const isAdmin = role === 'admin'
   const initial = user?.email?.[0]?.toUpperCase()
 
   return (
