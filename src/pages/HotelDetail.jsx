@@ -4,16 +4,16 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 
 const SAMPLE = {
-  'the-silo-hotel': { id: '5', name: 'The Silo Hotel', slug: 'the-silo-hotel', city: 'Cape Town', province: 'Western Cape', short_desc: "Cape Town's most iconic luxury address", description: 'Perched atop the Zeitz Museum of Contemporary Art Africa in the historic V&A Waterfront, The Silo is a design landmark offering panoramic views of Table Mountain and the harbour.', price_night: 9200, rating: 4.8, review_count: 178, images: ['https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=900'], amenities: ['Rooftop pool','Spa','Restaurant','Bar','Gym','WiFi','Concierge'], category: 'boutique', seasonal_rates: [] },
+  'the-silo-hotel': { id: '5', name: 'The Silo Hotel', slug: 'the-silo-hotel', city: 'Cape Town', province: 'Western Cape', short_desc: "Cape Town's most iconic luxury address", description: 'Perched atop the Zeitz Museum of Contemporary Art Africa in the historic V&A Waterfront, The Silo is a design landmark offering panoramic views of Table Mountain and the harbour.', price_per_night: 9200, rating: 4.8, review_count: 178, images: ['https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=900'], amenities: ['Rooftop pool','Spa','Restaurant','Bar','Gym','WiFi','Concierge'], category: 'boutique', seasonal_rates: [] },
 }
 
 function getRateForDates(hotel, checkIn, checkOut) {
-  if (!hotel?.seasonal_rates?.length) return hotel?.price_night || 0
+  if (!hotel?.seasonal_rates?.length) return hotel?.price_per_night || 0
   const mid = new Date((new Date(checkIn).getTime() + new Date(checkOut).getTime()) / 2)
   for (const r of hotel.seasonal_rates) {
-    if (mid >= new Date(r.start) && mid <= new Date(r.end)) return parseFloat(r.price) || hotel.price_night
+    if (mid >= new Date(r.start) && mid <= new Date(r.end)) return parseFloat(r.price) || hotel.price_per_night
   }
-  return hotel.price_night
+  return hotel.price_per_night
 }
 
 const s = {
@@ -88,6 +88,9 @@ export default function HotelDetail() {
   const [booked, setBooked] = useState(false)
   const [bookingRef, setBookingRef] = useState(null)
   const [error, setError] = useState('')
+  const [reviewCount, setReviewCount] = useState(0)
+  const [industryPlanByRoom, setIndustryPlanByRoom] = useState({})
+  const [industryNightRate, setIndustryNightRate] = useState(null)
 
   const today = new Date().toISOString().split('T')[0]
   const plus3 = new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0]
@@ -96,7 +99,8 @@ export default function HotelDetail() {
   const [guests, setGuests] = useState(2)
 
   const nights = Math.max(1, Math.round((new Date(checkOut) - new Date(checkIn)) / 86400000))
-  const nightRate = selectedRoom ? parseFloat(selectedRoom.price_night) : hotel ? getRateForDates(hotel, checkIn, checkOut) : 0
+  const publicNightRate = selectedRoom ? parseFloat(selectedRoom.price_per_night) : hotel ? getRateForDates(hotel, checkIn, checkOut) : 0
+  const nightRate = industryNightRate != null ? industryNightRate : publicNightRate
   const total = nightRate * nights
 
   useEffect(() => {
@@ -106,9 +110,20 @@ export default function HotelDetail() {
         const { data: h } = await supabase.from('hotels').select('*').eq('slug', slug).single()
         if (h) {
           setHotel(h)
-          const { data: rooms } = await supabase.from('room_types').select('*').eq('hotel_id', h.id).order('price_night')
+          const { data: rooms } = await supabase.from('room_types').select('*').eq('hotel_id', h.id).order('price_per_night')
           if (rooms?.length) setRoomTypes(rooms)
-        } else setHotel(SAMPLE[slug] || null)
+          // Review count lives in its own table
+          const { count } = await supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('hotel_id', h.id)
+          setReviewCount(count || 0)
+          // Industry rate plans — RLS only returns these to active industry members
+          const { data: plans } = await supabase.from('rate_plans')
+            .select('id, room_type_id').eq('hotel_id', h.id).eq('audience', 'industry').eq('is_active', true)
+          if (plans?.length) {
+            const map = {}
+            plans.forEach(p => { if (p.room_type_id) map[p.room_type_id] = p.id })
+            setIndustryPlanByRoom(map)
+          }
+        } else { setHotel(SAMPLE[slug] || null); setReviewCount(SAMPLE[slug]?.review_count || 0) }
       } catch (_) { setHotel(SAMPLE[slug] || null) }
       setLoading(false)
     }
@@ -118,6 +133,17 @@ export default function HotelDetail() {
   useEffect(() => {
     if (roomTypes.length && checkIn && checkOut) checkRoomAvailability()
   }, [roomTypes, checkIn, checkOut])
+
+  useEffect(() => {
+    async function fetchIndustryRate() {
+      const planId = selectedRoom && industryPlanByRoom[selectedRoom.id]
+      if (!planId) { setIndustryNightRate(null); return }
+      const { data } = await supabase.from('rates')
+        .select('amount').eq('rate_plan_id', planId).eq('stay_date', checkIn).eq('occupancy', 0).maybeSingle()
+      setIndustryNightRate(data ? Number(data.amount) : null)
+    }
+    fetchIndustryRate()
+  }, [selectedRoom, checkIn, industryPlanByRoom])
 
   async function checkRoomAvailability() {
     const avail = {}
@@ -138,14 +164,16 @@ export default function HotelDetail() {
   async function handleReserve() {
     if (!user) { navigate('/auth'); return }
     setBooking(true); setError('')
+    const usingIndustry = industryNightRate != null && selectedRoom && industryPlanByRoom[selectedRoom.id]
     const { data, error: err } = await supabase.from('bookings').insert({
       hotel_id: hotel.id,
       room_type_id: selectedRoom?.id || null,
-      room_name: selectedRoom?.name || null,
+      rate_plan_id: usingIndustry ? industryPlanByRoom[selectedRoom.id] : null,
       user_id: user.id,
       check_in: checkIn,
       check_out: checkOut,
       guests: parseInt(guests),
+      price_per_night: nightRate,
       total_price: total,
       status: 'confirmed',
     }).select().single()
@@ -179,7 +207,7 @@ export default function HotelDetail() {
               <h1 style={s.name}>{hotel.name}</h1>
               <div style={s.meta}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600, color: 'var(--text)' }}>★ {hotel.rating?.toFixed(1)}</span>
-                <span>·</span><span>{hotel.review_count} reviews</span>
+                <span>·</span><span>{reviewCount} reviews</span>
                 <span>·</span><span>📍 {hotel.city}, {hotel.province}</span>
               </div>
               <p style={s.desc}>{hotel.description}</p>
@@ -210,7 +238,7 @@ export default function HotelDetail() {
                           <div style={s.roomName}>{room.name}</div>
                         </div>
                         <div style={{ textAlign: 'right' }}>
-                          <div style={s.roomPrice}>R{Number(room.price_night).toLocaleString()}<span style={s.roomPricePer}>/night</span></div>
+                          <div style={s.roomPrice}>R{Number(room.price_per_night).toLocaleString()}<span style={s.roomPricePer}>/night</span></div>
                           <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Up to {room.max_guests} guests</div>
                         </div>
                       </div>
@@ -252,6 +280,16 @@ export default function HotelDetail() {
                 <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 32, marginBottom: 4 }}>
                   R{Number(nightRate).toLocaleString()}<span style={{ fontSize: 14, fontWeight: 400, color: 'var(--text-muted)' }}> / night</span>
                 </div>
+                {industryNightRate != null && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                    <span style={{ background: '#ef4056', color: '#fff', borderRadius: 99, padding: '2px 10px', fontSize: 11, fontWeight: 700, letterSpacing: '0.04em' }}>INDUSTRY RATE</span>
+                    {selectedRoom && (
+                      <span style={{ fontSize: 13, color: 'var(--text-muted)', textDecoration: 'line-through' }}>
+                        R{Number(parseFloat(selectedRoom.price_per_night)).toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+                )}
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 20 }}>
                   {selectedRoom ? selectedRoom.name : 'Base rate · select a room above'}
                 </div>
