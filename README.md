@@ -219,3 +219,5 @@ In Supabase → Table Editor → `hotels`, click **"Insert row"** to add your ow
 | Hosting | Vercel |
 | Fonts | Syne + DM Sans |
 | Styling | CSS custom properties |
+
+<!-- trigger redeploy -->
