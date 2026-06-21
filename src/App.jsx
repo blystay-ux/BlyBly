@@ -10,6 +10,8 @@ import Admin from './pages/Admin'
 import ManageHotel from './pages/ManageHotel'
 import MyBookings from './pages/MyBookings'
 import Extranet from './pages/Extranet'
+import Industry from './pages/Industry'
+import ComingSoon from './pages/ComingSoon'
 
 export default function App() {
   return (
@@ -25,6 +27,8 @@ export default function App() {
         <Route path="/manage-hotel"  element={<ManageHotel />} />
         <Route path="/my-bookings"   element={<MyBookings />} />
         <Route path="/extranet"      element={<Extranet />} />
+        <Route path="/industry"      element={<Industry />} />
+        <Route path="/partners"      element={<ComingSoon />} />
       </Routes>
     </AuthProvider>
   )
