@@ -39,59 +39,78 @@ function StatCard({ icon, label, value, sub }) {
   )
 }
 
-function HotelsTab({ hotels, onToggleActive, onToggleFeatured }) {
+const HOTEL_STATUS = {
+  draft:          { c: 'default', label: 'Draft' },
+  pending_review: { c: 'yellow',  label: 'Pending' },
+  approved:       { c: 'green',   label: 'Approved' },
+  rejected:       { c: 'red',     label: 'Rejected' },
+  suspended:      { c: 'red',     label: 'Suspended' },
+}
+
+function HotelsTab({ hotels, onApprove, onReject, onToggleActive, onToggleFeatured }) {
   if (!hotels.length) return <div style={s.empty}>No hotels listed yet.</div>
   return (
     <div style={{ overflowX: 'auto' }}>
       <table style={s.table}>
         <thead>
           <tr>
-            {['Property', 'City', 'Owner', 'Rate / night', 'Bookings', 'Status', 'Featured', 'Actions'].map(h => (
+            {['Property', 'City', 'Submitted', 'Rate / night', 'Status', 'Live', 'Featured', 'Actions'].map(h => (
               <th key={h} style={s.th}>{h}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {hotels.map(h => (
-            <tr key={h.id}>
-              <td style={s.td}>
-                <div style={{ fontWeight: 700 }}>{h.name}</div>
-                <div style={{ fontSize: 12, color: '#aaa' }}>{h.slug}</div>
-              </td>
-              <td style={s.td}>{h.city}</td>
-              <td style={{ ...s.td, fontSize: 12, color: '#888' }}>{h.owner_email || '—'}</td>
-              <td style={s.td}>
-                {h.price_per_night
-                  ? `R ${Number(h.price_per_night).toLocaleString('en-ZA')}`
-                  : '—'}
-              </td>
-              <td style={{ ...s.td, textAlign: 'center' }}>{h.booking_count || 0}</td>
-              <td style={s.td}>
-                <span style={s.pill(h.is_active ? 'green' : 'yellow')}>
-                  {h.is_active ? 'Live' : 'Pending'}
-                </span>
-              </td>
-              <td style={{ ...s.td, textAlign: 'center' }}>
-                {h.is_featured ? '⭐' : '—'}
-              </td>
-              <td style={s.td}>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <button
-                    style={s.btn(h.is_active ? 'red' : 'green')}
-                    onClick={() => onToggleActive(h)}
-                  >
-                    {h.is_active ? 'Deactivate' : 'Approve'}
-                  </button>
-                  <button
-                    style={s.btn(h.is_featured ? 'red' : 'default')}
-                    onClick={() => onToggleFeatured(h)}
-                  >
-                    {h.is_featured ? 'Unfeature' : 'Feature'}
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
+          {hotels.map(h => {
+            const st = HOTEL_STATUS[h.status] || HOTEL_STATUS.draft
+            const submitted = h.submitted_at || h.created_at
+            const awaiting = h.status === 'pending_review' || h.status === 'draft' || h.status === 'rejected'
+            return (
+              <tr key={h.id}>
+                <td style={s.td}>
+                  <div style={{ fontWeight: 700 }}>{h.name}</div>
+                  <div style={{ fontSize: 12, color: '#aaa' }}>{h.slug}</div>
+                </td>
+                <td style={s.td}>{h.city}</td>
+                <td style={{ ...s.td, fontSize: 12, color: '#888' }}>
+                  {submitted ? new Date(submitted).toLocaleDateString('en-ZA') : '—'}
+                </td>
+                <td style={s.td}>
+                  {h.price_per_night
+                    ? `R ${Number(h.price_per_night).toLocaleString('en-ZA')}`
+                    : '—'}
+                </td>
+                <td style={s.td}>
+                  <span style={s.pill(st.c)}>{st.label}</span>
+                </td>
+                <td style={{ ...s.td, textAlign: 'center' }}>{h.is_active ? '🟢' : '—'}</td>
+                <td style={{ ...s.td, textAlign: 'center' }}>{h.is_featured ? '⭐' : '—'}</td>
+                <td style={s.td}>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {awaiting && (
+                      <>
+                        <button style={s.btn('green')} onClick={() => onApprove(h)}>Approve</button>
+                        <button style={s.btn('red')} onClick={() => onReject(h)}>Reject</button>
+                      </>
+                    )}
+                    {h.status === 'approved' && (
+                      <button
+                        style={s.btn(h.is_active ? 'red' : 'green')}
+                        onClick={() => onToggleActive(h)}
+                      >
+                        {h.is_active ? 'Deactivate' : 'Reactivate'}
+                      </button>
+                    )}
+                    <button
+                      style={s.btn(h.is_featured ? 'red' : 'default')}
+                      onClick={() => onToggleFeatured(h)}
+                    >
+                      {h.is_featured ? 'Unfeature' : 'Feature'}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            )
+          })}
         </tbody>
       </table>
     </div>
@@ -182,17 +201,78 @@ function WaitlistTab({ waitlist, onDelete }) {
   )
 }
 
+const MEMBER_STATUS = {
+  pending: 'yellow', active: 'green', rejected: 'red', expired: 'default', cancelled: 'default',
+}
+
+function MembersTab({ memberships, names, onApprove, onReject, onRevoke }) {
+  if (!memberships.length) return <div style={s.empty}>No industry applications yet.</div>
+  return (
+    <div style={{ overflowX: 'auto' }}>
+      <table style={s.table}>
+        <thead>
+          <tr>
+            {['Member', 'Applied', 'Status', 'Payment', 'Expires', 'Actions'].map(h => (
+              <th key={h} style={s.th}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {memberships.map(m => (
+            <tr key={m.id}>
+              <td style={s.td}>
+                <div style={{ fontWeight: 700 }}>{names[m.user_id] || 'Member'}</div>
+                <div style={{ fontSize: 12, color: '#aaa' }}>{m.user_id.slice(0, 8)}</div>
+              </td>
+              <td style={{ ...s.td, fontSize: 12, color: '#888' }}>
+                {new Date(m.created_at).toLocaleDateString('en-ZA')}
+              </td>
+              <td style={s.td}><span style={s.pill(MEMBER_STATUS[m.status] || 'default')}>{m.status}</span></td>
+              <td style={s.td}>
+                <span style={s.pill(m.payment_status === 'paid' ? 'green' : 'default')}>
+                  R{Number(m.amount).toLocaleString('en-ZA')} · {m.payment_status}
+                </span>
+              </td>
+              <td style={{ ...s.td, fontSize: 13 }}>
+                {m.expires_at ? new Date(m.expires_at).toLocaleDateString('en-ZA') : '—'}
+              </td>
+              <td style={s.td}>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {m.status === 'pending' && (
+                    <>
+                      <button style={s.btn('green')} onClick={() => onApprove(m)}>Approve</button>
+                      <button style={s.btn('red')} onClick={() => onReject(m)}>Reject</button>
+                    </>
+                  )}
+                  {m.status === 'active' && (
+                    <button style={s.btn('red')} onClick={() => onRevoke(m)}>Revoke</button>
+                  )}
+                  {(m.status === 'rejected' || m.status === 'cancelled' || m.status === 'expired') && (
+                    <button style={s.btn('green')} onClick={() => onApprove(m)}>Re-activate</button>
+                  )}
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 // ── Main Admin Page ───────────────────────────────────────────
 export default function Admin() {
-  const { user, signOut } = useAuth()
+  const { user, role, signOut } = useAuth()
   const navigate = useNavigate()
 
-  const isAdmin = user?.email === import.meta.env.VITE_ADMIN_EMAIL
+  const isAdmin = role === 'admin'
 
   const [tab,      setTab]      = useState('overview')
   const [hotels,   setHotels]   = useState([])
   const [bookings, setBookings] = useState([])
   const [waitlist, setWaitlist] = useState([])
+  const [memberships, setMemberships] = useState([])
+  const [memberNames, setMemberNames] = useState({})
   const [loading,  setLoading]  = useState(true)
 
   // Redirect if not admin
@@ -204,15 +284,50 @@ export default function Admin() {
 
   async function fetchAll() {
     setLoading(true)
-    const [hotelsRes, bookingsRes, waitlistRes] = await Promise.all([
+    const [hotelsRes, bookingsRes, waitlistRes, membersRes] = await Promise.all([
       supabase.from('hotels').select('*').order('created_at', { ascending: false }),
       supabase.from('bookings').select('*, hotels(name)').order('created_at', { ascending: false }),
       supabase.from('waitlist').select('*').order('created_at', { ascending: false }),
+      supabase.from('industry_memberships').select('*').order('created_at', { ascending: false }),
     ])
     if (hotelsRes.data)   setHotels(hotelsRes.data)
     if (bookingsRes.data) setBookings(bookingsRes.data)
     if (waitlistRes.data) setWaitlist(waitlistRes.data)
+    if (membersRes.data) {
+      setMemberships(membersRes.data)
+      const ids = [...new Set(membersRes.data.map(m => m.user_id))]
+      if (ids.length) {
+        const { data: profs } = await supabase.from('profiles').select('id, full_name').in('id', ids)
+        const map = {}
+        ;(profs || []).forEach(p => { map[p.id] = p.full_name })
+        setMemberNames(map)
+      }
+    }
     setLoading(false)
+  }
+
+  async function approveHotel(hotel) {
+    const { error } = await supabase
+      .from('hotels')
+      .update({
+        status: 'approved',
+        is_active: true,
+        approved_at: new Date().toISOString(),
+        approved_by: user.id,
+      })
+      .eq('id', hotel.id)
+    if (!error) setHotels(prev => prev.map(h => h.id === hotel.id
+      ? { ...h, status: 'approved', is_active: true } : h))
+  }
+
+  async function rejectHotel(hotel) {
+    const reason = window.prompt('Reason for rejection (optional, shown to the partner):') ?? null
+    const { error } = await supabase
+      .from('hotels')
+      .update({ status: 'rejected', is_active: false, rejection_reason: reason })
+      .eq('id', hotel.id)
+    if (!error) setHotels(prev => prev.map(h => h.id === hotel.id
+      ? { ...h, status: 'rejected', is_active: false } : h))
   }
 
   async function toggleActive(hotel) {
@@ -241,15 +356,40 @@ export default function Admin() {
     if (!error) setWaitlist(prev => prev.filter(w => w.id !== id))
   }
 
+  async function approveMember(m) {
+    const now = new Date()
+    const expires = new Date(now); expires.setFullYear(expires.getFullYear() + 1)
+    const patch = {
+      status: 'active', payment_status: 'paid',
+      approved_by: user.id, approved_at: now.toISOString(),
+      paid_at: now.toISOString(), expires_at: expires.toISOString(),
+    }
+    const { error } = await supabase.from('industry_memberships').update(patch).eq('id', m.id)
+    if (!error) setMemberships(prev => prev.map(x => x.id === m.id ? { ...x, ...patch } : x))
+  }
+
+  async function rejectMember(m) {
+    const { error } = await supabase.from('industry_memberships').update({ status: 'rejected' }).eq('id', m.id)
+    if (!error) setMemberships(prev => prev.map(x => x.id === m.id ? { ...x, status: 'rejected' } : x))
+  }
+
+  async function revokeMember(m) {
+    if (!window.confirm('Revoke this industry membership?')) return
+    const { error } = await supabase.from('industry_memberships').update({ status: 'cancelled' }).eq('id', m.id)
+    if (!error) setMemberships(prev => prev.map(x => x.id === m.id ? { ...x, status: 'cancelled' } : x))
+  }
+
   // Stats
   const liveHotels      = hotels.filter(h => h.is_active).length
-  const pendingHotels   = hotels.filter(h => !h.is_active).length
+  const pendingHotels   = hotels.filter(h => h.status === 'pending_review').length
   const totalRevenue    = bookings
     .filter(b => b.status === 'confirmed' || b.status === 'completed')
     .reduce((sum, b) => sum + (Number(b.total_price) || 0), 0)
   const confirmedCount  = bookings.filter(b => b.status === 'confirmed').length
+  const activeMembers   = memberships.filter(m => m.status === 'active').length
+  const pendingMembers  = memberships.filter(m => m.status === 'pending').length
 
-  const TABS = ['overview', 'hotels', 'bookings', 'waitlist']
+  const TABS = ['overview', 'hotels', 'bookings', 'waitlist', 'memberships']
 
   return (
     <div style={s.page}>
@@ -281,10 +421,16 @@ export default function Admin() {
               {t === 'hotels'   && '🏨 '}
               {t === 'bookings' && '📅 '}
               {t === 'waitlist' && '📋 '}
+              {t === 'memberships' && '🎟️ '}
               {t.charAt(0).toUpperCase() + t.slice(1)}
               {t === 'hotels'   && pendingHotels > 0 && (
                 <span style={{ marginLeft: 6, background: '#ef4056', color: '#fff', borderRadius: 99, padding: '1px 7px', fontSize: 11 }}>
                   {pendingHotels}
+                </span>
+              )}
+              {t === 'memberships' && pendingMembers > 0 && (
+                <span style={{ marginLeft: 6, background: '#ef4056', color: '#fff', borderRadius: 99, padding: '1px 7px', fontSize: 11 }}>
+                  {pendingMembers}
                 </span>
               )}
             </button>
@@ -306,6 +452,7 @@ export default function Admin() {
                 <StatCard icon="📋" label="Waitlist"          value={waitlist.length} sub="people waiting" />
                 <StatCard icon="⭐" label="Featured stays"    value={hotels.filter(h => h.is_featured).length} />
                 <StatCard icon="🌍" label="Cities covered"    value={new Set(hotels.map(h => h.city)).size} />
+                <StatCard icon="🎟️" label="Industry members"  value={activeMembers} sub={`${pendingMembers} pending approval`} />
               </div>
             )}
 
@@ -313,6 +460,8 @@ export default function Admin() {
             {tab === 'hotels' && (
               <HotelsTab
                 hotels={hotels}
+                onApprove={approveHotel}
+                onReject={rejectHotel}
                 onToggleActive={toggleActive}
                 onToggleFeatured={toggleFeatured}
               />
@@ -331,6 +480,17 @@ export default function Admin() {
               <WaitlistTab
                 waitlist={waitlist}
                 onDelete={deleteWaitlist}
+              />
+            )}
+
+            {/* Industry memberships */}
+            {tab === 'memberships' && (
+              <MembersTab
+                memberships={memberships}
+                names={memberNames}
+                onApprove={approveMember}
+                onReject={rejectMember}
+                onRevoke={revokeMember}
               />
             )}
           </>
