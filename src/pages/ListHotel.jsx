@@ -271,14 +271,21 @@ export default function ListHotel() {
     const imageArr = form.images.split('\n').map(s => s.trim()).filter(Boolean)
     const slug = slugify(form.name) + '-' + Date.now().toString(36)
     const { error } = await supabase.from('hotels').insert({
+      owner_id: user?.id,
       name: form.name, slug,
       city: form.city, province: form.province,
       category: form.category, short_desc: form.short_desc,
       description: form.description,
-      price_night: parseFloat(form.price_night),
-      images: imageArr, amenities: form.facilities,
+      price_per_night: parseFloat(form.price_night),
+      rooms: form.total_rooms ? parseInt(form.total_rooms) : 1,
+      total_floors: form.total_floors ? parseInt(form.total_floors) : null,
+      languages: form.languages,
+      images: imageArr,
+      amenities: form.facilities,
       seasonal_rates: form.seasonal_rates,
-      user_id: user?.id, featured: false, rating: 0, review_count: 0,
+      is_featured: false,
+      rating: 0,
+      status: 'pending_review',
     })
     if (error) { setError(error.message); setSubmitting(false); return }
     setSubmitted(true); setSubmitting(false)
@@ -298,9 +305,9 @@ export default function ListHotel() {
       <div style={s.card}>
         <div style={s.successPage}>
           <div style={s.successIcon}>🎉</div>
-          <div style={s.successTitle}>You're listed on Bly.</div>
-          <div style={s.successSub}>Your property has been submitted and will appear in search results shortly.</div>
-          <button style={s.btnNext} onClick={() => navigate('/search')}>Browse all stays →</button>
+          <div style={s.successTitle}>Submitted to Bly.</div>
+          <div style={s.successSub}>Your property is in BLY.'s review queue. You'll be notified once it's approved and live.</div>
+          <button style={s.btnNext} onClick={() => navigate('/extranet')}>Go to your extranet →</button>
         </div>
       </div>
     </div>
