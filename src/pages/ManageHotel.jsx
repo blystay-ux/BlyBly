@@ -44,7 +44,7 @@ const s = {
   availDot: (n) => ({ width: 10, height: 10, borderRadius: '50%', background: n > 3 ? '#1a7a40' : n > 0 ? '#a06000' : '#cc0000', flexShrink: 0 }),
 }
 
-const EMPTY_ROOM = { name: '', description: '', price_night: '', max_guests: 2, total_rooms: 1, amenities: [], images: '' }
+const EMPTY_ROOM = { name: '', description: '', price_per_night: '', max_guests: 2, total_rooms: 1, amenities: [], images: '' }
 
 export default function ManageHotel() {
   const { user } = useAuth()
@@ -63,11 +63,11 @@ export default function ManageHotel() {
 
   async function loadData() {
     setLoading(true)
-    const { data: h } = await supabase.from('hotels').select('*').eq('user_id', user.id).order('created_at', { ascending: false })
+    const { data: h } = await supabase.from('hotels').select('*').eq('owner_id', user.id).order('created_at', { ascending: false })
     if (h?.length) {
       setHotels(h)
       for (const hotel of h) {
-        const { data: rooms } = await supabase.from('room_types').select('*').eq('hotel_id', hotel.id).order('price_night')
+        const { data: rooms } = await supabase.from('room_types').select('*').eq('hotel_id', hotel.id).order('price_per_night')
         setRoomTypes(prev => ({ ...prev, [hotel.id]: rooms || [] }))
       }
     }
@@ -95,13 +95,13 @@ export default function ManageHotel() {
   }
 
   async function saveRoom() {
-    if (!form.name || !form.price_night) { setError('Name and price are required.'); return }
+    if (!form.name || !form.price_per_night) { setError('Name and price are required.'); return }
     setSaving(true); setError('')
     const payload = {
       hotel_id: activeHotel.id,
       name: form.name,
       description: form.description,
-      price_night: parseFloat(form.price_night),
+      price_per_night: parseFloat(form.price_per_night),
       max_guests: parseInt(form.max_guests),
       total_rooms: parseInt(form.total_rooms),
       amenities: form.amenities,
@@ -156,7 +156,7 @@ export default function ManageHotel() {
         return (
           <div key={hotel.id} style={s.hotelCard}>
             <div style={s.hotelName}>{hotel.name}</div>
-            <div style={s.hotelMeta}>📍 {hotel.city}, {hotel.province} · {hotel.category} · R{Number(hotel.price_night).toLocaleString()} base rate</div>
+            <div style={s.hotelMeta}>📍 {hotel.city}, {hotel.province} · {hotel.category} · R{Number(hotel.price_per_night).toLocaleString()} base rate</div>
 
             <div style={s.sectionTitle}>
               <span>Room types ({rooms.length})</span>
@@ -178,7 +178,7 @@ export default function ManageHotel() {
                     <div style={s.availDot(room.total_rooms)} />
                     <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{room.total_rooms} available</span>
                   </div>
-                  <span style={s.pill}>R{Number(room.price_night).toLocaleString()}/night</span>
+                  <span style={s.pill}>R{Number(room.price_per_night).toLocaleString()}/night</span>
                   <button style={s.editBtn} onClick={() => openEdit(hotel, room)}>Edit</button>
                   <button style={s.deleteBtn} onClick={() => deleteRoom(room.id, hotel.id)}>Delete</button>
                 </div>
@@ -203,7 +203,7 @@ export default function ManageHotel() {
             <div style={s.grid2}>
               <div>
                 <label style={s.label}>Price per night (R)</label>
-                <input style={s.input} type="number" value={form.price_night} onChange={e => setForm(f => ({ ...f, price_night: e.target.value }))} placeholder="1800" />
+                <input style={s.input} type="number" value={form.price_per_night} onChange={e => setForm(f => ({ ...f, price_per_night: e.target.value }))} placeholder="1800" />
               </div>
               <div>
                 <label style={s.label}>Max guests</label>
