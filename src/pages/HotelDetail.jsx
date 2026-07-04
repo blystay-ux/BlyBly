@@ -325,14 +325,11 @@ export default function HotelDetail() {
                 )}
 
                 {user
-                  ? <button
-                      style={roomTypes.length > 0 && !selectedRoom ? s.disabledBtn : { ...s.bookBtn, opacity: booking ? 0.7 : 1 }}
-                      onClick={handleReserve}
-                      disabled={booking || (roomTypes.length > 0 && !selectedRoom)}>
-                      {booking ? 'Confirming…' : `Reserve · R${total.toLocaleString()}`}
-                    </button>
-                  : <button style={s.loginBtn} onClick={() => navigate('/auth')}>Sign in to reserve</button>
-                }
+               <button
+  style={s.bookBtn}
+  onClick={() => window.open('https://agents.hyperguest.store/', '_blank', 'noopener,noreferrer')}>
+  Book now · R{total.toLocaleString()}
+</button>
 
                 <div style={s.totalRow}>
                   <span>R{Number(nightRate).toLocaleString()} × {nights} night{nights > 1 ? 's' : ''}</span>
