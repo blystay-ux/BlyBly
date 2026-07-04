@@ -324,7 +324,7 @@ export default function HotelDetail() {
                   </div>
                 )}
 
-                {user
+              
                <button
   style={s.bookBtn}
   onClick={() => window.open('https://agents.hyperguest.store/', '_blank', 'noopener,noreferrer')}>
