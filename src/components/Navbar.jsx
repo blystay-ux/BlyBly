@@ -1,5 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
+import { Link } from 'react-router-dom'
 
 const styles = {
   nav: {
@@ -53,13 +52,6 @@ const styles = {
 }
 
 export default function Navbar() {
-  const navigate = useNavigate()
-  const { user, role, signOut } = useAuth()
-
-  const isAdmin = role === 'admin'
-  const isPartner = role === 'partner' || isAdmin
-  const initial = user?.email?.[0]?.toUpperCase()
-
   return (
     <nav style={styles.nav}>
       <div style={styles.inner}>
@@ -69,32 +61,9 @@ export default function Navbar() {
           Bly<span style={styles.dot} />
         </Link>
 
-        {/* Links + account */}
+        {/* Links */}
         <div style={styles.actions}>
-          <Link to="/search"      style={styles.link}>Stays</Link>
-          <Link to="/industry"    style={styles.link}>Industry</Link>
-          <Link to="/list-hotel"  style={styles.link}>List your property</Link>
-
-          {user ? (
-            <>
-              {isPartner && <Link to="/extranet" style={styles.link}>Extranet</Link>}
-              {isAdmin   && <Link to="/admin"    style={styles.linkAccent}>Admin</Link>}
-              <Link to="/my-bookings" style={styles.link}>My trips</Link>
-              <button style={styles.avatar} title={user.email}>{initial}</button>
-              <button style={styles.btnOutline} onClick={() => { signOut(); navigate('/') }}>
-                Sign out
-              </button>
-            </>
-          ) : (
-            <>
-              <button style={styles.btnOutline} onClick={() => navigate('/auth')}>
-                Sign in
-              </button>
-              <button style={styles.btnFill} onClick={() => navigate('/auth')}>
-                Sign up
-              </button>
-            </>
-          )}
+          <Link to="/industry" style={styles.link}>Industry</Link>
         </div>
 
       </div>
