@@ -7,6 +7,18 @@ const SAMPLE = {
   'the-silo-hotel': { id: '5', name: 'The Silo Hotel', slug: 'the-silo-hotel', city: 'Cape Town', province: 'Western Cape', short_desc: "Cape Town's most iconic luxury address", description: 'Perched atop the Zeitz Museum of Contemporary Art Africa in the historic V&A Waterfront, The Silo is a design landmark offering panoramic views of Table Mountain and the harbour.', price_per_night: 9200, rating: 4.8, review_count: 178, images: ['https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=900'], amenities: ['Rooftop pool','Spa','Restaurant','Bar','Gym','WiFi','Concierge'], category: 'boutique', seasonal_rates: [] },
 }
 
+function slugifyName(str) {
+  return (str || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'property'
+}
+
+// Builds the guest-facing HyperGuest storefront link for this specific property.
+// Falls back to the generic storefront if we don't have a HyperGuest property id
+// (e.g. a hotel that was added directly rather than via the HyperGuest catalog).
+function hyperguestUrl(hotel) {
+  if (!hotel?.hotel_code) return 'https://agents.hyperguest.store/'
+  return `https://agents.hyperguest.store/properties/${hotel.hotel_code}-${slugifyName(hotel.name)}`
+}
+
 function getRateForDates(hotel, checkIn, checkOut) {
   if (!hotel?.seasonal_rates?.length) return hotel?.price_per_night || 0
   const mid = new Date((new Date(checkIn).getTime() + new Date(checkOut).getTime()) / 2)
@@ -195,7 +207,11 @@ export default function HotelDetail() {
           {/* Left column */}
           <div>
             <div style={s.imgMain}>
-              <img src={hotel.images?.[0]} alt={hotel.name} style={s.img} />
+              <img
+                src={hotel.images?.[0] || hotel.image_url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80'}
+                alt={hotel.name}
+                style={s.img}
+              />
             </div>
             {hotel.images?.length > 1 && (
               <div style={s.imgRow}>
@@ -324,12 +340,11 @@ export default function HotelDetail() {
                   </div>
                 )}
 
-              
-               <button
-  style={s.bookBtn}
-  onClick={() => window.open('https://agents.hyperguest.store/', '_blank', 'noopener,noreferrer')}>
-  Book now · R{total.toLocaleString()}
-</button>
+                <button
+                  style={s.bookBtn}
+                  onClick={() => window.open(hyperguestUrl(hotel), '_blank', 'noopener,noreferrer')}>
+                  Book now on HyperGuest →
+                </button>
 
                 <div style={s.totalRow}>
                   <span>R{Number(nightRate).toLocaleString()} × {nights} night{nights > 1 ? 's' : ''}</span>
