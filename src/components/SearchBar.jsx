@@ -18,7 +18,7 @@ const s = {
     background: '#fff', borderRadius: 99,
     padding: '6px 6px 6px 0', display: 'flex', alignItems: 'center',
     boxShadow: '0 2px 24px rgba(0,0,0,0.07)',
-    width: '100%', maxWidth: 860,
+    width: '100%', maxWidth: 460,
   },
   field: {
     display: 'flex', alignItems: 'center', gap: 10,
@@ -49,17 +49,12 @@ const s = {
   },
 }
 
-// Accepts optional initial values so the Search page can pre-fill from URL params
-export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut, initialGuests }) {
-  const navigate  = useNavigate()
-  const today     = new Date().toISOString().split('T')[0]
-  const threeDays = new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0]
+// Accepts an optional initial value so the Search page can pre-fill from URL params
+export default function SearchBar({ initialCity }) {
+  const navigate = useNavigate()
 
-  const [cities,   setCities]   = useState(MAJOR_CITIES)
-  const [city,     setCity]     = useState(initialCity     || 'Cape Town')
-  const [checkIn,  setCheckIn]  = useState(initialCheckIn  || today)
-  const [checkOut, setCheckOut] = useState(initialCheckOut || threeDays)
-  const [guests,   setGuests]   = useState(initialGuests   || 2)
+  const [cities, setCities] = useState(MAJOR_CITIES)
+  const [city,   setCity]   = useState(initialCity || 'Cape Town')
 
   useEffect(() => {
     async function fetchListedCities() {
@@ -75,35 +70,17 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
   }, [])
 
   const go = () => {
-    const params = new URLSearchParams({ city, checkIn, checkOut, guests })
+    const params = new URLSearchParams({ city })
     navigate(`/search?${params}`)
   }
 
   return (
     <div style={s.wrapper}>
-      <div style={s.field}>
+      <div style={s.fieldLast}>
         <span style={s.icon}>📍</span>
         <select style={s.select} value={city} onChange={e => setCity(e.target.value)}>
           {cities.map(c => <option key={c}>{c}</option>)}
         </select>
-      </div>
-      <div style={s.field}>
-        <span style={s.icon}>📅</span>
-        <input type="date" style={s.input} value={checkIn} min={today}
-          onChange={e => setCheckIn(e.target.value)} />
-      </div>
-      <div style={s.field}>
-        <span style={s.icon}>📅</span>
-        <input type="date" style={s.input} value={checkOut} min={checkIn}
-          onChange={e => setCheckOut(e.target.value)} />
-      </div>
-      <div style={s.fieldLast}>
-        <span style={s.icon}>👥</span>
-        <input type="number" style={{ ...s.input, maxWidth: 36 }}
-          value={guests} min={1} max={20} onChange={e => setGuests(e.target.value)} />
-        <span style={{ fontSize: 13, color: '#999' }}>
-          {guests == 1 ? 'guest' : 'guests'}
-        </span>
       </div>
       <button style={s.searchBtn} onClick={go}>🔍 Search</button>
     </div>
