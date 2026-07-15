@@ -1,23 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { useAuth } from '../contexts/AuthContext'
 import SearchBar from '../components/SearchBar'
 
-function HotelCard({ hotel, checkIn, checkOut, guests }) {
+function HotelCard({ hotel }) {
   const navigate = useNavigate()
-  const { user } = useAuth()
 
-  const nights = checkIn && checkOut
-    ? Math.round((new Date(checkOut) - new Date(checkIn)) / 86400000)
-    : 1
-
-  const total = hotel.price_per_night ? hotel.price_per_night * nights : null
-
-  const handleBook = () => {
-    if (!user) { navigate('/auth'); return }
-    navigate(`/hotel/${hotel.slug}?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`)
-  }
+  const handleView = () => navigate(`/hotel/${hotel.slug}`)
 
   return (
     <div style={{
@@ -28,7 +17,7 @@ function HotelCard({ hotel, checkIn, checkOut, guests }) {
     }}>
       {/* Image */}
       <div style={{ position: 'relative', height: 220, overflow: 'hidden' }}
-        onClick={handleBook}>
+        onClick={handleView}>
         <img
           src={hotel.image_url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80'}
           alt={hotel.name}
@@ -86,18 +75,13 @@ function HotelCard({ hotel, checkIn, checkOut, guests }) {
                   R {Number(hotel.price_per_night).toLocaleString('en-ZA')}
                 </span>
                 <span style={{ fontSize: 13, color: '#999' }}> / night</span>
-                {total && nights > 1 && (
-                  <p style={{ fontSize: 12, color: '#aaa', marginTop: 2 }}>
-                    R {Number(total).toLocaleString('en-ZA')} total · {nights} nights
-                  </p>
-                )}
               </>
             ) : (
               <span style={{ fontSize: 14, color: '#aaa' }}>Price on request</span>
             )}
           </div>
           <button
-            onClick={handleBook}
+            onClick={handleView}
             style={{
               background: '#111', color: '#fff', borderRadius: 99,
               padding: '10px 20px', fontSize: 13, fontWeight: 700,
@@ -143,10 +127,7 @@ function EmptyState({ city }) {
 export default function Search() {
   const [searchParams] = useSearchParams()
 
-  const city     = searchParams.get('city')     || 'Cape Town'
-  const checkIn  = searchParams.get('checkIn')  || ''
-  const checkOut = searchParams.get('checkOut') || ''
-  const guests   = searchParams.get('guests')   || 2
+  const city = searchParams.get('city') || 'Cape Town'
 
   const [hotels,  setHotels]  = useState([])
   const [loading, setLoading] = useState(true)
@@ -184,12 +165,7 @@ export default function Search() {
         background: '#fff', borderBottom: '1px solid #E2DFDB',
         padding: '16px 40px', display: 'flex', justifyContent: 'center',
       }}>
-        <SearchBar
-          initialCity={city}
-          initialCheckIn={checkIn}
-          initialCheckOut={checkOut}
-          initialGuests={Number(guests)}
-        />
+        <SearchBar initialCity={city} />
       </div>
 
       {/* Results */}
@@ -225,13 +201,7 @@ export default function Search() {
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 24 }}>
             {hotels.map(hotel => (
-              <HotelCard
-                key={hotel.id}
-                hotel={hotel}
-                checkIn={checkIn}
-                checkOut={checkOut}
-                guests={guests}
-              />
+              <HotelCard key={hotel.id} hotel={hotel} />
             ))}
           </div>
         )}
