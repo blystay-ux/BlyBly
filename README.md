@@ -1,144 +1,68 @@
-# Bly. — Deployment Guide
+# Bly. — South Africa's travel platform
 
-> South African stays. Curated sharp.
+> Find. Book. Bly waar dit saak maak.
 
-This guide walks you through getting Bly running live — from zero to a deployed app — using **GitHub** for version control and **Supabase** for the database, with **Vercel** for hosting.
-
----
-
-## What you'll have at the end
-
-- ✅ A live URL (e.g. `bly.vercel.app`)
-- ✅ A Supabase database with 6 sample hotels
-- ✅ Hotel search, detail pages, and booking UI
-- ✅ Fully connected to your own Supabase backend
+South African OTA (~6% commission) built on React/Vite, Supabase, and Vercel, with live hotel inventory sourced from **HyperGuest** (connectivity partner) rather than manual property onboarding.
 
 ---
 
-## Prerequisites
+## Current status (as of Aug 2026)
 
-Install these first if you don't have them:
-
-- [Node.js 18+](https://nodejs.org) — check with `node -v`
-- [Git](https://git-scm.com) — check with `git -v`
-- A [GitHub account](https://github.com)
-- A [Supabase account](https://supabase.com) (free)
-- A [Vercel account](https://vercel.com) (free, sign in with GitHub)
+- ✅ Live search: city → real HyperGuest properties, rooms, and rates, with ZAR currency conversion
+- ✅ Property detail page with room/rate selection and live **pre-book** price confirmation
+- ⏳ Full booking completion — built and code-complete, but blocked pending HyperGuest granting booking permission on the certification account (in progress with their account team)
+- ⏳ PCI-compliant payment gateway (PayFast / Yoco / Peach Payments) — not yet integrated; booking completion is gated on this
+- 🔜 BLY Trade — closed discount channel for travel-industry staff (schema exists: `industry_memberships`, `rate_plans.audience = 'industry'`)
 
 ---
 
-## Step 1 — Set up Supabase
+## Stack
 
-### 1a. Create a new project
-
-1. Go to [supabase.com](https://supabase.com) and sign in
-2. Click **"New project"**
-3. Fill in:
-   - **Name:** `bly`
-   - **Database password:** choose a strong password and save it
-   - **Region:** pick the closest to South Africa (e.g. `eu-west-2` London)
-4. Click **"Create new project"** — wait ~2 minutes for it to provision
-
-### 1b. Run the schema
-
-1. In your Supabase dashboard, click **SQL Editor** in the left sidebar
-2. Click **"New query"**
-3. Open the file `supabase/schema.sql` from this project
-4. Copy the entire contents and paste into the SQL editor
-5. Click **"Run"** (or press `Cmd/Ctrl + Enter`)
-6. You should see: `Success. No rows returned`
-7. Verify: go to **Table Editor** — you should see `hotels`, `bookings`, `reviews` tables
-8. Click the `hotels` table — you should see 6 sample hotels
-
-### 1c. Get your API keys
-
-1. Go to **Settings** → **API** in your Supabase dashboard
-2. Copy these two values (you'll need them soon):
-   - **Project URL** — looks like `https://abcdefgh.supabase.co`
-   - **anon / public key** — a long JWT string
+| Layer | Technology |
+|---|---|
+| Frontend | React 18 + Vite |
+| Routing | React Router v6 |
+| Database | Supabase (Postgres) |
+| Backend logic | Supabase Edge Functions (Deno) |
+| Inventory | HyperGuest API (search, pre-book, book, cancel) |
+| Hosting | Vercel |
+| Fonts | Plus Jakarta Sans |
+| Styling | CSS custom properties + Tailwind utilities |
 
 ---
 
-## Step 2 — Set up GitHub
+## Project structure
 
-### 2a. Create a new repository
-
-1. Go to [github.com/new](https://github.com/new)
-2. Set:
-   - **Repository name:** `bly`
-   - **Visibility:** Public or Private (your choice)
-   - Do NOT initialise with README (you already have one)
-3. Click **"Create repository"**
-4. Copy the repo URL — e.g. `https://github.com/yourusername/bly.git`
-
-### 2b. Push the code
-
-Open a terminal in the `bly` project folder and run:
-
-```bash
-# Install dependencies
-npm install
-
-# Copy the env example and fill in your Supabase keys
-cp .env.example .env
+```
+BlyBly/
+├── src/
+│   ├── lib/
+│   │   └── supabase.js          # Supabase client
+│   ├── components/
+│   │   ├── Navbar.jsx
+│   │   └── SearchBar.jsx        # City/date/guest search, calls hg_cities view
+│   ├── pages/
+│   │   ├── Home.jsx
+│   │   ├── Search.jsx           # Calls hyperguest-city-search Edge Function
+│   │   ├── HotelDetail.jsx      # Room/rate selection + hyperguest-prebook
+│   │   ├── Auth.jsx / Admin.jsx / Extranet.jsx / Industry.jsx /
+│   │   │   ListHotel.jsx / ManageHotel.jsx / MyBookings.jsx
+│   │   └── ComingSoon.jsx       # Now only used at /partners, not the homepage
+│   ├── contexts/AuthContext.jsx
+│   ├── App.jsx                  # Routes
+│   ├── main.jsx                 # Entry point
+│   └── index.css                # Global styles + CSS vars
+├── supabase/
+│   └── schema.sql               # REFERENCE snapshot of the live DB schema
+├── index.html                   # Vite entry (mounts src/main.jsx)
+├── vite.config.js
+├── vercel.json
+├── package.json
+└── .gitignore
 ```
 
-Open `.env` and replace the placeholder values:
-
-```env
-VITE_SUPABASE_URL=https://your-project-id.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-public-key-here
-```
-
-Then push to GitHub:
-
-```bash
-git init
-git add .
-git commit -m "feat: initial Bly. setup"
-git branch -M main
-git remote add origin https://github.com/yourusername/bly.git
-git push -u origin main
-```
-
-> ⚠️ The `.gitignore` already excludes `.env` so your keys are safe.
-
----
-
-## Step 3 — Deploy to Vercel
-
-### 3a. Import the project
-
-1. Go to [vercel.com](https://vercel.com) and sign in with GitHub
-2. Click **"Add New Project"**
-3. Click **"Import"** next to your `bly` repository
-4. Vercel will detect it as a Vite project automatically
-
-### 3b. Add environment variables
-
-Before clicking "Deploy", scroll down to **"Environment Variables"** and add:
-
-| Key | Value |
-|-----|-------|
-| `VITE_SUPABASE_URL` | `https://your-project-id.supabase.co` |
-| `VITE_SUPABASE_ANON_KEY` | `your-anon-public-key-here` |
-
-### 3c. Deploy
-
-1. Click **"Deploy"**
-2. Wait ~1 minute
-3. You'll get a live URL like `https://bly-yourusername.vercel.app` 🎉
-
----
-
-## Step 4 — Test it's all working
-
-Visit your live URL and check:
-
-- [ ] Home page loads with hero image and 6 hotels in the carousel
-- [ ] Search for "Cape Town" — shows filtered results
-- [ ] Click a hotel card — detail page loads with pricing
-- [ ] Change dates on the booking card — total updates correctly
+**Edge Functions** (deployed directly via Supabase, not in this repo's source tree — see the Supabase dashboard):
+`hyperguest-static-sync`, `hyperguest-search`, `hyperguest-city-search`, `hyperguest-prebook`, `hyperguest-book`, `hyperguest-cancel`, `hyperguest-booking-get`, `hyperguest-booking-list`.
 
 ---
 
@@ -146,78 +70,42 @@ Visit your live URL and check:
 
 ```bash
 npm install
-cp .env.example .env  # fill in your keys
-npm run dev           # runs at http://localhost:5173
+cp .env.example .env   # fill in your Supabase project URL + anon key
+npm run dev             # runs at http://localhost:5173
 ```
 
----
-
-## Project structure
-
-```
-bly/
-├── src/
-│   ├── lib/
-│   │   └── supabase.js          # Supabase client
-│   ├── components/
-│   │   ├── Navbar.jsx
-│   │   ├── SearchBar.jsx
-│   │   ├── HotelCard.jsx
-│   │   └── FeaturedCarousel.jsx
-│   ├── pages/
-│   │   ├── Home.jsx             # Landing page
-│   │   ├── Search.jsx           # Search results
-│   │   └── HotelDetail.jsx      # Hotel + booking card
-│   ├── App.jsx                  # Routes
-│   ├── main.jsx                 # Entry point
-│   └── index.css                # Global styles + CSS vars
-├── supabase/
-│   └── schema.sql               # Tables, RLS, seed data
-├── index.html
-├── vite.config.js
-├── package.json
-└── .env.example
+Required env vars (see `.env.example`):
+```env
+VITE_SUPABASE_URL=https://sfzinvadnmrbxgttnygj.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-public-key-here
 ```
 
----
-
-## Add your own hotels
-
-In Supabase → Table Editor → `hotels`, click **"Insert row"** to add your own properties. Required fields:
-
-| Field | Type | Example |
-|-------|------|---------|
-| `name` | text | `"The Grand Franschhoek"` |
-| `slug` | text | `"grand-franschhoek"` (unique URL key) |
-| `city` | text | `"Franschhoek"` |
-| `province` | text | `"Western Cape"` |
-| `price_night` | number | `5500` |
-| `images` | text[] | `{https://...jpg}` |
-| `featured` | boolean | `true` |
-| `category` | text | `hotel` / `lodge` / `boutique` |
+`.gitignore` excludes `.env` — never commit real keys to this repo, which is public.
 
 ---
 
-## Future enhancements
+## Database schema
 
-- **Auth**: Supabase Auth is already wired in — enable email/Google login
-- **Bookings**: The `bookings` table is ready; add a checkout flow
-- **Reviews**: The `reviews` table is set up; build a review form
-- **Map**: Add a hotel map view using React Leaflet
-- **Payments**: Integrate Peach Payments or Yoco for ZAR payments
+`supabase/schema.sql` is a **reference snapshot**, regenerated from the live database, not a from-scratch setup script — the live Supabase project is the source of truth. If you change the schema via the dashboard or a migration, regenerate this file rather than hand-editing it.
+
+Key things to know if you're touching the schema:
+- Every table has **Row Level Security enabled**. Most tables have **zero RLS policies** — they're written to and read from exclusively via Edge Functions using the service-role key, which bypasses RLS. If you add a new **direct frontend query** against a table, check whether it has a matching policy first — RLS-enabled-with-no-policy means silent zero-row results, not an error, which is easy to misdiagnose as a frontend bug.
+- `hg_property_index` has ~53k+ rows with no natural ordering. Never query it directly with a `LIMIT` expecting representative results (e.g. for a city list) — use the `hg_cities` view instead.
+- `hotels` (the original, non-HyperGuest table) currently has 0 active rows. All live search/booking activity runs through the `hg_*` tables.
 
 ---
 
-## Tech stack
+## HyperGuest integration notes
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React 18 + Vite |
-| Routing | React Router v6 |
-| Database | Supabase (PostgreSQL) |
-| Auth | Supabase Auth (ready to enable) |
-| Hosting | Vercel |
-| Fonts | Syne + DM Sans |
-| Styling | CSS custom properties |
+- Test/certification property ID: **19912** — all testing must use this property until HyperGuest issues a LIVE token
+- Booking endpoint timeout can be up to 300 seconds per HyperGuest's own docs — `hyperguest-booking-list` exists as the required fallback for reconciling booking status if a request times out client-side before HyperGuest responds
+- `hyperguest-book` hardcodes HyperGuest's own published test card number and refuses to accept card details from any caller — no real payment card data can reach this function until PCI-compliant handling is built
+- Full API call audit trail lives in `hg_api_logs` (used for HyperGuest's certification log requirement)
 
-<!-- trigger redeploy -->
+---
+
+## Deploying
+
+Push to `main` → Vercel auto-deploys (`vercel.json`: `vite build`, output `dist/`, SPA rewrite to `index.html`).
+
+Node.js version: **24.x** (set in Vercel project settings — 20.x deployments stop working after Oct 2026).
