@@ -13,31 +13,49 @@ const MAJOR_CITIES = [
   'Sabi Sand', 'Marloth Park', 'Upington', 'Springbok', 'Tzaneen',
 ]
 
+// Sensible defaults: check-in tomorrow, 2-night stay — matches what most
+// travel sites default to, and gives HyperGuest search valid dates without
+// forcing the user to pick anything before their first search.
+function defaultCheckIn() {
+  const d = new Date()
+  d.setDate(d.getDate() + 1)
+  return d.toISOString().split('T')[0]
+}
+function addNights(dateStr, nights) {
+  const d = new Date(dateStr)
+  d.setDate(d.getDate() + nights)
+  return d.toISOString().split('T')[0]
+}
+function nightsBetween(checkIn, checkOut) {
+  const ms = new Date(checkOut) - new Date(checkIn)
+  return Math.max(1, Math.round(ms / (1000 * 60 * 60 * 24)))
+}
+
 const s = {
   wrapper: {
     background: '#fff', borderRadius: 99,
     padding: '6px 6px 6px 0', display: 'flex', alignItems: 'center',
     boxShadow: '0 2px 24px rgba(0,0,0,0.07)',
-    width: '100%', maxWidth: 460,
+    width: '100%', maxWidth: 720, flexWrap: 'wrap', rowGap: 6,
   },
   field: {
-    display: 'flex', alignItems: 'center', gap: 10,
-    flex: 1, padding: '10px 20px',
+    display: 'flex', alignItems: 'center', gap: 8,
+    flex: 1, minWidth: 130, padding: '10px 16px',
     borderRight: '1px solid #E2DFDB',
   },
   fieldLast: {
-    display: 'flex', alignItems: 'center', gap: 10,
-    flex: 1, padding: '10px 20px',
+    display: 'flex', alignItems: 'center', gap: 8,
+    flex: 1, minWidth: 130, padding: '10px 16px',
   },
-  icon: { fontSize: 16, flexShrink: 0 },
+  icon: { fontSize: 15, flexShrink: 0 },
   input: {
     border: 'none', outline: 'none', background: 'none',
-    fontSize: 14, color: '#111', width: '100%',
+    fontSize: 13, color: '#111', width: '100%',
     fontFamily: 'var(--font-body)',
   },
   select: {
     border: 'none', outline: 'none', background: 'none',
-    fontSize: 14, color: '#111', width: '100%',
+    fontSize: 13, color: '#111', width: '100%',
     appearance: 'none', fontFamily: 'var(--font-body)', cursor: 'pointer',
   },
   searchBtn: {
@@ -47,19 +65,24 @@ const s = {
     cursor: 'pointer', display: 'flex', alignItems: 'center',
     gap: 6, whiteSpace: 'nowrap', flexShrink: 0, marginLeft: 6,
   },
+  error: { width: '100%', color: '#ef4056', fontSize: 12, fontWeight: 600, padding: '4px 20px 0' },
 }
 
-// Accepts an optional initial value so the Search page can pre-fill from URL params
-export default function SearchBar({ initialCity }) {
+// Accepts optional initial values so the Search page can pre-fill from URL params
+export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut, initialAdults }) {
   const navigate = useNavigate()
 
   const [cities, setCities] = useState(MAJOR_CITIES)
-  const [city,   setCity]   = useState(initialCity || 'Cape Town')
+  const [city, setCity] = useState(initialCity || 'Cape Town')
+  const [checkIn, setCheckIn] = useState(initialCheckIn || defaultCheckIn())
+  const [checkOut, setCheckOut] = useState(initialCheckOut || addNights(initialCheckIn || defaultCheckIn(), 2))
+  const [adults, setAdults] = useState(initialAdults || 2)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     async function fetchListedCities() {
       const { data } = await supabase
-        .from('hotels').select('city').not('city', 'is', null)
+        .from('hg_property_index').select('city').not('city', 'is', null).limit(1000)
       if (data) {
         const listed = data.map(h => h.city).filter(Boolean)
         const merged = Array.from(new Set([...MAJOR_CITIES, ...listed])).sort()
@@ -69,20 +92,75 @@ export default function SearchBar({ initialCity }) {
     fetchListedCities()
   }, [])
 
+  // If check-out ever ends up before/equal to check-in (e.g. user picks an
+  // earlier check-in after already setting check-out), push check-out along.
+  useEffect(() => {
+    if (new Date(checkOut) <= new Date(checkIn)) {
+      setCheckOut(addNights(checkIn, 1))
+    }
+  }, [checkIn])
+
   const go = () => {
-    const params = new URLSearchParams({ city })
+    setError('')
+    if (!checkIn || !checkOut) {
+      setError('Please select your check-in and check-out dates.')
+      return
+    }
+    if (new Date(checkOut) <= new Date(checkIn)) {
+      setError('Check-out must be after check-in.')
+      return
+    }
+    if (new Date(checkIn) < new Date(new Date().toDateString())) {
+      setError('Check-in date is in the past.')
+      return
+    }
+    const params = new URLSearchParams({
+      city,
+      checkIn,
+      nights: String(nightsBetween(checkIn, checkOut)),
+      adults: String(adults),
+    })
     navigate(`/search?${params}`)
   }
 
   return (
-    <div style={s.wrapper}>
-      <div style={s.fieldLast}>
-        <span style={s.icon}>📍</span>
-        <select style={s.select} value={city} onChange={e => setCity(e.target.value)}>
-          {cities.map(c => <option key={c}>{c}</option>)}
-        </select>
+    <div>
+      <div style={s.wrapper}>
+        <div style={s.field}>
+          <span style={s.icon}>📍</span>
+          <select style={s.select} value={city} onChange={e => setCity(e.target.value)}>
+            {cities.map(c => <option key={c}>{c}</option>)}
+          </select>
+        </div>
+        <div style={s.field}>
+          <span style={s.icon}>📅</span>
+          <input
+            type="date" style={s.input} value={checkIn}
+            min={new Date().toISOString().split('T')[0]}
+            onChange={e => setCheckIn(e.target.value)}
+            aria-label="Check-in date"
+          />
+        </div>
+        <div style={s.field}>
+          <span style={s.icon}>📅</span>
+          <input
+            type="date" style={s.input} value={checkOut}
+            min={addNights(checkIn, 1)}
+            onChange={e => setCheckOut(e.target.value)}
+            aria-label="Check-out date"
+          />
+        </div>
+        <div style={s.fieldLast}>
+          <span style={s.icon}>🧑‍🤝‍🧑</span>
+          <select style={s.select} value={adults} onChange={e => setAdults(Number(e.target.value))}>
+            {[1, 2, 3, 4, 5, 6].map(n => (
+              <option key={n} value={n}>{n} {n === 1 ? 'adult' : 'adults'}</option>
+            ))}
+          </select>
+        </div>
+        <button style={s.searchBtn} onClick={go}>🔍 Search</button>
       </div>
-      <button style={s.searchBtn} onClick={go}>🔍 Search</button>
+      {error && <div style={s.error}>{error}</div>}
     </div>
   )
 }
