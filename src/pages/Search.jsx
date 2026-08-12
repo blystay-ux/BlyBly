@@ -3,93 +3,88 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import SearchBar from '../components/SearchBar'
 
-function HotelCard({ hotel }) {
-  const navigate = useNavigate()
+const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80'
 
-  const handleView = () => navigate(`/hotel/${hotel.slug}`)
+// Finds the cheapest sell price across all rooms/rate plans for a property,
+// so the card can show one headline "from RXXX/night" figure.
+function cheapestOffer(property) {
+  let cheapest = null
+  for (const room of property.rooms ?? []) {
+    for (const plan of room.ratePlans ?? []) {
+      const sell = plan.prices?.sell
+      if (!sell) continue
+      if (!cheapest || sell.price < cheapest.price) {
+        cheapest = { price: sell.price, currency: sell.currency, roomName: room.roomName, boardBasis: plan.board }
+      }
+    }
+  }
+  return cheapest
+}
+
+function ResultCard({ property, checkIn, nights, adults }) {
+  const navigate = useNavigate()
+  const offer = cheapestOffer(property)
+  const info = property.propertyInfo
+
+  const handleView = () => {
+    // Hand the full search result forward via router state so HotelDetail
+    // doesn't need to re-run a search just to show what we already have.
+    navigate(`/hotel/hg-${property.propertyId}`, {
+      state: { property, checkIn, nights, adults },
+    })
+  }
 
   return (
-    <div style={{
-      background: '#fff', borderRadius: 20, overflow: 'hidden',
-      boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
-      transition: 'box-shadow 0.2s',
-      cursor: 'pointer',
-    }}>
-      {/* Image */}
-      <div style={{ position: 'relative', height: 220, overflow: 'hidden' }}
-        onClick={handleView}>
+    <div
+      onClick={handleView}
+      style={{
+        background: '#fff', borderRadius: 20, overflow: 'hidden',
+        boxShadow: '0 2px 16px rgba(0,0,0,0.06)', cursor: 'pointer',
+      }}
+    >
+      <div style={{ position: 'relative', height: 220, overflow: 'hidden' }}>
         <img
-          src={hotel.image_url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80'}
-          alt={hotel.name}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s' }}
-          onMouseEnter={e => e.target.style.transform = 'scale(1.04)'}
-          onMouseLeave={e => e.target.style.transform = 'scale(1)'}
+          src={property.thumbnailImage || PLACEHOLDER_IMG}
+          alt={info.name}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         />
-        {hotel.is_featured && (
-          <div style={{
-            position: 'absolute', top: 14, left: 14,
-            background: '#ef4056', color: '#fff',
-            borderRadius: 99, padding: '4px 12px',
-            fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
-          }}>
-            FEATURED
-          </div>
-        )}
       </div>
-
-      {/* Details */}
       <div style={{ padding: '18px 20px 20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
           <div>
             <h3 style={{ fontWeight: 800, fontSize: 17, letterSpacing: '-0.03em', marginBottom: 2 }}>
-              {hotel.name}
+              {info.name}
             </h3>
-            <p style={{ fontSize: 13, color: '#888' }}>
-              📍 {hotel.location || hotel.city}
-            </p>
+            <p style={{ fontSize: 13, color: '#888' }}>📍 {info.cityName}, {info.countryCode}</p>
           </div>
-          {hotel.rating && (
+          {info.starRating > 0 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
               <span style={{ color: '#f59e0b', fontSize: 14 }}>★</span>
-              <span style={{ fontWeight: 700, fontSize: 14 }}>{hotel.rating}</span>
+              <span style={{ fontWeight: 700, fontSize: 14 }}>{info.starRating}</span>
             </div>
           )}
         </div>
 
-        {hotel.description && (
-          <p style={{
-            fontSize: 13, color: '#666', marginTop: 10,
-            lineHeight: 1.5,
-            display: '-webkit-box', WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical', overflow: 'hidden',
-          }}>
-            {hotel.description}
-          </p>
-        )}
-
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>
           <div>
-            {hotel.price_per_night ? (
+            {offer ? (
               <>
+                <span style={{ fontSize: 11, color: '#999', display: 'block' }}>from</span>
                 <span style={{ fontWeight: 800, fontSize: 18 }}>
-                  R {Number(hotel.price_per_night).toLocaleString('en-ZA')}
+                  {offer.currency} {Number(offer.price).toLocaleString()}
                 </span>
                 <span style={{ fontSize: 13, color: '#999' }}> / night</span>
               </>
             ) : (
-              <span style={{ fontSize: 14, color: '#aaa' }}>Price on request</span>
+              <span style={{ fontSize: 14, color: '#aaa' }}>No availability for these dates</span>
             )}
           </div>
           <button
-            onClick={handleView}
             style={{
               background: '#111', color: '#fff', borderRadius: 99,
               padding: '10px 20px', fontSize: 13, fontWeight: 700,
-              border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)',
-              transition: 'background 0.15s',
+              border: 'none', cursor: 'pointer',
             }}
-            onMouseEnter={e => e.target.style.background = '#ef4056'}
-            onMouseLeave={e => e.target.style.background = '#111'}
           >
             View →
           </button>
@@ -99,23 +94,25 @@ function HotelCard({ hotel }) {
   )
 }
 
-function EmptyState({ city }) {
+function EmptyState({ city, noneAvailable }) {
   const navigate = useNavigate()
   return (
     <div style={{ textAlign: 'center', padding: '80px 20px' }}>
       <div style={{ fontSize: 56, marginBottom: 16 }}>🔍</div>
       <h2 style={{ fontWeight: 800, fontSize: 24, letterSpacing: '-0.04em', marginBottom: 8 }}>
-        No stays found in {city}
+        {noneAvailable ? `No availability in ${city} for these dates` : `No stays found in ${city}`}
       </h2>
       <p style={{ color: '#888', fontSize: 15, marginBottom: 28 }}>
-        We don't have any listings there yet — try another destination.
+        {noneAvailable
+          ? 'Try different dates or another destination.'
+          : "We don't have any properties there yet — try another destination."}
       </p>
       <button
         onClick={() => navigate('/')}
         style={{
           background: '#ef4056', color: '#fff', borderRadius: 99,
           padding: '12px 28px', fontSize: 14, fontWeight: 700,
-          border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)',
+          border: 'none', cursor: 'pointer',
         }}
       >
         ← Back to home
@@ -128,51 +125,47 @@ export default function Search() {
   const [searchParams] = useSearchParams()
 
   const city = searchParams.get('city') || 'Cape Town'
+  const checkIn = searchParams.get('checkIn')
+  const nights = Number(searchParams.get('nights') || 2)
+  const adults = Number(searchParams.get('adults') || 2)
 
-  const [hotels,  setHotels]  = useState([])
+  const [results, setResults] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
-    async function fetchHotels() {
+    async function runSearch() {
       setLoading(true)
-
-      let query = supabase
-        .from('hotels')
-        .select('*')
-        .eq('is_active', true)
-        .order('is_featured', { ascending: false })
-        .order('created_at', { ascending: false })
-
-      // Filter by city — case-insensitive match
-      if (city) {
-        query = query.ilike('city', `%${city}%`)
+      setError(null)
+      try {
+        const { data, error: fnError } = await supabase.functions.invoke('hyperguest-city-search', {
+          body: { city, checkIn, nights, adults, customerNationality: 'ZA', currency: 'ZAR' },
+        })
+        if (fnError) throw fnError
+        // Only show properties that actually have rooms available for these dates.
+        const withAvailability = (data?.results ?? []).filter(p => p.rooms?.length > 0)
+        setResults(withAvailability)
+      } catch (err) {
+        console.error('City search failed:', err)
+        setError(err.message || 'Search failed. Please try again.')
+        setResults([])
       }
-
-      const { data, error } = await query
-
-      if (!error && data) setHotels(data)
       setLoading(false)
     }
-
-    fetchHotels()
-  }, [city])
+    if (checkIn) runSearch()
+  }, [city, checkIn, nights, adults])
 
   return (
     <div style={{ minHeight: 'calc(100vh - var(--nav-height))', background: '#F8F7F5' }}>
-
-      {/* Search bar strip */}
       <div style={{
         background: '#fff', borderBottom: '1px solid #E2DFDB',
         padding: '16px 40px', display: 'flex', justifyContent: 'center',
       }}>
-        <SearchBar initialCity={city} />
+        <SearchBar initialCity={city} initialCheckIn={checkIn} initialAdults={adults} />
       </div>
 
-      {/* Results */}
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 40px 60px' }}>
-
-        {/* Header */}
-        {!loading && (
+        {!loading && !error && (
           <div style={{ marginBottom: 28 }}>
             <p style={{ fontSize: 13, color: '#ef4056', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
               Search results
@@ -180,33 +173,34 @@ export default function Search() {
             <h1 style={{ fontWeight: 800, fontSize: 32, letterSpacing: '-0.05em', marginTop: 4 }}>
               Stays in {city}
               <span style={{ fontWeight: 400, fontSize: 18, color: '#999', marginLeft: 12 }}>
-                {loading ? '' : `${hotels.length} ${hotels.length === 1 ? 'property' : 'properties'}`}
+                {results.length} {results.length === 1 ? 'property' : 'properties'} · {checkIn} · {nights} {nights === 1 ? 'night' : 'nights'}
               </span>
             </h1>
           </div>
         )}
 
         {loading ? (
-          /* Skeleton loader */
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 24 }}>
             {[1, 2, 3, 4, 5, 6].map(i => (
-              <div key={i} style={{
-                height: 360, borderRadius: 20, background: '#fff',
-                animation: 'pulse 1.5s ease-in-out infinite',
-              }} />
+              <div key={i} style={{ height: 360, borderRadius: 20, background: '#fff', opacity: 0.7 }} />
             ))}
           </div>
-        ) : hotels.length === 0 ? (
-          <EmptyState city={city} />
+        ) : error ? (
+          <div style={{ background: '#fff', borderRadius: 20, padding: '56px 24px', textAlign: 'center' }}>
+            <div style={{ fontSize: 44, marginBottom: 12 }}>⚠️</div>
+            <p style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: 18 }}>Something went wrong</p>
+            <p style={{ color: '#888', fontSize: 14, marginTop: 6 }}>{error}</p>
+          </div>
+        ) : results.length === 0 ? (
+          <EmptyState city={city} noneAvailable />
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 24 }}>
-            {hotels.map(hotel => (
-              <HotelCard key={hotel.id} hotel={hotel} />
+            {results.map(property => (
+              <ResultCard key={property.propertyId} property={property} checkIn={checkIn} nights={nights} adults={adults} />
             ))}
           </div>
         )}
       </div>
-
     </div>
   )
 }
