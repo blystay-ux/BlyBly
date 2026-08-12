@@ -5,6 +5,12 @@ import SearchBar from '../components/SearchBar'
 
 const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80'
 
+function addNights(dateStr, nights) {
+  const d = new Date(dateStr)
+  d.setDate(d.getDate() + nights)
+  return d.toISOString().split('T')[0]
+}
+
 // Finds the cheapest sell price across all rooms/rate plans for a property,
 // so the card can show one headline "from RXXX/night" figure.
 function cheapestOffer(property) {
@@ -161,7 +167,7 @@ export default function Search() {
         background: '#fff', borderBottom: '1px solid #E2DFDB',
         padding: '16px 40px', display: 'flex', justifyContent: 'center',
       }}>
-        <SearchBar initialCity={city} initialCheckIn={checkIn} initialAdults={adults} />
+        <SearchBar initialCity={city} initialCheckIn={checkIn} initialCheckOut={addNights(checkIn, nights)} initialAdults={adults} />
       </div>
 
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 40px 60px' }}>
