@@ -13,9 +13,6 @@ const MAJOR_CITIES = [
   'Sabi Sand', 'Marloth Park', 'Upington', 'Springbok', 'Tzaneen',
 ]
 
-// Sensible defaults: check-in tomorrow, 2-night stay — matches what most
-// travel sites default to, and gives HyperGuest search valid dates without
-// forcing the user to pick anything before their first search.
 function defaultCheckIn() {
   const d = new Date()
   d.setDate(d.getDate() + 1)
@@ -81,10 +78,18 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
 
   useEffect(() => {
     async function fetchListedCities() {
-      const { data } = await supabase
-        .from('hg_property_index').select('city').not('city', 'is', null).limit(1000)
+      // hg_cities is a DISTINCT view over hg_property_index (53k+ rows) --
+      // querying the raw table with a row limit would only return an
+      // arbitrary slice and silently miss most cities (this was a real bug:
+      // Haifa's properties have high hotel_ids and never appeared in the
+      // first 1000 raw rows). The view returns every distinct city, cheaply.
+      const { data, error } = await supabase.from('hg_cities').select('city')
+      if (error) {
+        console.error('Failed to load HyperGuest city list:', error)
+        return
+      }
       if (data) {
-        const listed = data.map(h => h.city).filter(Boolean)
+        const listed = data.map(row => row.city).filter(Boolean)
         const merged = Array.from(new Set([...MAJOR_CITIES, ...listed])).sort()
         setCities(merged)
       }
@@ -92,8 +97,6 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
     fetchListedCities()
   }, [])
 
-  // If check-out ever ends up before/equal to check-in (e.g. user picks an
-  // earlier check-in after already setting check-out), push check-out along.
   useEffect(() => {
     if (new Date(checkOut) <= new Date(checkIn)) {
       setCheckOut(addNights(checkIn, 1))
