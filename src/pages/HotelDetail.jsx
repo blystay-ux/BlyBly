@@ -20,17 +20,6 @@ function flattenOffers(property) {
   return offers.sort((a, b) => (a.plan.prices?.sell?.price ?? 0) - (b.plan.prices?.sell?.price ?? 0))
 }
 
-function emptyGuest() {
-  return { firstName: '', lastName: '' }
-}
-
-function emptyLeadGuest() {
-  return {
-    firstName: '', lastName: '', title: 'MR', birthDate: '',
-    email: '', phone: '', address: '', city: '', state: '', zip: '', country: 'ZA',
-  }
-}
-
 function describeCancellationPolicy(p) {
   const penalty = p.penaltyType === 'percent' ? `${p.amount}%`
     : p.penaltyType === 'nights' ? `${p.amount} night(s)`
@@ -43,8 +32,6 @@ function describeCancellationPolicy(p) {
 const s = {
   page: { maxWidth: 860, margin: '0 auto' },
 
-  // ── LOCKED header: hero photo + thumbnails + CTA bar, pinned below the
-  // site navbar. Everything else scrolls underneath it.
   lockedHeader: {
     position: 'sticky', top: 'var(--nav-height)', zIndex: 15,
     background: 'var(--bg)', boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
@@ -77,7 +64,6 @@ const s = {
   ctaBtnDisabled: { opacity: 0.4, cursor: 'not-allowed' },
   errorBar: { background: '#FDEBEC', color: '#ef4056', fontSize: 12, fontWeight: 600, padding: '8px 24px' },
 
-  // ── Scrollable content below the locked header ──
   content: { padding: '20px 24px 60px' },
   remark: { background: '#F5D6DE', borderRadius: 12, padding: '12px 16px', fontSize: 13, color: '#000', marginBottom: 10, lineHeight: 1.5 },
   sectionTitle: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 18, marginTop: 28, marginBottom: 12, letterSpacing: '-0.3px', color: 'var(--text)' },
@@ -101,14 +87,6 @@ const s = {
   priceRowTotal: { fontWeight: 700, borderBottom: 'none', paddingTop: 8 },
   taxItem: { fontSize: 11, color: 'var(--text-muted)', padding: '3px 0' },
   policyItem: { fontSize: 12, padding: '4px 0' },
-
-  formLabel: { fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 4, marginTop: 12, display: 'block' },
-  formInput: { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, fontFamily: 'var(--font-body)', boxSizing: 'border-box' },
-  formTextarea: { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, fontFamily: 'var(--font-body)', boxSizing: 'border-box', minHeight: 70 },
-  formRow: { display: 'flex', gap: 8 },
-  guestBlock: { marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border)' },
-
-  confirmBox: { background: 'var(--bg-card)', borderRadius: 20, padding: 40, textAlign: 'center', boxShadow: '0 4px 32px rgba(0,0,0,0.08)', margin: '40px 24px' },
 }
 
 export default function HotelDetail() {
@@ -179,19 +157,9 @@ export default function HotelDetail() {
     loadStatic()
   }, [property?.propertyId])
 
-  const [step, setStep] = useState('select')
   const [selectedOffer, setSelectedOffer] = useState(null)
-
   const [prebooking, setPrebooking] = useState(false)
-  const [prebookResult, setPrebookResult] = useState(null)
   const [prebookError, setPrebookError] = useState(null)
-
-  const [leadGuest, setLeadGuest] = useState(emptyLeadGuest())
-  const [roomGuests, setRoomGuests] = useState([])
-  const [specialRequests, setSpecialRequests] = useState('')
-  const [booking, setBooking] = useState(false)
-  const [bookingResult, setBookingResult] = useState(null)
-  const [bookingError, setBookingError] = useState(null)
 
   const [legacyLoading, setLegacyLoading] = useState(!isHyperGuest)
   const [legacyProperty, setLegacyProperty] = useState(null)
@@ -207,12 +175,6 @@ export default function HotelDetail() {
     loadLegacy()
   }, [slug, isHyperGuest])
 
-  useEffect(() => {
-    if (selectedOffer) {
-      setRoomGuests(Array.from({ length: adults }, emptyGuest))
-    }
-  }, [selectedOffer, adults])
-
   const offers = property ? flattenOffers(property) : []
   const photos = (staticDetail?.images || []).filter(i => i.type === 'photo')
   const facilities = (staticDetail?.facilities || []).filter(f => f.name)
@@ -222,7 +184,6 @@ export default function HotelDetail() {
     if (!selectedOffer || !property) return
     setPrebooking(true)
     setPrebookError(null)
-    setPrebookResult(null)
 
     const sell = selectedOffer.plan.prices?.sell
     try {
@@ -242,105 +203,14 @@ export default function HotelDetail() {
       })
       if (error) throw error
       if (data?.error) throw new Error(data.error)
-      setPrebookResult(data)
-      setStep('guestDetails')
+      navigate('/checkout', {
+        state: { property, selectedOffer, prebookResult: data, checkIn, nights, adults },
+      })
     } catch (err) {
       console.error('Pre-book failed:', err)
       setPrebookError(err.message || 'Something went wrong confirming this price. Please try again.')
     }
     setPrebooking(false)
-  }
-
-  function updateLeadGuest(field, value) {
-    setLeadGuest(prev => ({ ...prev, [field]: value }))
-  }
-  function updateRoomGuest(idx, field, value) {
-    setRoomGuests(prev => prev.map((g, i) => (i === idx ? { ...g, [field]: value } : g)))
-  }
-
-  function leadGuestValid() {
-    return leadGuest.firstName && leadGuest.lastName && leadGuest.birthDate && leadGuest.email && leadGuest.phone
-      && leadGuest.address && leadGuest.city && leadGuest.state && leadGuest.zip && leadGuest.country
-  }
-  function roomGuestsValid() {
-    return roomGuests.every(g => g.firstName && g.lastName)
-  }
-
-  async function handleBook() {
-    if (!selectedOffer || !property || !prebookResult) return
-    setBooking(true)
-    setBookingError(null)
-
-    const confirmedRoom = prebookResult.content?.rooms?.[0]
-    const sell = confirmedRoom?.prices?.sell ?? selectedOffer.plan.prices?.sell
-
-    try {
-      const { data, error } = await supabase.functions.invoke('hyperguest-book', {
-        body: {
-          propertyId: property.propertyId,
-          checkIn,
-          checkOut: addNights(checkIn, nights),
-          agencyReference: `BLY-${Date.now()}`,
-          leadGuest,
-          rooms: [{
-            roomId: selectedOffer.room.roomId,
-            ratePlanId: selectedOffer.plan.ratePlanId,
-            expectedPrice: { amount: sell.price, currency: sell.currency },
-            guests: roomGuests,
-            ...(specialRequests ? { specialRequests: [specialRequests] } : {}),
-          }],
-        },
-      })
-      if (error) throw error
-      if (data?.error) throw new Error(data.error)
-      setBookingResult(data)
-      setStep('confirmed')
-    } catch (err) {
-      console.error('Booking failed:', err)
-      setBookingError(err.message || 'Something went wrong completing this booking. Please try again, or contact support.')
-    }
-    setBooking(false)
-  }
-
-  function CtaBar() {
-    if (step === 'select') {
-      const label = selectedOffer ? `${selectedOffer.room.roomName} — ${selectedOffer.plan.ratePlanName}` : 'Select a room & rate below'
-      return (
-        <div style={s.ctaBar}>
-          <div style={s.ctaInfo}>
-            <div style={s.ctaDates}>{checkIn} → {addNights(checkIn, nights)} · {nights}n · {adults}a</div>
-            <div style={s.ctaSelection}>{label}</div>
-          </div>
-          <button
-            style={{ ...s.ctaBtn, ...(!selectedOffer || prebooking ? s.ctaBtnDisabled : {}) }}
-            disabled={!selectedOffer || prebooking}
-            onClick={handlePrebook}
-          >
-            {prebooking ? 'Checking…' : 'Check price'}
-          </button>
-        </div>
-      )
-    }
-    if (step === 'guestDetails') {
-      const confirmedRoom = prebookResult?.content?.rooms?.[0]
-      const sell = confirmedRoom?.prices?.sell
-      return (
-        <div style={s.ctaBar}>
-          <div style={s.ctaInfo}>
-            <div style={s.ctaDates}>{sell?.currency} {Number(sell?.price).toLocaleString()} total</div>
-            <div style={s.ctaSelection}>{selectedOffer.room.roomName}</div>
-          </div>
-          <button
-            style={{ ...s.ctaBtn, ...(!leadGuestValid() || !roomGuestsValid() || booking ? s.ctaBtnDisabled : {}) }}
-            disabled={!leadGuestValid() || !roomGuestsValid() || booking}
-            onClick={handleBook}
-          >
-            {booking ? 'Booking…' : 'Confirm booking'}
-          </button>
-        </div>
-      )
-    }
-    return null
   }
 
   if (isCertDirectLink && certLinkLoading) {
@@ -378,7 +248,7 @@ export default function HotelDetail() {
     return (
       <main>
         <div style={s.page}>
-          <button style={s.back} onClick={() => navigate(-1)}>← Back to results</button>
+          <button onClick={() => navigate(-1)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 500, color: 'var(--text-muted)', cursor: 'pointer', background: 'none', border: 'none', margin: '20px 24px 16px' }}>← Back to results</button>
           <h1 style={{ padding: '0 24px', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 30 }}>{legacyProperty.name}</h1>
           <p style={{ padding: '0 24px', color: 'var(--text-muted)' }}>{legacyProperty.description}</p>
         </div>
@@ -387,57 +257,15 @@ export default function HotelDetail() {
   }
 
   const info = property.propertyInfo
-
-  if (step === 'confirmed' && bookingResult) {
-    const content = bookingResult.content
-    return (
-      <main>
-        <div style={s.confirmBox}>
-          <div style={{ fontSize: 56, marginBottom: 12 }}>✓</div>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 28, marginBottom: 8, color: 'var(--text)' }}>
-            Booking confirmed!
-          </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24 }}>
-            Confirmation sent to {leadGuest.email}
-          </p>
-          <div style={{ background: 'var(--bg)', borderRadius: 14, padding: 20, textAlign: 'left', marginBottom: 20 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Booking reference</span>
-              <span style={{ fontWeight: 700, fontSize: 13 }}>{content?.bookingId}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Status</span>
-              <span style={{ fontWeight: 700, fontSize: 13 }}>{content?.status}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: specialRequests ? 8 : 0 }}>
-              <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Dates</span>
-              <span style={{ fontWeight: 700, fontSize: 13 }}>{checkIn} → {addNights(checkIn, nights)}</span>
-            </div>
-            {specialRequests && (
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Special request</span>
-                <span style={{ fontWeight: 700, fontSize: 13, textAlign: 'right', maxWidth: 220 }}>{specialRequests}</span>
-              </div>
-            )}
-          </div>
-          <button onClick={() => navigate('/')} style={{ background: 'var(--text)', color: '#fff', borderRadius: 99, padding: '12px 28px', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
-            Back to home
-          </button>
-        </div>
-      </main>
-    )
-  }
+  const ctaLabel = selectedOffer ? `${selectedOffer.room.roomName} — ${selectedOffer.plan.ratePlanName}` : 'Select a room & rate below'
 
   return (
     <main>
       <div style={s.page}>
 
-        {/* ── LOCKED: hero + thumbnails + CTA bar stay pinned while scrolling ── */}
         <div style={s.lockedHeader}>
           <div style={s.hero}>
-            <button style={s.back} onClick={() => (step === 'guestDetails' ? setStep('select') : navigate(-1))}>
-              ← {step === 'guestDetails' ? 'Back to room selection' : 'Back to results'}
-            </button>
+            <button style={s.back} onClick={() => navigate(-1)}>← Back to results</button>
             <img src={photos[activePhoto]?.uri || property.thumbnailImage || PLACEHOLDER_IMG} alt={info.name} style={s.heroImg} />
             <div style={s.heroScrim} />
             <div style={s.heroText}>
@@ -457,13 +285,23 @@ export default function HotelDetail() {
             </div>
           )}
 
-          {(prebookError || bookingError) && (
-            <div style={s.errorBar}>{prebookError || bookingError}</div>
-          )}
-          <CtaBar />
+          {prebookError && <div style={s.errorBar}>{prebookError}</div>}
+
+          <div style={s.ctaBar}>
+            <div style={s.ctaInfo}>
+              <div style={s.ctaDates}>{checkIn} → {addNights(checkIn, nights)} · {nights}n · {adults}a</div>
+              <div style={s.ctaSelection}>{ctaLabel}</div>
+            </div>
+            <button
+              style={{ ...s.ctaBtn, ...(!selectedOffer || prebooking ? s.ctaBtnDisabled : {}) }}
+              disabled={!selectedOffer || prebooking}
+              onClick={handlePrebook}
+            >
+              {prebooking ? 'Checking…' : 'Check price'}
+            </button>
+          </div>
         </div>
 
-        {/* ── SCROLLABLE content ── */}
         <div style={s.content}>
           {description && <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>{description}</p>}
           {property.remarks?.map((r, i) => (
@@ -479,7 +317,7 @@ export default function HotelDetail() {
             </>
           )}
 
-          {step === 'select' && offers.length > 0 && (
+          {offers.length > 0 && (
             <>
               <div style={s.sectionTitle}>Choose your room & rate</div>
               {offers.map((offer, i) => {
@@ -491,7 +329,7 @@ export default function HotelDetail() {
                 const fees = offer.plan.prices?.fees || []
                 const policies = offer.plan.cancellationPolicies || []
                 return (
-                  <div key={i} style={s.offerCard(isSelected)} onClick={() => { setSelectedOffer(offer); setPrebookResult(null); setPrebookError(null) }}>
+                  <div key={i} style={s.offerCard(isSelected)} onClick={() => { setSelectedOffer(offer); setPrebookError(null) }}>
                     <div style={s.offerTop}>
                       <div>
                         <div style={s.offerName}>{offer.room.roomName} — {offer.plan.ratePlanName}</div>
@@ -523,94 +361,6 @@ export default function HotelDetail() {
                   </div>
                 )
               })}
-            </>
-          )}
-
-          {step === 'guestDetails' && (
-            <>
-              <div style={s.sectionTitle}>Your details</div>
-              <div style={s.formRow}>
-                <div style={{ flex: 1 }}>
-                  <label style={s.formLabel}>First name</label>
-                  <input style={s.formInput} value={leadGuest.firstName} onChange={e => updateLeadGuest('firstName', e.target.value)} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={s.formLabel}>Last name</label>
-                  <input style={s.formInput} value={leadGuest.lastName} onChange={e => updateLeadGuest('lastName', e.target.value)} />
-                </div>
-              </div>
-              <div style={s.formRow}>
-                <div style={{ flex: 1 }}>
-                  <label style={s.formLabel}>Date of birth</label>
-                  <input type="date" style={s.formInput} value={leadGuest.birthDate} onChange={e => updateLeadGuest('birthDate', e.target.value)} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={s.formLabel}>Title</label>
-                  <select style={s.formInput} value={leadGuest.title} onChange={e => updateLeadGuest('title', e.target.value)}>
-                    <option value="MR">Mr</option>
-                    <option value="MRS">Mrs</option>
-                    <option value="MS">Ms</option>
-                  </select>
-                </div>
-              </div>
-              <div style={s.formRow}>
-                <div style={{ flex: 1 }}>
-                  <label style={s.formLabel}>Email</label>
-                  <input type="email" style={s.formInput} value={leadGuest.email} onChange={e => updateLeadGuest('email', e.target.value)} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={s.formLabel}>Phone</label>
-                  <input style={s.formInput} value={leadGuest.phone} onChange={e => updateLeadGuest('phone', e.target.value)} />
-                </div>
-              </div>
-              <label style={s.formLabel}>Address</label>
-              <input style={s.formInput} value={leadGuest.address} onChange={e => updateLeadGuest('address', e.target.value)} />
-              <div style={s.formRow}>
-                <div style={{ flex: 1 }}>
-                  <label style={s.formLabel}>City</label>
-                  <input style={s.formInput} value={leadGuest.city} onChange={e => updateLeadGuest('city', e.target.value)} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={s.formLabel}>State/Province</label>
-                  <input style={s.formInput} value={leadGuest.state} onChange={e => updateLeadGuest('state', e.target.value)} />
-                </div>
-              </div>
-              <div style={s.formRow}>
-                <div style={{ flex: 1 }}>
-                  <label style={s.formLabel}>Zip/Postal code</label>
-                  <input style={s.formInput} value={leadGuest.zip} onChange={e => updateLeadGuest('zip', e.target.value)} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={s.formLabel}>Country code</label>
-                  <input style={s.formInput} value={leadGuest.country} onChange={e => updateLeadGuest('country', e.target.value.toUpperCase())} maxLength={2} placeholder="ZA" />
-                </div>
-              </div>
-
-              <div style={s.guestBlock}>
-                <div style={{ ...s.sectionTitle, marginTop: 0, fontSize: 16 }}>Guest names ({roomGuests.length})</div>
-                {roomGuests.map((g, i) => (
-                  <div key={i} style={s.formRow}>
-                    <div style={{ flex: 1 }}>
-                      <label style={s.formLabel}>Guest {i + 1} first name</label>
-                      <input style={s.formInput} value={g.firstName} onChange={e => updateRoomGuest(i, 'firstName', e.target.value)} />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <label style={s.formLabel}>Guest {i + 1} last name</label>
-                      <input style={s.formInput} value={g.lastName} onChange={e => updateRoomGuest(i, 'lastName', e.target.value)} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div style={s.guestBlock}>
-                <label style={s.formLabel}>Special requests (optional)</label>
-                <textarea
-                  style={s.formTextarea}
-                  value={specialRequests}
-                  onChange={e => setSpecialRequests(e.target.value)}
-                  placeholder="e.g. Non-smoking room, high floor, late check-in"
-                />
-              </div>
             </>
           )}
         </div>
