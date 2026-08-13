@@ -211,8 +211,8 @@ export default function HotelDetail() {
   }
 
   function leadGuestValid() {
-    return leadGuest.firstName && leadGuest.lastName && leadGuest.email && leadGuest.phone
-      && leadGuest.address && leadGuest.city && leadGuest.country
+    return leadGuest.firstName && leadGuest.lastName && leadGuest.birthDate && leadGuest.email && leadGuest.phone
+      && leadGuest.address && leadGuest.city && leadGuest.state && leadGuest.zip && leadGuest.country
   }
   function roomGuestsValid() {
     return roomGuests.every(g => g.firstName && g.lastName)
@@ -415,6 +415,20 @@ export default function HotelDetail() {
                 </div>
                 <div style={s.formRow}>
                   <div style={{ flex: 1 }}>
+                    <label style={s.formLabel}>Date of birth</label>
+                    <input type="date" style={s.formInput} value={leadGuest.birthDate} onChange={e => updateLeadGuest('birthDate', e.target.value)} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={s.formLabel}>Title</label>
+                    <select style={s.formInput} value={leadGuest.title} onChange={e => updateLeadGuest('title', e.target.value)}>
+                      <option value="MR">Mr</option>
+                      <option value="MRS">Mrs</option>
+                      <option value="MS">Ms</option>
+                    </select>
+                  </div>
+                </div>
+                <div style={s.formRow}>
+                  <div style={{ flex: 1 }}>
                     <label style={s.formLabel}>Email</label>
                     <input type="email" style={s.formInput} value={leadGuest.email} onChange={e => updateLeadGuest('email', e.target.value)} />
                   </div>
@@ -429,6 +443,16 @@ export default function HotelDetail() {
                   <div style={{ flex: 1 }}>
                     <label style={s.formLabel}>City</label>
                     <input style={s.formInput} value={leadGuest.city} onChange={e => updateLeadGuest('city', e.target.value)} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={s.formLabel}>State/Province</label>
+                    <input style={s.formInput} value={leadGuest.state} onChange={e => updateLeadGuest('state', e.target.value)} />
+                  </div>
+                </div>
+                <div style={s.formRow}>
+                  <div style={{ flex: 1 }}>
+                    <label style={s.formLabel}>Zip/Postal code</label>
+                    <input style={s.formInput} value={leadGuest.zip} onChange={e => updateLeadGuest('zip', e.target.value)} />
                   </div>
                   <div style={{ flex: 1 }}>
                     <label style={s.formLabel}>Country code</label>
