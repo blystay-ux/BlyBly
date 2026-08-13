@@ -80,10 +80,57 @@ export default function HotelDetail() {
   const stateNights = location.state?.nights
   const stateAdults = location.state?.adults
 
-  const [property] = useState(stateProperty || null)
-  const [checkIn] = useState(stateCheckIn)
-  const [nights] = useState(stateNights)
+  // Property 19912 is HyperGuest's certification property -- the only one
+  // our current test token can actually complete a booking against. Make
+  // this URL work as a standalone, shareable link (e.g. to send to
+  // HyperGuest's certification reviewers) even without arriving from a
+  // Search click, by running a self-contained search with sensible
+  // default dates instead of requiring router state.
+  const CERT_PROPERTY_ID = 19912
+  const isCertDirectLink = slug === `hg-${CERT_PROPERTY_ID}` && !stateProperty
+
+  function defaultCertDates() {
+    const d = new Date()
+    d.setDate(d.getDate() + 14) // 2 weeks out -- comfortably within bookable range
+    const checkIn = d.toISOString().split('T')[0]
+    return checkIn
+  }
+
+  const [property, setProperty] = useState(stateProperty || null)
+  const [checkIn, setCheckIn] = useState(stateCheckIn || (isCertDirectLink ? defaultCertDates() : null))
+  const [nights] = useState(stateNights || (isCertDirectLink ? 2 : null))
   const [adults] = useState(stateAdults || 2)
+  const [certLinkLoading, setCertLinkLoading] = useState(isCertDirectLink)
+  const [certLinkError, setCertLinkError] = useState(null)
+
+  useEffect(() => {
+    if (!isCertDirectLink) return
+    async function runCertSearch() {
+      setCertLinkLoading(true)
+      setCertLinkError(null)
+      try {
+        const { data, error } = await supabase.functions.invoke('hyperguest-search', {
+          body: {
+            checkIn,
+            nights: 2,
+            rooms: [{ adults: 2 }],
+            hotelIds: [CERT_PROPERTY_ID],
+            customerNationality: 'ZA',
+          },
+        })
+        if (error) throw error
+        const result = data?.results?.[0]
+        if (!result) throw new Error('No availability returned for the certification property on these dates.')
+        setProperty(result)
+      } catch (err) {
+        console.error('Certification link search failed:', err)
+        setCertLinkError(err.message || 'Could not load the certification property right now.')
+      }
+      setCertLinkLoading(false)
+    }
+    runCertSearch()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCertDirectLink])
 
   // step: 'select' -> 'guestDetails' -> 'confirmed'
   const [step, setStep] = useState('select')
@@ -209,7 +256,25 @@ export default function HotelDetail() {
     setBooking(false)
   }
 
-  if (isHyperGuest && !stateProperty) {
+  // Certification direct-link loading/error states
+  if (isCertDirectLink && certLinkLoading) {
+    return <div style={{ padding: 80, textAlign: 'center', color: 'var(--text-muted)' }}>Loading certification property…</div>
+  }
+  if (isCertDirectLink && certLinkError) {
+    return (
+      <div style={{ padding: 80, textAlign: 'center' }}>
+        <p style={{ fontSize: 16, color: '#ef4056', marginBottom: 20 }}>{certLinkError}</p>
+        <button onClick={() => navigate('/')} style={{ background: '#111', color: '#fff', borderRadius: 99, padding: '12px 28px', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
+          ← Back to home
+        </button>
+      </div>
+    )
+  }
+
+  // Any other HyperGuest property reached without router state (i.e. not
+  // the certification direct link, and not arriving from a Search click)
+  // has no dates/guest count to work with -- send back rather than guess.
+  if (isHyperGuest && !stateProperty && !isCertDirectLink) {
     return (
       <div style={{ padding: 80, textAlign: 'center' }}>
         <p style={{ fontSize: 16, color: 'var(--text-muted)', marginBottom: 20 }}>
