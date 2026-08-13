@@ -2,6 +2,19 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
+// TEMPORARY CERTIFICATION RESTRICTION (added 2026-08-13):
+// hyperguest-city-search currently only returns results for property 19912
+// (in Haifa) -- our HyperGuest account only has a certification token, not
+// a live one. Rather than show the full worldwide city list (~53k+
+// properties, hundreds of cities) when everything except Haifa returns an
+// empty "restricted" message, the dropdown is limited to just Haifa for
+// now. Once HyperGuest issues a live token and ALLOW_LIVE_HYPERGUEST_BOOKINGS
+// is flipped on the Edge Functions, replace CERT_RESTRICTED_CITIES below
+// with the original dynamic hg_cities fetch (see git history for the
+// pre-restriction version of this component).
+const CERT_RESTRICTED = true
+const CERT_RESTRICTED_CITIES = ['Haifa']
+
 const MAJOR_CITIES = [
   'Cape Town', 'Johannesburg', 'Pretoria', 'Durban', 'Gqeberha',
   'Bloemfontein', 'East London', 'Nelspruit', 'Polokwane', 'Kimberley',
@@ -63,26 +76,22 @@ const s = {
     gap: 6, whiteSpace: 'nowrap', flexShrink: 0, marginLeft: 6,
   },
   error: { width: '100%', color: '#ef4056', fontSize: 12, fontWeight: 600, padding: '4px 20px 0' },
+  notice: { width: '100%', color: '#8a8580', fontSize: 11, padding: '4px 20px 0' },
 }
 
-// Accepts optional initial values so the Search page can pre-fill from URL params
 export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut, initialAdults }) {
   const navigate = useNavigate()
 
-  const [cities, setCities] = useState(MAJOR_CITIES)
-  const [city, setCity] = useState(initialCity || 'Cape Town')
+  const [cities, setCities] = useState(CERT_RESTRICTED ? CERT_RESTRICTED_CITIES : MAJOR_CITIES)
+  const [city, setCity] = useState(initialCity || cities[0])
   const [checkIn, setCheckIn] = useState(initialCheckIn || defaultCheckIn())
   const [checkOut, setCheckOut] = useState(initialCheckOut || addNights(initialCheckIn || defaultCheckIn(), 2))
   const [adults, setAdults] = useState(initialAdults || 2)
   const [error, setError] = useState('')
 
   useEffect(() => {
+    if (CERT_RESTRICTED) return // skip the dynamic fetch entirely while restricted
     async function fetchListedCities() {
-      // hg_cities is a DISTINCT view over hg_property_index (53k+ rows) --
-      // querying the raw table with a row limit would only return an
-      // arbitrary slice and silently miss most cities (this was a real bug:
-      // Haifa's properties have high hotel_ids and never appeared in the
-      // first 1000 raw rows). The view returns every distinct city, cheaply.
       const { data, error } = await supabase.from('hg_cities').select('city')
       if (error) {
         console.error('Failed to load HyperGuest city list:', error)
@@ -164,6 +173,9 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
         <button style={s.searchBtn} onClick={go}>🔍 Search</button>
       </div>
       {error && <div style={s.error}>{error}</div>}
+      {CERT_RESTRICTED && !error && (
+        <div style={s.notice}>Search is temporarily limited to Haifa while our HyperGuest integration completes certification.</div>
+      )}
     </div>
   )
 }
