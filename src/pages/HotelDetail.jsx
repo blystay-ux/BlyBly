@@ -47,16 +47,22 @@ const s = {
   // site navbar. Everything else scrolls underneath it.
   lockedHeader: {
     position: 'sticky', top: 'var(--nav-height)', zIndex: 15,
-    background: 'var(--bg-card)', borderBottom: '1px solid var(--border)',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
+    background: 'var(--bg)', boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
   },
-  back: { display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 500, color: 'var(--text-muted)', cursor: 'pointer', background: 'none', border: 'none', margin: '14px 24px 10px' },
-  hero: { position: 'relative', width: '100%', height: 220, overflow: 'hidden' },
+  back: {
+    display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 700,
+    color: '#fff', cursor: 'pointer', background: 'rgba(0,0,0,0.35)', border: 'none',
+    position: 'absolute', top: 14, left: 14, zIndex: 2, padding: '7px 14px', borderRadius: 99,
+  },
+  hero: {
+    position: 'relative', width: '100%', aspectRatio: '1 / 1',
+    maxHeight: 560, overflow: 'hidden',
+  },
   heroImg: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' },
-  heroScrim: { position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.65) 100%)' },
-  heroText: { position: 'absolute', left: 24, right: 24, bottom: 14, color: '#fff' },
-  heroName: { fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 22, letterSpacing: '-0.02em', marginBottom: 2, lineHeight: 1.1 },
-  heroMeta: { display: 'flex', alignItems: 'center', gap: 14, fontSize: 12, color: 'rgba(255,255,255,0.9)' },
+  heroScrim: { position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,0.7) 100%)' },
+  heroText: { position: 'absolute', left: 24, right: 24, bottom: 20, color: '#fff' },
+  heroName: { fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(24px, 4vw, 34px)', letterSpacing: '-0.02em', marginBottom: 4, lineHeight: 1.1 },
+  heroMeta: { display: 'flex', alignItems: 'center', gap: 14, fontSize: 13, color: 'rgba(255,255,255,0.9)' },
   thumbStrip: { display: 'flex', gap: 8, overflowX: 'auto', padding: '10px 24px', scrollbarWidth: 'thin' },
   thumb: { flexShrink: 0, width: 68, height: 48, objectFit: 'cover', borderRadius: 8, cursor: 'pointer' },
 
@@ -428,11 +434,10 @@ export default function HotelDetail() {
 
         {/* ── LOCKED: hero + thumbnails + CTA bar stay pinned while scrolling ── */}
         <div style={s.lockedHeader}>
-          <button style={s.back} onClick={() => (step === 'guestDetails' ? setStep('select') : navigate(-1))}>
-            ← {step === 'guestDetails' ? 'Back to room selection' : 'Back to results'}
-          </button>
-
           <div style={s.hero}>
+            <button style={s.back} onClick={() => (step === 'guestDetails' ? setStep('select') : navigate(-1))}>
+              ← {step === 'guestDetails' ? 'Back to room selection' : 'Back to results'}
+            </button>
             <img src={photos[activePhoto]?.uri || property.thumbnailImage || PLACEHOLDER_IMG} alt={info.name} style={s.heroImg} />
             <div style={s.heroScrim} />
             <div style={s.heroText}>
