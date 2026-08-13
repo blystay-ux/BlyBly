@@ -5,11 +5,11 @@ const styles = {
     position: 'sticky', top: 0, zIndex: 100,
     background: 'var(--bg)', borderBottom: '1px solid var(--border)',
     height: 'var(--nav-height)', display: 'flex', alignItems: 'center',
-    padding: '0 40px',
   },
   inner: {
-    width: '100%', maxWidth: 1280, margin: '0 auto',
+    width: '100%', maxWidth: 1280, margin: '0 auto', padding: '0 40px',
     display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
+    boxSizing: 'border-box',
   },
   logo: {
     fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 28,
@@ -54,10 +54,16 @@ const styles = {
 export default function Navbar() {
   return (
     <nav style={styles.nav}>
-      <div style={styles.inner}>
+      <style>{`
+        @media (max-width: 480px) {
+          .bly-navbar-inner { padding-left: 18px !important; padding-right: 18px !important; }
+          .bly-navbar-logo { font-size: 24px !important; }
+        }
+      `}</style>
+      <div className="bly-navbar-inner" style={styles.inner}>
 
         {/* Logo */}
-        <Link to="/" style={styles.logo}>
+        <Link to="/" className="bly-navbar-logo" style={styles.logo}>
           Bly<span style={styles.dot} />
         </Link>
 
