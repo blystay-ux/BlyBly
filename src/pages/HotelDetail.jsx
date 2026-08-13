@@ -31,15 +31,29 @@ function emptyLeadGuest() {
   }
 }
 
+function describeCancellationPolicy(p) {
+  const penalty = p.penaltyType === 'percent' ? `${p.amount}%`
+    : p.penaltyType === 'nights' ? `${p.amount} night(s)`
+    : `${p.currency} ${p.amount}`
+  const when = p.daysBefore >= 999 ? 'always (non-refundable)' : `${p.daysBefore} day(s) before check-in`
+  const deadline = p.cancellationDeadlineHour ? `, deadline ${p.cancellationDeadlineHour}` : ''
+  return `Penalty: ${penalty} — applies ${when}${deadline}`
+}
+
 const s = {
   page: { maxWidth: 1280, margin: '0 auto', padding: '40px 40px' },
   back: { display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 500, color: 'var(--text-muted)', cursor: 'pointer', marginBottom: 28, background: 'none', border: 'none' },
   grid: { display: 'grid', gridTemplateColumns: '1fr 380px', gap: 48, alignItems: 'start' },
-  imgMain: { borderRadius: 20, overflow: 'hidden', marginBottom: 16 },
+  imgMain: { borderRadius: 20, overflow: 'hidden', marginBottom: 8 },
   img: { width: '100%', height: 420, objectFit: 'cover', display: 'block' },
+  photoStrip: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: 8, marginBottom: 20 },
+  photoThumb: { width: '100%', height: 70, objectFit: 'cover', borderRadius: 10, cursor: 'pointer' },
   name: { fontFamily: 'Poppins, Inter, var(--font-display)', fontWeight: 800, fontSize: 36, letterSpacing: '-1px', color: 'var(--text)', marginBottom: 8, lineHeight: 1.1 },
   meta: { display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20, fontSize: 14, color: 'var(--text-muted)' },
   remark: { background: '#F5D6DE', borderRadius: 12, padding: '12px 16px', fontSize: 13, color: '#000', marginBottom: 10, lineHeight: 1.5 },
+  sectionTitle: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 18, marginTop: 28, marginBottom: 12, letterSpacing: '-0.3px' },
+  facilities: { display: 'flex', flexWrap: 'wrap', gap: 8 },
+  facilityTag: { background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 99, padding: '6px 14px', fontSize: 12 },
   roomsSection: { marginTop: 36 },
   roomsSectionTitle: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, marginBottom: 16, letterSpacing: '-0.3px' },
   offerCard: (selected) => ({
@@ -56,6 +70,12 @@ const s = {
   offerBadges: { display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 },
   badge: { padding: '4px 10px', background: 'var(--bg)', borderRadius: 99, fontSize: 11, color: 'var(--text-muted)', border: '1px solid var(--border)' },
   packageBadge: { padding: '4px 10px', background: '#F5D6DE', borderRadius: 99, fontSize: 11, color: '#000', fontWeight: 600 },
+  details: { marginTop: 10, fontSize: 12 },
+  summary: { cursor: 'pointer', fontWeight: 700, color: '#ef4056', fontSize: 12 },
+  priceRow: { display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px dashed var(--border)', fontSize: 12 },
+  priceRowTotal: { fontWeight: 700, borderBottom: 'none', paddingTop: 8 },
+  taxItem: { fontSize: 11, color: 'var(--text-muted)', padding: '3px 0' },
+  policyItem: { fontSize: 12, padding: '4px 0' },
   card: { background: '#fff', borderRadius: 20, padding: 28, boxShadow: '0 4px 32px rgba(0,0,0,0.08)', position: 'sticky', top: 84 },
   bookBtn: { width: '100%', padding: '16px 0', borderRadius: 99, background: '#ef4056', color: '#fff', fontFamily: 'Poppins, Inter, var(--font-display)', fontWeight: 700, fontSize: 16, border: 'none', cursor: 'pointer' },
   bookBtnDisabled: { opacity: 0.4, cursor: 'not-allowed' },
@@ -63,6 +83,7 @@ const s = {
   errorBox: { marginTop: 12, padding: 12, background: '#FDEBEC', borderRadius: 10, fontSize: 13, color: '#ef4056', fontWeight: 600 },
   formLabel: { fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 4, marginTop: 12, display: 'block' },
   formInput: { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, fontFamily: 'var(--font-body)', boxSizing: 'border-box' },
+  formTextarea: { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, fontFamily: 'var(--font-body)', boxSizing: 'border-box', minHeight: 70 },
   formRow: { display: 'flex', gap: 8 },
   guestBlock: { marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border)' },
   confirmBox: { background: '#fff', borderRadius: 20, padding: 40, textAlign: 'center', boxShadow: '0 4px 32px rgba(0,0,0,0.08)' },
@@ -80,20 +101,13 @@ export default function HotelDetail() {
   const stateNights = location.state?.nights
   const stateAdults = location.state?.adults
 
-  // Property 19912 is HyperGuest's certification property -- the only one
-  // our current test token can actually complete a booking against. Make
-  // this URL work as a standalone, shareable link (e.g. to send to
-  // HyperGuest's certification reviewers) even without arriving from a
-  // Search click, by running a self-contained search with sensible
-  // default dates instead of requiring router state.
   const CERT_PROPERTY_ID = 19912
   const isCertDirectLink = slug === `hg-${CERT_PROPERTY_ID}` && !stateProperty
 
   function defaultCertDates() {
     const d = new Date()
-    d.setDate(d.getDate() + 14) // 2 weeks out -- comfortably within bookable range
-    const checkIn = d.toISOString().split('T')[0]
-    return checkIn
+    d.setDate(d.getDate() + 14)
+    return d.toISOString().split('T')[0]
   }
 
   const [property, setProperty] = useState(stateProperty || null)
@@ -102,6 +116,11 @@ export default function HotelDetail() {
   const [adults] = useState(stateAdults || 2)
   const [certLinkLoading, setCertLinkLoading] = useState(isCertDirectLink)
   const [certLinkError, setCertLinkError] = useState(null)
+
+  // Cached static detail (photos, facilities, descriptions) -- separate from
+  // the live search result, since search doesn't include this content.
+  const [staticDetail, setStaticDetail] = useState(null)
+  const [activePhoto, setActivePhoto] = useState(0)
 
   useEffect(() => {
     if (!isCertDirectLink) return
@@ -132,7 +151,22 @@ export default function HotelDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCertDirectLink])
 
-  // step: 'select' -> 'guestDetails' -> 'confirmed'
+  // Fetch cached static detail (photos, facilities, description) whenever
+  // we know which property we're showing.
+  useEffect(() => {
+    const propertyId = property?.propertyId
+    if (!propertyId) return
+    async function loadStatic() {
+      const { data } = await supabase
+        .from('hg_property_static')
+        .select('images, facilities, descriptions')
+        .eq('hotel_id', propertyId)
+        .single()
+      setStaticDetail(data || null)
+    }
+    loadStatic()
+  }, [property?.propertyId])
+
   const [step, setStep] = useState('select')
   const [selectedOffer, setSelectedOffer] = useState(null)
 
@@ -142,6 +176,7 @@ export default function HotelDetail() {
 
   const [leadGuest, setLeadGuest] = useState(emptyLeadGuest())
   const [roomGuests, setRoomGuests] = useState([])
+  const [specialRequests, setSpecialRequests] = useState('')
   const [booking, setBooking] = useState(false)
   const [bookingResult, setBookingResult] = useState(null)
   const [bookingError, setBookingError] = useState(null)
@@ -160,8 +195,6 @@ export default function HotelDetail() {
     loadLegacy()
   }, [slug, isHyperGuest])
 
-  // Once a room is selected, pre-fill one guest slot per adult so the form
-  // starts with the right number of name fields.
   useEffect(() => {
     if (selectedOffer) {
       setRoomGuests(Array.from({ length: adults }, emptyGuest))
@@ -169,6 +202,9 @@ export default function HotelDetail() {
   }, [selectedOffer, adults])
 
   const offers = property ? flattenOffers(property) : []
+  const photos = (staticDetail?.images || []).filter(i => i.type === 'photo')
+  const facilities = (staticDetail?.facilities || []).filter(f => f.name)
+  const description = (staticDetail?.descriptions || []).find(d => d.type === 'general')?.description
 
   async function handlePrebook() {
     if (!selectedOffer || !property) return
@@ -223,9 +259,6 @@ export default function HotelDetail() {
     setBooking(true)
     setBookingError(null)
 
-    // Use the (possibly updated) confirmed price from pre-book, not the
-    // original search price -- HyperGuest's pre-book is the authoritative
-    // quote at this point in the flow.
     const confirmedRoom = prebookResult.content?.rooms?.[0]
     const sell = confirmedRoom?.prices?.sell ?? selectedOffer.plan.prices?.sell
 
@@ -242,6 +275,7 @@ export default function HotelDetail() {
             ratePlanId: selectedOffer.plan.ratePlanId,
             expectedPrice: { amount: sell.price, currency: sell.currency },
             guests: roomGuests,
+            ...(specialRequests ? { specialRequests: [specialRequests] } : {}),
           }],
         },
       })
@@ -256,7 +290,6 @@ export default function HotelDetail() {
     setBooking(false)
   }
 
-  // Certification direct-link loading/error states
   if (isCertDirectLink && certLinkLoading) {
     return <div style={{ padding: 80, textAlign: 'center', color: 'var(--text-muted)' }}>Loading certification property…</div>
   }
@@ -271,9 +304,6 @@ export default function HotelDetail() {
     )
   }
 
-  // Any other HyperGuest property reached without router state (i.e. not
-  // the certification direct link, and not arriving from a Search click)
-  // has no dates/guest count to work with -- send back rather than guess.
   if (isHyperGuest && !stateProperty && !isCertDirectLink) {
     return (
       <div style={{ padding: 80, textAlign: 'center' }}>
@@ -307,7 +337,6 @@ export default function HotelDetail() {
 
   const info = property.propertyInfo
 
-  // ── Confirmed booking screen ──
   if (step === 'confirmed' && bookingResult) {
     const content = bookingResult.content
     return (
@@ -334,10 +363,16 @@ export default function HotelDetail() {
                 <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Property</span>
                 <span style={{ fontWeight: 700, fontSize: 13 }}>{info.name}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: specialRequests ? 8 : 0 }}>
                 <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Dates</span>
                 <span style={{ fontWeight: 700, fontSize: 13 }}>{checkIn} → {addNights(checkIn, nights)}</span>
               </div>
+              {specialRequests && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Special request</span>
+                  <span style={{ fontWeight: 700, fontSize: 13, textAlign: 'right', maxWidth: 220 }}>{specialRequests}</span>
+                </div>
+              )}
             </div>
             <button onClick={() => navigate('/')} style={{ background: '#111', color: '#fff', borderRadius: 99, padding: '12px 28px', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
               Back to home
@@ -358,18 +393,36 @@ export default function HotelDetail() {
 
           <div>
             <div style={s.imgMain}>
-              <img src={property.thumbnailImage || PLACEHOLDER_IMG} alt={info.name} style={s.img} />
+              <img src={photos[activePhoto]?.uri || property.thumbnailImage || PLACEHOLDER_IMG} alt={info.name} style={s.img} />
             </div>
-            <div style={{ marginTop: 36 }}>
+            {photos.length > 1 && (
+              <div style={s.photoStrip}>
+                {photos.slice(0, 10).map((p, i) => (
+                  <img key={i} src={p.uri} style={s.photoThumb} onClick={() => setActivePhoto(i)} alt="" />
+                ))}
+              </div>
+            )}
+
+            <div style={{ marginTop: 20 }}>
               <h1 style={s.name}>{info.name}</h1>
               <div style={s.meta}>
                 {info.starRating > 0 && <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600, color: 'var(--text)' }}>★ {info.starRating}</span>}
                 <span>📍 {info.cityName}, {info.countryCode}</span>
               </div>
+              {description && <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 12 }}>{description}</p>}
               {property.remarks?.map((r, i) => (
                 <div key={i} style={s.remark}>{r}</div>
               ))}
             </div>
+
+            {facilities.length > 0 && (
+              <>
+                <div style={s.sectionTitle}>Facilities</div>
+                <div style={s.facilities}>
+                  {facilities.map((f, i) => <span key={i} style={s.facilityTag}>{f.name}</span>)}
+                </div>
+              </>
+            )}
 
             {step === 'select' && offers.length > 0 && (
               <div style={s.roomsSection}>
@@ -377,6 +430,11 @@ export default function HotelDetail() {
                 {offers.map((offer, i) => {
                   const isSelected = selectedOffer === offer
                   const sell = offer.plan.prices?.sell
+                  const net = offer.plan.prices?.net
+                  const bar = offer.plan.prices?.bar
+                  const taxes = sell?.taxes || []
+                  const fees = offer.plan.prices?.fees || []
+                  const policies = offer.plan.cancellationPolicies || []
                   return (
                     <div key={i} style={s.offerCard(isSelected)} onClick={() => { setSelectedOffer(offer); setPrebookResult(null); setPrebookError(null) }}>
                       <div style={s.offerTop}>
@@ -392,8 +450,27 @@ export default function HotelDetail() {
                         {offer.plan.ratePlanInfo?.isPackageRate && <span style={s.packageBadge}>Package rate</span>}
                         {offer.plan.ratePlanInfo?.isPromotion && <span style={s.packageBadge}>Promo</span>}
                         {offer.plan.isImmediate && <span style={s.badge}>Instant confirmation</span>}
-                        {offer.plan.cancellationPolicies?.length > 0 && <span style={s.badge}>Has cancellation policy</span>}
                       </div>
+
+                      <details style={s.details} onClick={e => e.stopPropagation()}>
+                        <summary style={s.summary}>Taxes & fees breakdown</summary>
+                        <div style={s.priceRow}><span>Net rate</span><span>{net?.currency} {net?.price}</span></div>
+                        <div style={s.priceRow}><span>BAR rate</span><span>{bar?.currency} {bar?.price}</span></div>
+                        <div style={{ ...s.priceRow, ...s.priceRowTotal }}><span>Sell rate (total)</span><span>{sell?.currency} {sell?.price}</span></div>
+                        {taxes.map((t, ti) => (
+                          <div key={ti} style={s.taxItem}>Tax — {t.name}: {t.currency} {t.amount} ({t.relation}, {t.scope}, {t.frequency})</div>
+                        ))}
+                        {fees.map((f, fi) => (
+                          <div key={fi} style={s.taxItem}>Fee — {f.name}: {f.currency} {f.amount} ({f.relation}, {f.scope}, {f.frequency})</div>
+                        ))}
+                      </details>
+
+                      <details style={s.details} onClick={e => e.stopPropagation()}>
+                        <summary style={s.summary}>Cancellation policy</summary>
+                        {policies.length === 0
+                          ? <div style={s.policyItem}>No cancellation policy returned for this rate plan.</div>
+                          : policies.map((p, pi) => <div key={pi} style={s.policyItem}>{describeCancellationPolicy(p)}</div>)}
+                      </details>
                     </div>
                   )
                 })}
@@ -474,6 +551,16 @@ export default function HotelDetail() {
                       </div>
                     </div>
                   ))}
+                </div>
+
+                <div style={s.guestBlock}>
+                  <label style={s.formLabel}>Special requests (optional)</label>
+                  <textarea
+                    style={s.formTextarea}
+                    value={specialRequests}
+                    onChange={e => setSpecialRequests(e.target.value)}
+                    placeholder="e.g. Non-smoking room, high floor, late check-in"
+                  />
                 </div>
               </div>
             )}
