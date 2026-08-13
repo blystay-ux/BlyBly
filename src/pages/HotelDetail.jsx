@@ -10,8 +10,6 @@ function addNights(dateStr, nights) {
   return d.toISOString().split('T')[0]
 }
 
-// Every (room, ratePlan) pair is a separately bookable offer -- flatten them
-// into one list so they're easy to render and select from.
 function flattenOffers(property) {
   const offers = []
   for (const room of property.rooms ?? []) {
@@ -20,6 +18,17 @@ function flattenOffers(property) {
     }
   }
   return offers.sort((a, b) => (a.plan.prices?.sell?.price ?? 0) - (b.plan.prices?.sell?.price ?? 0))
+}
+
+function emptyGuest() {
+  return { firstName: '', lastName: '' }
+}
+
+function emptyLeadGuest() {
+  return {
+    firstName: '', lastName: '', title: 'MR', birthDate: '',
+    email: '', phone: '', address: '', city: '', state: '', zip: '', country: 'ZA',
+  }
 }
 
 const s = {
@@ -52,6 +61,11 @@ const s = {
   bookBtnDisabled: { opacity: 0.4, cursor: 'not-allowed' },
   prebookBox: { marginTop: 20, padding: 16, background: '#F8F7F5', borderRadius: 14 },
   errorBox: { marginTop: 12, padding: 12, background: '#FDEBEC', borderRadius: 10, fontSize: 13, color: '#ef4056', fontWeight: 600 },
+  formLabel: { fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 4, marginTop: 12, display: 'block' },
+  formInput: { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, fontFamily: 'var(--font-body)', boxSizing: 'border-box' },
+  formRow: { display: 'flex', gap: 8 },
+  guestBlock: { marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border)' },
+  confirmBox: { background: '#fff', borderRadius: 20, padding: 40, textAlign: 'center', boxShadow: '0 4px 32px rgba(0,0,0,0.08)' },
 }
 
 export default function HotelDetail() {
@@ -60,40 +74,54 @@ export default function HotelDetail() {
   const location = useLocation()
 
   const isHyperGuest = slug?.startsWith('hg-')
-  const propertyIdFromUrl = isHyperGuest ? Number(slug.replace('hg-', '')) : null
 
-  // Handed forward from the Search page -- no re-fetch needed on the happy path.
   const stateProperty = location.state?.property
   const stateCheckIn = location.state?.checkIn
   const stateNights = location.state?.nights
   const stateAdults = location.state?.adults
 
-  const [property, setProperty] = useState(stateProperty || null)
+  const [property] = useState(stateProperty || null)
   const [checkIn] = useState(stateCheckIn)
   const [nights] = useState(stateNights)
   const [adults] = useState(stateAdults || 2)
 
+  // step: 'select' -> 'guestDetails' -> 'confirmed'
+  const [step, setStep] = useState('select')
   const [selectedOffer, setSelectedOffer] = useState(null)
+
   const [prebooking, setPrebooking] = useState(false)
   const [prebookResult, setPrebookResult] = useState(null)
   const [prebookError, setPrebookError] = useState(null)
 
-  // Legacy path: non-HyperGuest hotels still come from the Supabase `hotels`
-  // table directly (unchanged from before).
+  const [leadGuest, setLeadGuest] = useState(emptyLeadGuest())
+  const [roomGuests, setRoomGuests] = useState([])
+  const [booking, setBooking] = useState(false)
+  const [bookingResult, setBookingResult] = useState(null)
+  const [bookingError, setBookingError] = useState(null)
+
   const [legacyLoading, setLegacyLoading] = useState(!isHyperGuest)
+  const [legacyProperty, setLegacyProperty] = useState(null)
 
   useEffect(() => {
     if (isHyperGuest) return
     async function loadLegacy() {
       setLegacyLoading(true)
       const { data: h } = await supabase.from('hotels').select('*').eq('slug', slug).single()
-      setProperty(h ? { legacy: h } : null)
+      setLegacyProperty(h)
       setLegacyLoading(false)
     }
     loadLegacy()
   }, [slug, isHyperGuest])
 
-  const offers = property && !property.legacy ? flattenOffers(property) : []
+  // Once a room is selected, pre-fill one guest slot per adult so the form
+  // starts with the right number of name fields.
+  useEffect(() => {
+    if (selectedOffer) {
+      setRoomGuests(Array.from({ length: adults }, emptyGuest))
+    }
+  }, [selectedOffer, adults])
+
+  const offers = property ? flattenOffers(property) : []
 
   async function handlePrebook() {
     if (!selectedOffer || !property) return
@@ -120,6 +148,7 @@ export default function HotelDetail() {
       if (error) throw error
       if (data?.error) throw new Error(data.error)
       setPrebookResult(data)
+      setStep('guestDetails')
     } catch (err) {
       console.error('Pre-book failed:', err)
       setPrebookError(err.message || 'Something went wrong confirming this price. Please try again.')
@@ -127,19 +156,66 @@ export default function HotelDetail() {
     setPrebooking(false)
   }
 
-  // ── Direct link / page refresh with no router state ──
-  // We don't have checkIn/nights/adults in this case, so we can't safely
-  // re-run a search. Send the person back rather than guess at dates.
+  function updateLeadGuest(field, value) {
+    setLeadGuest(prev => ({ ...prev, [field]: value }))
+  }
+  function updateRoomGuest(idx, field, value) {
+    setRoomGuests(prev => prev.map((g, i) => (i === idx ? { ...g, [field]: value } : g)))
+  }
+
+  function leadGuestValid() {
+    return leadGuest.firstName && leadGuest.lastName && leadGuest.email && leadGuest.phone
+      && leadGuest.address && leadGuest.city && leadGuest.country
+  }
+  function roomGuestsValid() {
+    return roomGuests.every(g => g.firstName && g.lastName)
+  }
+
+  async function handleBook() {
+    if (!selectedOffer || !property || !prebookResult) return
+    setBooking(true)
+    setBookingError(null)
+
+    // Use the (possibly updated) confirmed price from pre-book, not the
+    // original search price -- HyperGuest's pre-book is the authoritative
+    // quote at this point in the flow.
+    const confirmedRoom = prebookResult.content?.rooms?.[0]
+    const sell = confirmedRoom?.prices?.sell ?? selectedOffer.plan.prices?.sell
+
+    try {
+      const { data, error } = await supabase.functions.invoke('hyperguest-book', {
+        body: {
+          propertyId: property.propertyId,
+          checkIn,
+          checkOut: addNights(checkIn, nights),
+          agencyReference: `BLY-${Date.now()}`,
+          leadGuest,
+          rooms: [{
+            roomId: selectedOffer.room.roomId,
+            ratePlanId: selectedOffer.plan.ratePlanId,
+            expectedPrice: { amount: sell.price, currency: sell.currency },
+            guests: roomGuests,
+          }],
+        },
+      })
+      if (error) throw error
+      if (data?.error) throw new Error(data.error)
+      setBookingResult(data)
+      setStep('confirmed')
+    } catch (err) {
+      console.error('Booking failed:', err)
+      setBookingError(err.message || 'Something went wrong completing this booking. Please try again, or contact support.')
+    }
+    setBooking(false)
+  }
+
   if (isHyperGuest && !stateProperty) {
     return (
       <div style={{ padding: 80, textAlign: 'center' }}>
         <p style={{ fontSize: 16, color: 'var(--text-muted)', marginBottom: 20 }}>
           This page needs search details (dates, guests) that aren't available on a direct link or refresh yet.
         </p>
-        <button
-          onClick={() => navigate('/')}
-          style={{ background: '#ef4056', color: '#fff', borderRadius: 99, padding: '12px 28px', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer' }}
-        >
+        <button onClick={() => navigate('/')} style={{ background: '#ef4056', color: '#fff', borderRadius: 99, padding: '12px 28px', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
           ← Search again
         </button>
       </div>
@@ -149,19 +225,16 @@ export default function HotelDetail() {
   if (!isHyperGuest && legacyLoading) {
     return <div style={{ padding: 80, textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div>
   }
-  if (!isHyperGuest && !property) {
+  if (!isHyperGuest && !legacyProperty) {
     return <div style={{ padding: 80, textAlign: 'center', color: 'var(--text-muted)' }}>Hotel not found.</div>
   }
-
-  // ── Legacy (non-HyperGuest) rendering stays simple ──
-  if (property?.legacy) {
-    const hotel = property.legacy
+  if (legacyProperty) {
     return (
       <main>
         <div style={s.page}>
           <button style={s.back} onClick={() => navigate(-1)}>← Back to results</button>
-          <h1 style={s.name}>{hotel.name}</h1>
-          <p style={{ color: 'var(--text-muted)' }}>{hotel.description}</p>
+          <h1 style={s.name}>{legacyProperty.name}</h1>
+          <p style={{ color: 'var(--text-muted)' }}>{legacyProperty.description}</p>
         </div>
       </main>
     )
@@ -169,10 +242,53 @@ export default function HotelDetail() {
 
   const info = property.propertyInfo
 
+  // ── Confirmed booking screen ──
+  if (step === 'confirmed' && bookingResult) {
+    const content = bookingResult.content
+    return (
+      <main>
+        <div style={{ ...s.page, maxWidth: 640 }}>
+          <div style={s.confirmBox}>
+            <div style={{ fontSize: 56, marginBottom: 12 }}>✓</div>
+            <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 28, marginBottom: 8 }}>
+              Booking confirmed!
+            </h1>
+            <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24 }}>
+              Confirmation sent to {leadGuest.email}
+            </p>
+            <div style={{ background: '#F8F7F5', borderRadius: 14, padding: 20, textAlign: 'left', marginBottom: 20 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Booking reference</span>
+                <span style={{ fontWeight: 700, fontSize: 13 }}>{content?.bookingId}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Status</span>
+                <span style={{ fontWeight: 700, fontSize: 13 }}>{content?.status}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Property</span>
+                <span style={{ fontWeight: 700, fontSize: 13 }}>{info.name}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Dates</span>
+                <span style={{ fontWeight: 700, fontSize: 13 }}>{checkIn} → {addNights(checkIn, nights)}</span>
+              </div>
+            </div>
+            <button onClick={() => navigate('/')} style={{ background: '#111', color: '#fff', borderRadius: 99, padding: '12px 28px', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
+              Back to home
+            </button>
+          </div>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main>
-      <div style={s.page} className="fade-up">
-        <button style={s.back} onClick={() => navigate(-1)}>← Back to results</button>
+      <div style={s.page}>
+        <button style={s.back} onClick={() => (step === 'guestDetails' ? setStep('select') : navigate(-1))}>
+          ← {step === 'guestDetails' ? 'Back to room selection' : 'Back to results'}
+        </button>
         <div style={s.grid}>
 
           <div>
@@ -185,13 +301,12 @@ export default function HotelDetail() {
                 {info.starRating > 0 && <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600, color: 'var(--text)' }}>★ {info.starRating}</span>}
                 <span>📍 {info.cityName}, {info.countryCode}</span>
               </div>
-
               {property.remarks?.map((r, i) => (
                 <div key={i} style={s.remark}>{r}</div>
               ))}
             </div>
 
-            {offers.length > 0 && (
+            {step === 'select' && offers.length > 0 && (
               <div style={s.roomsSection}>
                 <div style={s.roomsSectionTitle}>Choose your room & rate</div>
                 {offers.map((offer, i) => {
@@ -219,6 +334,60 @@ export default function HotelDetail() {
                 })}
               </div>
             )}
+
+            {step === 'guestDetails' && (
+              <div style={s.roomsSection}>
+                <div style={s.roomsSectionTitle}>Your details</div>
+                <div style={s.formRow}>
+                  <div style={{ flex: 1 }}>
+                    <label style={s.formLabel}>First name</label>
+                    <input style={s.formInput} value={leadGuest.firstName} onChange={e => updateLeadGuest('firstName', e.target.value)} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={s.formLabel}>Last name</label>
+                    <input style={s.formInput} value={leadGuest.lastName} onChange={e => updateLeadGuest('lastName', e.target.value)} />
+                  </div>
+                </div>
+                <div style={s.formRow}>
+                  <div style={{ flex: 1 }}>
+                    <label style={s.formLabel}>Email</label>
+                    <input type="email" style={s.formInput} value={leadGuest.email} onChange={e => updateLeadGuest('email', e.target.value)} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={s.formLabel}>Phone</label>
+                    <input style={s.formInput} value={leadGuest.phone} onChange={e => updateLeadGuest('phone', e.target.value)} />
+                  </div>
+                </div>
+                <label style={s.formLabel}>Address</label>
+                <input style={s.formInput} value={leadGuest.address} onChange={e => updateLeadGuest('address', e.target.value)} />
+                <div style={s.formRow}>
+                  <div style={{ flex: 1 }}>
+                    <label style={s.formLabel}>City</label>
+                    <input style={s.formInput} value={leadGuest.city} onChange={e => updateLeadGuest('city', e.target.value)} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={s.formLabel}>Country code</label>
+                    <input style={s.formInput} value={leadGuest.country} onChange={e => updateLeadGuest('country', e.target.value.toUpperCase())} maxLength={2} placeholder="ZA" />
+                  </div>
+                </div>
+
+                <div style={s.guestBlock}>
+                  <div style={{ ...s.roomsSectionTitle, fontSize: 16 }}>Guest names ({roomGuests.length})</div>
+                  {roomGuests.map((g, i) => (
+                    <div key={i} style={s.formRow}>
+                      <div style={{ flex: 1 }}>
+                        <label style={s.formLabel}>Guest {i + 1} first name</label>
+                        <input style={s.formInput} value={g.firstName} onChange={e => updateRoomGuest(i, 'firstName', e.target.value)} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label style={s.formLabel}>Guest {i + 1} last name</label>
+                        <input style={s.formInput} value={g.lastName} onChange={e => updateRoomGuest(i, 'lastName', e.target.value)} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div style={s.card}>
@@ -229,40 +398,50 @@ export default function HotelDetail() {
               {nights} {nights === 1 ? 'night' : 'nights'} · {adults} {adults === 1 ? 'adult' : 'adults'}
             </div>
 
-            {!selectedOffer ? (
-              <div style={{ background: '#F5D6DE', borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#000', marginBottom: 14, border: '1px solid #ef4056' }}>
-                ☝️ Select a room & rate above to continue
-              </div>
-            ) : (
-              <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 14 }}>
-                {selectedOffer.room.roomName} — {selectedOffer.plan.ratePlanName}
-              </div>
-            )}
-
-            <button
-              style={{ ...s.bookBtn, ...(!selectedOffer || prebooking ? s.bookBtnDisabled : {}) }}
-              disabled={!selectedOffer || prebooking}
-              onClick={handlePrebook}
-            >
-              {prebooking ? 'Checking price…' : 'Check price & availability'}
-            </button>
-
-            {prebookError && <div style={s.errorBox}>{prebookError}</div>}
-
-            {prebookResult && (
-              <div style={s.prebookBox}>
-                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 8 }}>
-                  ✓ Price confirmed: {prebookResult.content?.rooms?.[0]?.prices?.sell?.currency} {Number(prebookResult.content?.rooms?.[0]?.prices?.sell?.price).toLocaleString()}
-                </div>
-                {prebookResult.content?.rooms?.[0]?.cancellationPolicies?.length > 0 && (
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
-                    Cancellation policy applies — see terms before booking.
+            {step === 'select' && (
+              <>
+                {!selectedOffer ? (
+                  <div style={{ background: '#F5D6DE', borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#000', marginBottom: 14, border: '1px solid #ef4056' }}>
+                    ☝️ Select a room & rate above to continue
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 14 }}>
+                    {selectedOffer.room.roomName} — {selectedOffer.plan.ratePlanName}
                   </div>
                 )}
-                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  Guest details and payment step coming next.
+                <button
+                  style={{ ...s.bookBtn, ...(!selectedOffer || prebooking ? s.bookBtnDisabled : {}) }}
+                  disabled={!selectedOffer || prebooking}
+                  onClick={handlePrebook}
+                >
+                  {prebooking ? 'Checking price…' : 'Check price & availability'}
+                </button>
+                {prebookError && <div style={s.errorBox}>{prebookError}</div>}
+              </>
+            )}
+
+            {step === 'guestDetails' && (
+              <>
+                <div style={s.prebookBox}>
+                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>
+                    {prebookResult.content?.rooms?.[0]?.prices?.sell?.currency} {Number(prebookResult.content?.rooms?.[0]?.prices?.sell?.price).toLocaleString()}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{selectedOffer.room.roomName} — {selectedOffer.plan.ratePlanName}</div>
                 </div>
-              </div>
+                <button
+                  style={{ ...s.bookBtn, marginTop: 16, ...(!leadGuestValid() || !roomGuestsValid() || booking ? s.bookBtnDisabled : {}) }}
+                  disabled={!leadGuestValid() || !roomGuestsValid() || booking}
+                  onClick={handleBook}
+                >
+                  {booking ? 'Booking…' : 'Confirm booking'}
+                </button>
+                {bookingError && <div style={s.errorBox}>{bookingError}</div>}
+                {(!leadGuestValid() || !roomGuestsValid()) && (
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>
+                    Fill in all fields to continue.
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
