@@ -41,17 +41,38 @@ function describeCancellationPolicy(p) {
 }
 
 const s = {
-  page: { maxWidth: 860, margin: '0 auto', padding: '0 0 100px' },
-  back: { display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 500, color: 'var(--text-muted)', cursor: 'pointer', background: 'none', border: 'none', margin: '20px 24px 16px' },
-  hero: { position: 'relative', width: '100%', height: 360, overflow: 'hidden', borderRadius: 0 },
+  page: { maxWidth: 860, margin: '0 auto' },
+
+  // ── LOCKED header: hero photo + thumbnails + CTA bar, pinned below the
+  // site navbar. Everything else scrolls underneath it.
+  lockedHeader: {
+    position: 'sticky', top: 'var(--nav-height)', zIndex: 15,
+    background: 'var(--bg-card)', borderBottom: '1px solid var(--border)',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
+  },
+  back: { display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 500, color: 'var(--text-muted)', cursor: 'pointer', background: 'none', border: 'none', margin: '14px 24px 10px' },
+  hero: { position: 'relative', width: '100%', height: 220, overflow: 'hidden' },
   heroImg: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' },
   heroScrim: { position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.65) 100%)' },
-  heroText: { position: 'absolute', left: 24, right: 24, bottom: 20, color: '#fff' },
-  heroName: { fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 30, letterSpacing: '-0.03em', marginBottom: 4, lineHeight: 1.1 },
-  heroMeta: { display: 'flex', alignItems: 'center', gap: 14, fontSize: 13, color: 'rgba(255,255,255,0.9)' },
+  heroText: { position: 'absolute', left: 24, right: 24, bottom: 14, color: '#fff' },
+  heroName: { fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 22, letterSpacing: '-0.02em', marginBottom: 2, lineHeight: 1.1 },
+  heroMeta: { display: 'flex', alignItems: 'center', gap: 14, fontSize: 12, color: 'rgba(255,255,255,0.9)' },
   thumbStrip: { display: 'flex', gap: 8, overflowX: 'auto', padding: '10px 24px', scrollbarWidth: 'thin' },
-  thumb: { flexShrink: 0, width: 84, height: 60, objectFit: 'cover', borderRadius: 10, cursor: 'pointer' },
-  content: { padding: '8px 24px 0' },
+  thumb: { flexShrink: 0, width: 68, height: 48, objectFit: 'cover', borderRadius: 8, cursor: 'pointer' },
+
+  ctaBar: {
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
+    padding: '10px 24px 14px',
+  },
+  ctaInfo: { minWidth: 0, flex: 1 },
+  ctaDates: { fontSize: 12, color: 'var(--text-muted)' },
+  ctaSelection: { fontSize: 14, fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+  ctaBtn: { flexShrink: 0, padding: '13px 24px', borderRadius: 99, background: '#ef4056', color: '#fff', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' },
+  ctaBtnDisabled: { opacity: 0.4, cursor: 'not-allowed' },
+  errorBar: { background: '#FDEBEC', color: '#ef4056', fontSize: 12, fontWeight: 600, padding: '8px 24px' },
+
+  // ── Scrollable content below the locked header ──
+  content: { padding: '20px 24px 60px' },
   remark: { background: '#F5D6DE', borderRadius: 12, padding: '12px 16px', fontSize: 13, color: '#000', marginBottom: 10, lineHeight: 1.5 },
   sectionTitle: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 18, marginTop: 28, marginBottom: 12, letterSpacing: '-0.3px', color: 'var(--text)' },
   facilities: { display: 'flex', flexWrap: 'wrap', gap: 8 },
@@ -80,20 +101,6 @@ const s = {
   formTextarea: { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, fontFamily: 'var(--font-body)', boxSizing: 'border-box', minHeight: 70 },
   formRow: { display: 'flex', gap: 8 },
   guestBlock: { marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border)' },
-
-  stickyBar: {
-    position: 'sticky', bottom: 0, left: 0, right: 0, zIndex: 20,
-    background: 'var(--bg-card)', borderTop: '1px solid var(--border)',
-    boxShadow: '0 -4px 20px rgba(0,0,0,0.06)',
-    padding: '12px 20px', display: 'flex', alignItems: 'center',
-    justifyContent: 'space-between', gap: 16,
-  },
-  stickyInfo: { minWidth: 0, flex: 1 },
-  stickyDates: { fontSize: 12, color: 'var(--text-muted)' },
-  stickySelection: { fontSize: 14, fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
-  stickyBtn: { flexShrink: 0, padding: '13px 24px', borderRadius: 99, background: '#ef4056', color: '#fff', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' },
-  stickyBtnDisabled: { opacity: 0.4, cursor: 'not-allowed' },
-  errorBar: { background: '#FDEBEC', color: '#ef4056', fontSize: 12, fontWeight: 600, padding: '8px 20px' },
 
   confirmBox: { background: 'var(--bg-card)', borderRadius: 20, padding: 40, textAlign: 'center', boxShadow: '0 4px 32px rgba(0,0,0,0.08)', margin: '40px 24px' },
 }
@@ -289,17 +296,17 @@ export default function HotelDetail() {
     setBooking(false)
   }
 
-  function StickyBar() {
+  function CtaBar() {
     if (step === 'select') {
       const label = selectedOffer ? `${selectedOffer.room.roomName} — ${selectedOffer.plan.ratePlanName}` : 'Select a room & rate below'
       return (
-        <div style={s.stickyBar}>
-          <div style={s.stickyInfo}>
-            <div style={s.stickyDates}>{checkIn} → {addNights(checkIn, nights)} · {nights}n · {adults}a</div>
-            <div style={s.stickySelection}>{label}</div>
+        <div style={s.ctaBar}>
+          <div style={s.ctaInfo}>
+            <div style={s.ctaDates}>{checkIn} → {addNights(checkIn, nights)} · {nights}n · {adults}a</div>
+            <div style={s.ctaSelection}>{label}</div>
           </div>
           <button
-            style={{ ...s.stickyBtn, ...(!selectedOffer || prebooking ? s.stickyBtnDisabled : {}) }}
+            style={{ ...s.ctaBtn, ...(!selectedOffer || prebooking ? s.ctaBtnDisabled : {}) }}
             disabled={!selectedOffer || prebooking}
             onClick={handlePrebook}
           >
@@ -312,13 +319,13 @@ export default function HotelDetail() {
       const confirmedRoom = prebookResult?.content?.rooms?.[0]
       const sell = confirmedRoom?.prices?.sell
       return (
-        <div style={s.stickyBar}>
-          <div style={s.stickyInfo}>
-            <div style={s.stickyDates}>{sell?.currency} {Number(sell?.price).toLocaleString()} total</div>
-            <div style={s.stickySelection}>{selectedOffer.room.roomName}</div>
+        <div style={s.ctaBar}>
+          <div style={s.ctaInfo}>
+            <div style={s.ctaDates}>{sell?.currency} {Number(sell?.price).toLocaleString()} total</div>
+            <div style={s.ctaSelection}>{selectedOffer.room.roomName}</div>
           </div>
           <button
-            style={{ ...s.stickyBtn, ...(!leadGuestValid() || !roomGuestsValid() || booking ? s.stickyBtnDisabled : {}) }}
+            style={{ ...s.ctaBtn, ...(!leadGuestValid() || !roomGuestsValid() || booking ? s.ctaBtnDisabled : {}) }}
             disabled={!leadGuestValid() || !roomGuestsValid() || booking}
             onClick={handleBook}
           >
@@ -416,13 +423,15 @@ export default function HotelDetail() {
   }
 
   return (
-    <main style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - var(--nav-height))' }}>
-      <div style={{ flex: 1 }}>
-        <button style={s.back} onClick={() => (step === 'guestDetails' ? setStep('select') : navigate(-1))}>
-          ← {step === 'guestDetails' ? 'Back to room selection' : 'Back to results'}
-        </button>
+    <main>
+      <div style={s.page}>
 
-        <div style={s.page}>
+        {/* ── LOCKED: hero + thumbnails + CTA bar stay pinned while scrolling ── */}
+        <div style={s.lockedHeader}>
+          <button style={s.back} onClick={() => (step === 'guestDetails' ? setStep('select') : navigate(-1))}>
+            ← {step === 'guestDetails' ? 'Back to room selection' : 'Back to results'}
+          </button>
+
           <div style={s.hero}>
             <img src={photos[activePhoto]?.uri || property.thumbnailImage || PLACEHOLDER_IMG} alt={info.name} style={s.heroImg} />
             <div style={s.heroScrim} />
@@ -443,163 +452,164 @@ export default function HotelDetail() {
             </div>
           )}
 
-          <div style={s.content}>
-            {description && <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, marginTop: 16 }}>{description}</p>}
-            {property.remarks?.map((r, i) => (
-              <div key={i} style={{ ...s.remark, marginTop: i === 0 ? 16 : 0 }}>{r}</div>
-            ))}
+          {(prebookError || bookingError) && (
+            <div style={s.errorBar}>{prebookError || bookingError}</div>
+          )}
+          <CtaBar />
+        </div>
 
-            {facilities.length > 0 && (
-              <>
-                <div style={s.sectionTitle}>Facilities</div>
-                <div style={s.facilities}>
-                  {facilities.map((f, i) => <span key={i} style={s.facilityTag}>{f.name}</span>)}
-                </div>
-              </>
-            )}
+        {/* ── SCROLLABLE content ── */}
+        <div style={s.content}>
+          {description && <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>{description}</p>}
+          {property.remarks?.map((r, i) => (
+            <div key={i} style={{ ...s.remark, marginTop: i === 0 ? 16 : 0 }}>{r}</div>
+          ))}
 
-            {step === 'select' && offers.length > 0 && (
-              <>
-                <div style={s.sectionTitle}>Choose your room & rate</div>
-                {offers.map((offer, i) => {
-                  const isSelected = selectedOffer === offer
-                  const sell = offer.plan.prices?.sell
-                  const net = offer.plan.prices?.net
-                  const bar = offer.plan.prices?.bar
-                  const taxes = sell?.taxes || []
-                  const fees = offer.plan.prices?.fees || []
-                  const policies = offer.plan.cancellationPolicies || []
-                  return (
-                    <div key={i} style={s.offerCard(isSelected)} onClick={() => { setSelectedOffer(offer); setPrebookResult(null); setPrebookError(null) }}>
-                      <div style={s.offerTop}>
-                        <div>
-                          <div style={s.offerName}>{offer.room.roomName} — {offer.plan.ratePlanName}</div>
-                          <div style={s.offerBoard}>{offer.plan.board} board · up to {offer.room.settings?.maxOccupancy} guests</div>
-                        </div>
-                        <div style={s.offerPrice}>{sell?.currency} {Number(sell?.price).toLocaleString()}</div>
+          {facilities.length > 0 && (
+            <>
+              <div style={s.sectionTitle}>Facilities</div>
+              <div style={s.facilities}>
+                {facilities.map((f, i) => <span key={i} style={s.facilityTag}>{f.name}</span>)}
+              </div>
+            </>
+          )}
+
+          {step === 'select' && offers.length > 0 && (
+            <>
+              <div style={s.sectionTitle}>Choose your room & rate</div>
+              {offers.map((offer, i) => {
+                const isSelected = selectedOffer === offer
+                const sell = offer.plan.prices?.sell
+                const net = offer.plan.prices?.net
+                const bar = offer.plan.prices?.bar
+                const taxes = sell?.taxes || []
+                const fees = offer.plan.prices?.fees || []
+                const policies = offer.plan.cancellationPolicies || []
+                return (
+                  <div key={i} style={s.offerCard(isSelected)} onClick={() => { setSelectedOffer(offer); setPrebookResult(null); setPrebookError(null) }}>
+                    <div style={s.offerTop}>
+                      <div>
+                        <div style={s.offerName}>{offer.room.roomName} — {offer.plan.ratePlanName}</div>
+                        <div style={s.offerBoard}>{offer.plan.board} board · up to {offer.room.settings?.maxOccupancy} guests</div>
                       </div>
-                      <div style={s.offerBadges}>
-                        {offer.plan.ratePlanInfo?.isPackageRate && <span style={s.packageBadge}>Package rate</span>}
-                        {offer.plan.ratePlanInfo?.isPromotion && <span style={s.packageBadge}>Promo</span>}
-                        {offer.plan.isImmediate && <span style={s.badge}>Instant confirmation</span>}
-                      </div>
-
-                      <details style={s.details} onClick={e => e.stopPropagation()}>
-                        <summary style={s.summary}>Taxes & fees breakdown</summary>
-                        <div style={s.priceRow}><span>Net rate</span><span>{net?.currency} {net?.price}</span></div>
-                        <div style={s.priceRow}><span>BAR rate</span><span>{bar?.currency} {bar?.price}</span></div>
-                        <div style={{ ...s.priceRow, ...s.priceRowTotal }}><span>Sell rate (total)</span><span>{sell?.currency} {sell?.price}</span></div>
-                        {taxes.map((t, ti) => <div key={ti} style={s.taxItem}>Tax — {t.name}: {t.currency} {t.amount} ({t.relation}, {t.scope}, {t.frequency})</div>)}
-                        {fees.map((f, fi) => <div key={fi} style={s.taxItem}>Fee — {f.name}: {f.currency} {f.amount} ({f.relation}, {f.scope}, {f.frequency})</div>)}
-                      </details>
-
-                      <details style={s.details} onClick={e => e.stopPropagation()}>
-                        <summary style={s.summary}>Cancellation policy</summary>
-                        {policies.length === 0
-                          ? <div style={s.policyItem}>No cancellation policy returned for this rate plan.</div>
-                          : policies.map((p, pi) => <div key={pi} style={s.policyItem}>{describeCancellationPolicy(p)}</div>)}
-                      </details>
+                      <div style={s.offerPrice}>{sell?.currency} {Number(sell?.price).toLocaleString()}</div>
                     </div>
-                  )
-                })}
-              </>
-            )}
-
-            {step === 'guestDetails' && (
-              <>
-                <div style={s.sectionTitle}>Your details</div>
-                <div style={s.formRow}>
-                  <div style={{ flex: 1 }}>
-                    <label style={s.formLabel}>First name</label>
-                    <input style={s.formInput} value={leadGuest.firstName} onChange={e => updateLeadGuest('firstName', e.target.value)} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <label style={s.formLabel}>Last name</label>
-                    <input style={s.formInput} value={leadGuest.lastName} onChange={e => updateLeadGuest('lastName', e.target.value)} />
-                  </div>
-                </div>
-                <div style={s.formRow}>
-                  <div style={{ flex: 1 }}>
-                    <label style={s.formLabel}>Date of birth</label>
-                    <input type="date" style={s.formInput} value={leadGuest.birthDate} onChange={e => updateLeadGuest('birthDate', e.target.value)} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <label style={s.formLabel}>Title</label>
-                    <select style={s.formInput} value={leadGuest.title} onChange={e => updateLeadGuest('title', e.target.value)}>
-                      <option value="MR">Mr</option>
-                      <option value="MRS">Mrs</option>
-                      <option value="MS">Ms</option>
-                    </select>
-                  </div>
-                </div>
-                <div style={s.formRow}>
-                  <div style={{ flex: 1 }}>
-                    <label style={s.formLabel}>Email</label>
-                    <input type="email" style={s.formInput} value={leadGuest.email} onChange={e => updateLeadGuest('email', e.target.value)} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <label style={s.formLabel}>Phone</label>
-                    <input style={s.formInput} value={leadGuest.phone} onChange={e => updateLeadGuest('phone', e.target.value)} />
-                  </div>
-                </div>
-                <label style={s.formLabel}>Address</label>
-                <input style={s.formInput} value={leadGuest.address} onChange={e => updateLeadGuest('address', e.target.value)} />
-                <div style={s.formRow}>
-                  <div style={{ flex: 1 }}>
-                    <label style={s.formLabel}>City</label>
-                    <input style={s.formInput} value={leadGuest.city} onChange={e => updateLeadGuest('city', e.target.value)} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <label style={s.formLabel}>State/Province</label>
-                    <input style={s.formInput} value={leadGuest.state} onChange={e => updateLeadGuest('state', e.target.value)} />
-                  </div>
-                </div>
-                <div style={s.formRow}>
-                  <div style={{ flex: 1 }}>
-                    <label style={s.formLabel}>Zip/Postal code</label>
-                    <input style={s.formInput} value={leadGuest.zip} onChange={e => updateLeadGuest('zip', e.target.value)} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <label style={s.formLabel}>Country code</label>
-                    <input style={s.formInput} value={leadGuest.country} onChange={e => updateLeadGuest('country', e.target.value.toUpperCase())} maxLength={2} placeholder="ZA" />
-                  </div>
-                </div>
-
-                <div style={s.guestBlock}>
-                  <div style={{ ...s.sectionTitle, marginTop: 0, fontSize: 16 }}>Guest names ({roomGuests.length})</div>
-                  {roomGuests.map((g, i) => (
-                    <div key={i} style={s.formRow}>
-                      <div style={{ flex: 1 }}>
-                        <label style={s.formLabel}>Guest {i + 1} first name</label>
-                        <input style={s.formInput} value={g.firstName} onChange={e => updateRoomGuest(i, 'firstName', e.target.value)} />
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <label style={s.formLabel}>Guest {i + 1} last name</label>
-                        <input style={s.formInput} value={g.lastName} onChange={e => updateRoomGuest(i, 'lastName', e.target.value)} />
-                      </div>
+                    <div style={s.offerBadges}>
+                      {offer.plan.ratePlanInfo?.isPackageRate && <span style={s.packageBadge}>Package rate</span>}
+                      {offer.plan.ratePlanInfo?.isPromotion && <span style={s.packageBadge}>Promo</span>}
+                      {offer.plan.isImmediate && <span style={s.badge}>Instant confirmation</span>}
                     </div>
-                  ))}
-                </div>
 
-                <div style={s.guestBlock}>
-                  <label style={s.formLabel}>Special requests (optional)</label>
-                  <textarea
-                    style={s.formTextarea}
-                    value={specialRequests}
-                    onChange={e => setSpecialRequests(e.target.value)}
-                    placeholder="e.g. Non-smoking room, high floor, late check-in"
-                  />
+                    <details style={s.details} onClick={e => e.stopPropagation()}>
+                      <summary style={s.summary}>Taxes & fees breakdown</summary>
+                      <div style={s.priceRow}><span>Net rate</span><span>{net?.currency} {net?.price}</span></div>
+                      <div style={s.priceRow}><span>BAR rate</span><span>{bar?.currency} {bar?.price}</span></div>
+                      <div style={{ ...s.priceRow, ...s.priceRowTotal }}><span>Sell rate (total)</span><span>{sell?.currency} {sell?.price}</span></div>
+                      {taxes.map((t, ti) => <div key={ti} style={s.taxItem}>Tax — {t.name}: {t.currency} {t.amount} ({t.relation}, {t.scope}, {t.frequency})</div>)}
+                      {fees.map((f, fi) => <div key={fi} style={s.taxItem}>Fee — {f.name}: {f.currency} {f.amount} ({f.relation}, {f.scope}, {f.frequency})</div>)}
+                    </details>
+
+                    <details style={s.details} onClick={e => e.stopPropagation()}>
+                      <summary style={s.summary}>Cancellation policy</summary>
+                      {policies.length === 0
+                        ? <div style={s.policyItem}>No cancellation policy returned for this rate plan.</div>
+                        : policies.map((p, pi) => <div key={pi} style={s.policyItem}>{describeCancellationPolicy(p)}</div>)}
+                    </details>
+                  </div>
+                )
+              })}
+            </>
+          )}
+
+          {step === 'guestDetails' && (
+            <>
+              <div style={s.sectionTitle}>Your details</div>
+              <div style={s.formRow}>
+                <div style={{ flex: 1 }}>
+                  <label style={s.formLabel}>First name</label>
+                  <input style={s.formInput} value={leadGuest.firstName} onChange={e => updateLeadGuest('firstName', e.target.value)} />
                 </div>
-              </>
-            )}
-          </div>
+                <div style={{ flex: 1 }}>
+                  <label style={s.formLabel}>Last name</label>
+                  <input style={s.formInput} value={leadGuest.lastName} onChange={e => updateLeadGuest('lastName', e.target.value)} />
+                </div>
+              </div>
+              <div style={s.formRow}>
+                <div style={{ flex: 1 }}>
+                  <label style={s.formLabel}>Date of birth</label>
+                  <input type="date" style={s.formInput} value={leadGuest.birthDate} onChange={e => updateLeadGuest('birthDate', e.target.value)} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={s.formLabel}>Title</label>
+                  <select style={s.formInput} value={leadGuest.title} onChange={e => updateLeadGuest('title', e.target.value)}>
+                    <option value="MR">Mr</option>
+                    <option value="MRS">Mrs</option>
+                    <option value="MS">Ms</option>
+                  </select>
+                </div>
+              </div>
+              <div style={s.formRow}>
+                <div style={{ flex: 1 }}>
+                  <label style={s.formLabel}>Email</label>
+                  <input type="email" style={s.formInput} value={leadGuest.email} onChange={e => updateLeadGuest('email', e.target.value)} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={s.formLabel}>Phone</label>
+                  <input style={s.formInput} value={leadGuest.phone} onChange={e => updateLeadGuest('phone', e.target.value)} />
+                </div>
+              </div>
+              <label style={s.formLabel}>Address</label>
+              <input style={s.formInput} value={leadGuest.address} onChange={e => updateLeadGuest('address', e.target.value)} />
+              <div style={s.formRow}>
+                <div style={{ flex: 1 }}>
+                  <label style={s.formLabel}>City</label>
+                  <input style={s.formInput} value={leadGuest.city} onChange={e => updateLeadGuest('city', e.target.value)} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={s.formLabel}>State/Province</label>
+                  <input style={s.formInput} value={leadGuest.state} onChange={e => updateLeadGuest('state', e.target.value)} />
+                </div>
+              </div>
+              <div style={s.formRow}>
+                <div style={{ flex: 1 }}>
+                  <label style={s.formLabel}>Zip/Postal code</label>
+                  <input style={s.formInput} value={leadGuest.zip} onChange={e => updateLeadGuest('zip', e.target.value)} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={s.formLabel}>Country code</label>
+                  <input style={s.formInput} value={leadGuest.country} onChange={e => updateLeadGuest('country', e.target.value.toUpperCase())} maxLength={2} placeholder="ZA" />
+                </div>
+              </div>
+
+              <div style={s.guestBlock}>
+                <div style={{ ...s.sectionTitle, marginTop: 0, fontSize: 16 }}>Guest names ({roomGuests.length})</div>
+                {roomGuests.map((g, i) => (
+                  <div key={i} style={s.formRow}>
+                    <div style={{ flex: 1 }}>
+                      <label style={s.formLabel}>Guest {i + 1} first name</label>
+                      <input style={s.formInput} value={g.firstName} onChange={e => updateRoomGuest(i, 'firstName', e.target.value)} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={s.formLabel}>Guest {i + 1} last name</label>
+                      <input style={s.formInput} value={g.lastName} onChange={e => updateRoomGuest(i, 'lastName', e.target.value)} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={s.guestBlock}>
+                <label style={s.formLabel}>Special requests (optional)</label>
+                <textarea
+                  style={s.formTextarea}
+                  value={specialRequests}
+                  onChange={e => setSpecialRequests(e.target.value)}
+                  placeholder="e.g. Non-smoking room, high floor, late check-in"
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
-
-      {(prebookError || bookingError) && (
-        <div style={s.errorBar}>{prebookError || bookingError}</div>
-      )}
-      <StickyBar />
     </main>
   )
 }
