@@ -41,32 +41,30 @@ function describeCancellationPolicy(p) {
 }
 
 const s = {
-  page: { maxWidth: 1280, margin: '0 auto', padding: '40px 40px' },
-  back: { display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 500, color: 'var(--text-muted)', cursor: 'pointer', marginBottom: 28, background: 'none', border: 'none' },
-  grid: { display: 'grid', gridTemplateColumns: '1fr 380px', gap: 48, alignItems: 'start' },
-  imgMain: { borderRadius: 20, overflow: 'hidden', marginBottom: 8 },
-  img: { width: '100%', height: 420, objectFit: 'cover', display: 'block' },
-  photoStrip: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: 8, marginBottom: 20 },
-  photoThumb: { width: '100%', height: 70, objectFit: 'cover', borderRadius: 10, cursor: 'pointer' },
-  name: { fontFamily: 'Poppins, Inter, var(--font-display)', fontWeight: 800, fontSize: 36, letterSpacing: '-1px', color: 'var(--text)', marginBottom: 8, lineHeight: 1.1 },
-  meta: { display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20, fontSize: 14, color: 'var(--text-muted)' },
+  page: { maxWidth: 860, margin: '0 auto', padding: '0 0 100px' },
+  back: { display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 500, color: 'var(--text-muted)', cursor: 'pointer', background: 'none', border: 'none', margin: '20px 24px 16px' },
+  hero: { position: 'relative', width: '100%', height: 360, overflow: 'hidden', borderRadius: 0 },
+  heroImg: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' },
+  heroScrim: { position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.65) 100%)' },
+  heroText: { position: 'absolute', left: 24, right: 24, bottom: 20, color: '#fff' },
+  heroName: { fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 30, letterSpacing: '-0.03em', marginBottom: 4, lineHeight: 1.1 },
+  heroMeta: { display: 'flex', alignItems: 'center', gap: 14, fontSize: 13, color: 'rgba(255,255,255,0.9)' },
+  thumbStrip: { display: 'flex', gap: 8, overflowX: 'auto', padding: '10px 24px', scrollbarWidth: 'thin' },
+  thumb: { flexShrink: 0, width: 84, height: 60, objectFit: 'cover', borderRadius: 10, cursor: 'pointer' },
+  content: { padding: '8px 24px 0' },
   remark: { background: '#F5D6DE', borderRadius: 12, padding: '12px 16px', fontSize: 13, color: '#000', marginBottom: 10, lineHeight: 1.5 },
-  sectionTitle: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 18, marginTop: 28, marginBottom: 12, letterSpacing: '-0.3px' },
+  sectionTitle: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 18, marginTop: 28, marginBottom: 12, letterSpacing: '-0.3px', color: 'var(--text)' },
   facilities: { display: 'flex', flexWrap: 'wrap', gap: 8 },
   facilityTag: { background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 99, padding: '6px 14px', fontSize: 12 },
-  roomsSection: { marginTop: 36 },
-  roomsSectionTitle: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, marginBottom: 16, letterSpacing: '-0.3px' },
   offerCard: (selected) => ({
     border: selected ? '2px solid #000000' : '1.5px solid var(--border)',
-    borderRadius: 16, padding: '18px 20px', marginBottom: 12,
-    cursor: 'pointer', background: selected ? '#F8F7F5' : '#fff',
-    transition: 'all 0.15s',
+    borderRadius: 16, padding: '16px 18px', marginBottom: 12,
+    cursor: 'pointer', background: selected ? '#F8F7F5' : 'var(--bg-card)',
   }),
-  offerTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 },
-  offerName: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16 },
+  offerTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6, gap: 10 },
+  offerName: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 15 },
   offerBoard: { fontSize: 12, color: 'var(--text-muted)', marginTop: 2 },
-  offerPrice: { fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, color: 'var(--text)' },
-  offerPricePer: { fontSize: 12, color: 'var(--text-muted)', fontWeight: 400 },
+  offerPrice: { fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 18, color: 'var(--text)', whiteSpace: 'nowrap' },
   offerBadges: { display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 },
   badge: { padding: '4px 10px', background: 'var(--bg)', borderRadius: 99, fontSize: 11, color: 'var(--text-muted)', border: '1px solid var(--border)' },
   packageBadge: { padding: '4px 10px', background: '#F5D6DE', borderRadius: 99, fontSize: 11, color: '#000', fontWeight: 600 },
@@ -76,17 +74,28 @@ const s = {
   priceRowTotal: { fontWeight: 700, borderBottom: 'none', paddingTop: 8 },
   taxItem: { fontSize: 11, color: 'var(--text-muted)', padding: '3px 0' },
   policyItem: { fontSize: 12, padding: '4px 0' },
-  card: { background: '#fff', borderRadius: 20, padding: 28, boxShadow: '0 4px 32px rgba(0,0,0,0.08)', position: 'sticky', top: 84 },
-  bookBtn: { width: '100%', padding: '16px 0', borderRadius: 99, background: '#ef4056', color: '#fff', fontFamily: 'Poppins, Inter, var(--font-display)', fontWeight: 700, fontSize: 16, border: 'none', cursor: 'pointer' },
-  bookBtnDisabled: { opacity: 0.4, cursor: 'not-allowed' },
-  prebookBox: { marginTop: 20, padding: 16, background: '#F8F7F5', borderRadius: 14 },
-  errorBox: { marginTop: 12, padding: 12, background: '#FDEBEC', borderRadius: 10, fontSize: 13, color: '#ef4056', fontWeight: 600 },
+
   formLabel: { fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 4, marginTop: 12, display: 'block' },
   formInput: { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, fontFamily: 'var(--font-body)', boxSizing: 'border-box' },
   formTextarea: { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, fontFamily: 'var(--font-body)', boxSizing: 'border-box', minHeight: 70 },
   formRow: { display: 'flex', gap: 8 },
   guestBlock: { marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border)' },
-  confirmBox: { background: '#fff', borderRadius: 20, padding: 40, textAlign: 'center', boxShadow: '0 4px 32px rgba(0,0,0,0.08)' },
+
+  stickyBar: {
+    position: 'sticky', bottom: 0, left: 0, right: 0, zIndex: 20,
+    background: 'var(--bg-card)', borderTop: '1px solid var(--border)',
+    boxShadow: '0 -4px 20px rgba(0,0,0,0.06)',
+    padding: '12px 20px', display: 'flex', alignItems: 'center',
+    justifyContent: 'space-between', gap: 16,
+  },
+  stickyInfo: { minWidth: 0, flex: 1 },
+  stickyDates: { fontSize: 12, color: 'var(--text-muted)' },
+  stickySelection: { fontSize: 14, fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+  stickyBtn: { flexShrink: 0, padding: '13px 24px', borderRadius: 99, background: '#ef4056', color: '#fff', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' },
+  stickyBtnDisabled: { opacity: 0.4, cursor: 'not-allowed' },
+  errorBar: { background: '#FDEBEC', color: '#ef4056', fontSize: 12, fontWeight: 600, padding: '8px 20px' },
+
+  confirmBox: { background: 'var(--bg-card)', borderRadius: 20, padding: 40, textAlign: 'center', boxShadow: '0 4px 32px rgba(0,0,0,0.08)', margin: '40px 24px' },
 }
 
 export default function HotelDetail() {
@@ -111,14 +120,12 @@ export default function HotelDetail() {
   }
 
   const [property, setProperty] = useState(stateProperty || null)
-  const [checkIn, setCheckIn] = useState(stateCheckIn || (isCertDirectLink ? defaultCertDates() : null))
+  const [checkIn] = useState(stateCheckIn || (isCertDirectLink ? defaultCertDates() : null))
   const [nights] = useState(stateNights || (isCertDirectLink ? 2 : null))
   const [adults] = useState(stateAdults || 2)
   const [certLinkLoading, setCertLinkLoading] = useState(isCertDirectLink)
   const [certLinkError, setCertLinkError] = useState(null)
 
-  // Cached static detail (photos, facilities, descriptions) -- separate from
-  // the live search result, since search doesn't include this content.
   const [staticDetail, setStaticDetail] = useState(null)
   const [activePhoto, setActivePhoto] = useState(0)
 
@@ -129,13 +136,7 @@ export default function HotelDetail() {
       setCertLinkError(null)
       try {
         const { data, error } = await supabase.functions.invoke('hyperguest-search', {
-          body: {
-            checkIn,
-            nights: 2,
-            rooms: [{ adults: 2 }],
-            hotelIds: [CERT_PROPERTY_ID],
-            customerNationality: 'ZA',
-          },
+          body: { checkIn, nights: 2, rooms: [{ adults: 2 }], hotelIds: [CERT_PROPERTY_ID], customerNationality: 'ZA' },
         })
         if (error) throw error
         const result = data?.results?.[0]
@@ -151,8 +152,6 @@ export default function HotelDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCertDirectLink])
 
-  // Fetch cached static detail (photos, facilities, description) whenever
-  // we know which property we're showing.
   useEffect(() => {
     const propertyId = property?.propertyId
     if (!propertyId) return
@@ -290,6 +289,47 @@ export default function HotelDetail() {
     setBooking(false)
   }
 
+  function StickyBar() {
+    if (step === 'select') {
+      const label = selectedOffer ? `${selectedOffer.room.roomName} — ${selectedOffer.plan.ratePlanName}` : 'Select a room & rate below'
+      return (
+        <div style={s.stickyBar}>
+          <div style={s.stickyInfo}>
+            <div style={s.stickyDates}>{checkIn} → {addNights(checkIn, nights)} · {nights}n · {adults}a</div>
+            <div style={s.stickySelection}>{label}</div>
+          </div>
+          <button
+            style={{ ...s.stickyBtn, ...(!selectedOffer || prebooking ? s.stickyBtnDisabled : {}) }}
+            disabled={!selectedOffer || prebooking}
+            onClick={handlePrebook}
+          >
+            {prebooking ? 'Checking…' : 'Check price'}
+          </button>
+        </div>
+      )
+    }
+    if (step === 'guestDetails') {
+      const confirmedRoom = prebookResult?.content?.rooms?.[0]
+      const sell = confirmedRoom?.prices?.sell
+      return (
+        <div style={s.stickyBar}>
+          <div style={s.stickyInfo}>
+            <div style={s.stickyDates}>{sell?.currency} {Number(sell?.price).toLocaleString()} total</div>
+            <div style={s.stickySelection}>{selectedOffer.room.roomName}</div>
+          </div>
+          <button
+            style={{ ...s.stickyBtn, ...(!leadGuestValid() || !roomGuestsValid() || booking ? s.stickyBtnDisabled : {}) }}
+            disabled={!leadGuestValid() || !roomGuestsValid() || booking}
+            onClick={handleBook}
+          >
+            {booking ? 'Booking…' : 'Confirm booking'}
+          </button>
+        </div>
+      )
+    }
+    return null
+  }
+
   if (isCertDirectLink && certLinkLoading) {
     return <div style={{ padding: 80, textAlign: 'center', color: 'var(--text-muted)' }}>Loading certification property…</div>
   }
@@ -303,7 +343,6 @@ export default function HotelDetail() {
       </div>
     )
   }
-
   if (isHyperGuest && !stateProperty && !isCertDirectLink) {
     return (
       <div style={{ padding: 80, textAlign: 'center' }}>
@@ -316,7 +355,6 @@ export default function HotelDetail() {
       </div>
     )
   }
-
   if (!isHyperGuest && legacyLoading) {
     return <div style={{ padding: 80, textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div>
   }
@@ -328,8 +366,8 @@ export default function HotelDetail() {
       <main>
         <div style={s.page}>
           <button style={s.back} onClick={() => navigate(-1)}>← Back to results</button>
-          <h1 style={s.name}>{legacyProperty.name}</h1>
-          <p style={{ color: 'var(--text-muted)' }}>{legacyProperty.description}</p>
+          <h1 style={{ padding: '0 24px', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 30 }}>{legacyProperty.name}</h1>
+          <p style={{ padding: '0 24px', color: 'var(--text-muted)' }}>{legacyProperty.description}</p>
         </div>
       </main>
     )
@@ -341,79 +379,75 @@ export default function HotelDetail() {
     const content = bookingResult.content
     return (
       <main>
-        <div style={{ ...s.page, maxWidth: 640 }}>
-          <div style={s.confirmBox}>
-            <div style={{ fontSize: 56, marginBottom: 12 }}>✓</div>
-            <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 28, marginBottom: 8 }}>
-              Booking confirmed!
-            </h1>
-            <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24 }}>
-              Confirmation sent to {leadGuest.email}
-            </p>
-            <div style={{ background: '#F8F7F5', borderRadius: 14, padding: 20, textAlign: 'left', marginBottom: 20 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Booking reference</span>
-                <span style={{ fontWeight: 700, fontSize: 13 }}>{content?.bookingId}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Status</span>
-                <span style={{ fontWeight: 700, fontSize: 13 }}>{content?.status}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Property</span>
-                <span style={{ fontWeight: 700, fontSize: 13 }}>{info.name}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: specialRequests ? 8 : 0 }}>
-                <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Dates</span>
-                <span style={{ fontWeight: 700, fontSize: 13 }}>{checkIn} → {addNights(checkIn, nights)}</span>
-              </div>
-              {specialRequests && (
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Special request</span>
-                  <span style={{ fontWeight: 700, fontSize: 13, textAlign: 'right', maxWidth: 220 }}>{specialRequests}</span>
-                </div>
-              )}
+        <div style={s.confirmBox}>
+          <div style={{ fontSize: 56, marginBottom: 12 }}>✓</div>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 28, marginBottom: 8, color: 'var(--text)' }}>
+            Booking confirmed!
+          </h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24 }}>
+            Confirmation sent to {leadGuest.email}
+          </p>
+          <div style={{ background: 'var(--bg)', borderRadius: 14, padding: 20, textAlign: 'left', marginBottom: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+              <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Booking reference</span>
+              <span style={{ fontWeight: 700, fontSize: 13 }}>{content?.bookingId}</span>
             </div>
-            <button onClick={() => navigate('/')} style={{ background: '#111', color: '#fff', borderRadius: 99, padding: '12px 28px', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
-              Back to home
-            </button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+              <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Status</span>
+              <span style={{ fontWeight: 700, fontSize: 13 }}>{content?.status}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: specialRequests ? 8 : 0 }}>
+              <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Dates</span>
+              <span style={{ fontWeight: 700, fontSize: 13 }}>{checkIn} → {addNights(checkIn, nights)}</span>
+            </div>
+            {specialRequests && (
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Special request</span>
+                <span style={{ fontWeight: 700, fontSize: 13, textAlign: 'right', maxWidth: 220 }}>{specialRequests}</span>
+              </div>
+            )}
           </div>
+          <button onClick={() => navigate('/')} style={{ background: 'var(--text)', color: '#fff', borderRadius: 99, padding: '12px 28px', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
+            Back to home
+          </button>
         </div>
       </main>
     )
   }
 
   return (
-    <main>
-      <div style={s.page}>
+    <main style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - var(--nav-height))' }}>
+      <div style={{ flex: 1 }}>
         <button style={s.back} onClick={() => (step === 'guestDetails' ? setStep('select') : navigate(-1))}>
           ← {step === 'guestDetails' ? 'Back to room selection' : 'Back to results'}
         </button>
-        <div style={s.grid}>
 
-          <div>
-            <div style={s.imgMain}>
-              <img src={photos[activePhoto]?.uri || property.thumbnailImage || PLACEHOLDER_IMG} alt={info.name} style={s.img} />
-            </div>
-            {photos.length > 1 && (
-              <div style={s.photoStrip}>
-                {photos.slice(0, 10).map((p, i) => (
-                  <img key={i} src={p.uri} style={s.photoThumb} onClick={() => setActivePhoto(i)} alt="" />
-                ))}
-              </div>
-            )}
-
-            <div style={{ marginTop: 20 }}>
-              <h1 style={s.name}>{info.name}</h1>
-              <div style={s.meta}>
-                {info.starRating > 0 && <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600, color: 'var(--text)' }}>★ {info.starRating}</span>}
+        <div style={s.page}>
+          <div style={s.hero}>
+            <img src={photos[activePhoto]?.uri || property.thumbnailImage || PLACEHOLDER_IMG} alt={info.name} style={s.heroImg} />
+            <div style={s.heroScrim} />
+            <div style={s.heroText}>
+              <div style={s.heroName}>{info.name}</div>
+              <div style={s.heroMeta}>
+                {info.starRating > 0 && <span>★ {info.starRating}</span>}
                 <span>📍 {info.cityName}, {info.countryCode}</span>
               </div>
-              {description && <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 12 }}>{description}</p>}
-              {property.remarks?.map((r, i) => (
-                <div key={i} style={s.remark}>{r}</div>
+            </div>
+          </div>
+
+          {photos.length > 1 && (
+            <div style={s.thumbStrip}>
+              {photos.slice(0, 12).map((p, i) => (
+                <img key={i} src={p.uri} style={s.thumb} onClick={() => setActivePhoto(i)} alt="" />
               ))}
             </div>
+          )}
+
+          <div style={s.content}>
+            {description && <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, marginTop: 16 }}>{description}</p>}
+            {property.remarks?.map((r, i) => (
+              <div key={i} style={{ ...s.remark, marginTop: i === 0 ? 16 : 0 }}>{r}</div>
+            ))}
 
             {facilities.length > 0 && (
               <>
@@ -425,8 +459,8 @@ export default function HotelDetail() {
             )}
 
             {step === 'select' && offers.length > 0 && (
-              <div style={s.roomsSection}>
-                <div style={s.roomsSectionTitle}>Choose your room & rate</div>
+              <>
+                <div style={s.sectionTitle}>Choose your room & rate</div>
                 {offers.map((offer, i) => {
                   const isSelected = selectedOffer === offer
                   const sell = offer.plan.prices?.sell
@@ -442,9 +476,7 @@ export default function HotelDetail() {
                           <div style={s.offerName}>{offer.room.roomName} — {offer.plan.ratePlanName}</div>
                           <div style={s.offerBoard}>{offer.plan.board} board · up to {offer.room.settings?.maxOccupancy} guests</div>
                         </div>
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={s.offerPrice}>{sell?.currency} {Number(sell?.price).toLocaleString()}<span style={s.offerPricePer}> total</span></div>
-                        </div>
+                        <div style={s.offerPrice}>{sell?.currency} {Number(sell?.price).toLocaleString()}</div>
                       </div>
                       <div style={s.offerBadges}>
                         {offer.plan.ratePlanInfo?.isPackageRate && <span style={s.packageBadge}>Package rate</span>}
@@ -457,12 +489,8 @@ export default function HotelDetail() {
                         <div style={s.priceRow}><span>Net rate</span><span>{net?.currency} {net?.price}</span></div>
                         <div style={s.priceRow}><span>BAR rate</span><span>{bar?.currency} {bar?.price}</span></div>
                         <div style={{ ...s.priceRow, ...s.priceRowTotal }}><span>Sell rate (total)</span><span>{sell?.currency} {sell?.price}</span></div>
-                        {taxes.map((t, ti) => (
-                          <div key={ti} style={s.taxItem}>Tax — {t.name}: {t.currency} {t.amount} ({t.relation}, {t.scope}, {t.frequency})</div>
-                        ))}
-                        {fees.map((f, fi) => (
-                          <div key={fi} style={s.taxItem}>Fee — {f.name}: {f.currency} {f.amount} ({f.relation}, {f.scope}, {f.frequency})</div>
-                        ))}
+                        {taxes.map((t, ti) => <div key={ti} style={s.taxItem}>Tax — {t.name}: {t.currency} {t.amount} ({t.relation}, {t.scope}, {t.frequency})</div>)}
+                        {fees.map((f, fi) => <div key={fi} style={s.taxItem}>Fee — {f.name}: {f.currency} {f.amount} ({f.relation}, {f.scope}, {f.frequency})</div>)}
                       </details>
 
                       <details style={s.details} onClick={e => e.stopPropagation()}>
@@ -474,12 +502,12 @@ export default function HotelDetail() {
                     </div>
                   )
                 })}
-              </div>
+              </>
             )}
 
             {step === 'guestDetails' && (
-              <div style={s.roomsSection}>
-                <div style={s.roomsSectionTitle}>Your details</div>
+              <>
+                <div style={s.sectionTitle}>Your details</div>
                 <div style={s.formRow}>
                   <div style={{ flex: 1 }}>
                     <label style={s.formLabel}>First name</label>
@@ -538,7 +566,7 @@ export default function HotelDetail() {
                 </div>
 
                 <div style={s.guestBlock}>
-                  <div style={{ ...s.roomsSectionTitle, fontSize: 16 }}>Guest names ({roomGuests.length})</div>
+                  <div style={{ ...s.sectionTitle, marginTop: 0, fontSize: 16 }}>Guest names ({roomGuests.length})</div>
                   {roomGuests.map((g, i) => (
                     <div key={i} style={s.formRow}>
                       <div style={{ flex: 1 }}>
@@ -562,66 +590,16 @@ export default function HotelDetail() {
                     placeholder="e.g. Non-smoking room, high floor, late check-in"
                   />
                 </div>
-              </div>
-            )}
-          </div>
-
-          <div style={s.card}>
-            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, marginBottom: 6 }}>
-              {checkIn} → {addNights(checkIn, nights)}
-            </div>
-            <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>
-              {nights} {nights === 1 ? 'night' : 'nights'} · {adults} {adults === 1 ? 'adult' : 'adults'}
-            </div>
-
-            {step === 'select' && (
-              <>
-                {!selectedOffer ? (
-                  <div style={{ background: '#F5D6DE', borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#000', marginBottom: 14, border: '1px solid #ef4056' }}>
-                    ☝️ Select a room & rate above to continue
-                  </div>
-                ) : (
-                  <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 14 }}>
-                    {selectedOffer.room.roomName} — {selectedOffer.plan.ratePlanName}
-                  </div>
-                )}
-                <button
-                  style={{ ...s.bookBtn, ...(!selectedOffer || prebooking ? s.bookBtnDisabled : {}) }}
-                  disabled={!selectedOffer || prebooking}
-                  onClick={handlePrebook}
-                >
-                  {prebooking ? 'Checking price…' : 'Check price & availability'}
-                </button>
-                {prebookError && <div style={s.errorBox}>{prebookError}</div>}
-              </>
-            )}
-
-            {step === 'guestDetails' && (
-              <>
-                <div style={s.prebookBox}>
-                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>
-                    {prebookResult.content?.rooms?.[0]?.prices?.sell?.currency} {Number(prebookResult.content?.rooms?.[0]?.prices?.sell?.price).toLocaleString()}
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{selectedOffer.room.roomName} — {selectedOffer.plan.ratePlanName}</div>
-                </div>
-                <button
-                  style={{ ...s.bookBtn, marginTop: 16, ...(!leadGuestValid() || !roomGuestsValid() || booking ? s.bookBtnDisabled : {}) }}
-                  disabled={!leadGuestValid() || !roomGuestsValid() || booking}
-                  onClick={handleBook}
-                >
-                  {booking ? 'Booking…' : 'Confirm booking'}
-                </button>
-                {bookingError && <div style={s.errorBox}>{bookingError}</div>}
-                {(!leadGuestValid() || !roomGuestsValid()) && (
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>
-                    Fill in all fields to continue.
-                  </div>
-                )}
               </>
             )}
           </div>
         </div>
       </div>
+
+      {(prebookError || bookingError) && (
+        <div style={s.errorBar}>{prebookError || bookingError}</div>
+      )}
+      <StickyBar />
     </main>
   )
 }
