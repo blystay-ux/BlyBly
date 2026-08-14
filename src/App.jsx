@@ -4,6 +4,8 @@ import Navbar from './components/Navbar'
 import Home from './pages/Home'
 import Search from './pages/Search'
 import HotelDetail from './pages/HotelDetail'
+import Checkout from './pages/Checkout'
+import ManageBooking from './pages/ManageBooking'
 import Auth from './pages/Auth'
 import ListHotel from './pages/ListHotel'
 import Admin from './pages/Admin'
@@ -21,6 +23,8 @@ export default function App() {
         <Route path="/"              element={<Home />} />
         <Route path="/search"        element={<Search />} />
         <Route path="/hotel/:slug"   element={<HotelDetail />} />
+        <Route path="/checkout"      element={<Checkout />} />
+        <Route path="/manage-booking" element={<ManageBooking />} />
         <Route path="/auth"          element={<Auth />} />
         <Route path="/list-hotel"    element={<ListHotel />} />
         <Route path="/admin"         element={<Admin />} />
