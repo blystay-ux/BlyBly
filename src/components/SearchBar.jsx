@@ -12,7 +12,11 @@ import { supabase } from '../lib/supabase'
 // is flipped on the Edge Functions, replace CERT_RESTRICTED_CITIES below
 // with the original dynamic hg_cities fetch (see git history for the
 // pre-restriction version of this component).
-const CERT_RESTRICTED = true
+// CERTIFICATION RESTRICTION LIFTED 2026-08-14 -- HyperGuest issued the live
+// token and Phase 3 (live property booking) is underway. Full city search
+// is now enabled again. If this ever needs to go back to cert-only mode
+// (e.g. live token revoked), set this back to true.
+const CERT_RESTRICTED = false
 const CERT_RESTRICTED_CITIES = ['Haifa']
 
 const MAJOR_CITIES = [
