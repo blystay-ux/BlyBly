@@ -123,6 +123,25 @@ export default function Checkout() {
       if (data?.error) throw new Error(data.error)
       setAgencyReference(ref)
       setBookingResult(data)
+
+      // Best-effort confirmation email -- deliberately does NOT block or
+      // fail the booking flow if it errors. The booking already succeeded
+      // by this point; email is a nice-to-have on top, not a dependency.
+      supabase.functions.invoke('hyperguest-send-confirmation-email', {
+        body: {
+          to: leadGuest.email,
+          guestName: `${leadGuest.firstName} ${leadGuest.lastName}`,
+          agencyReference: ref,
+          hyperguestBookingId: data.content?.bookingId,
+          hotelName: info.name,
+          checkIn,
+          checkOut: addNights(checkIn, nights),
+          roomName: selectedOffer.room.roomName,
+          ratePlanName: selectedOffer.plan.ratePlanName,
+          totalPrice: sell.price,
+          currency: sell.currency,
+        },
+      }).catch(err => console.error('Confirmation email failed (booking still succeeded):', err))
     } catch (err) {
       console.error('Booking failed:', err)
       setBookingError(err.message || 'Something went wrong completing this booking. Please try again, or contact support.')
