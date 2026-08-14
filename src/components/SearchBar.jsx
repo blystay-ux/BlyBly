@@ -2,16 +2,6 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
-// TEMPORARY CERTIFICATION RESTRICTION (added 2026-08-13):
-// hyperguest-city-search currently only returns results for property 19912
-// (in Haifa) -- our HyperGuest account only has a certification token, not
-// a live one. Rather than show the full worldwide city list (~53k+
-// properties, hundreds of cities) when everything except Haifa returns an
-// empty "restricted" message, the dropdown is limited to just Haifa for
-// now. Once HyperGuest issues a live token and ALLOW_LIVE_HYPERGUEST_BOOKINGS
-// is flipped on the Edge Functions, replace CERT_RESTRICTED_CITIES below
-// with the original dynamic hg_cities fetch (see git history for the
-// pre-restriction version of this component).
 // CERTIFICATION RESTRICTION LIFTED 2026-08-14 -- HyperGuest issued the live
 // token and Phase 3 (live property booking) is underway. Full city search
 // is now enabled again. If this ever needs to go back to cert-only mode
@@ -19,28 +9,47 @@ import { supabase } from '../lib/supabase'
 const CERT_RESTRICTED = false
 const CERT_RESTRICTED_CITIES = ['Haifa']
 
+// Kept alphabetical for readability in the source, though the dropdown
+// re-sorts everything anyway once the live city list merges in.
 const MAJOR_CITIES = [
-  'Cape Town', 'Johannesburg', 'Pretoria', 'Durban', 'Gqeberha',
-  'Bloemfontein', 'East London', 'Nelspruit', 'Polokwane', 'Kimberley',
-  'George', 'Hermanus', 'Franschhoek', 'Stellenbosch', 'Knysna',
-  'Mossel Bay', 'Plettenberg Bay', 'Oudtshoorn', 'Hazyview', 'White River',
-  'Hoedspruit', 'Hartbeespoort', 'Magaliesburg', 'Clarens', 'Paternoster',
-  'Langebaan', 'Paarl', 'Somerset West', 'Umhlanga', 'Ballito',
-  'St Lucia', "Jeffrey's Bay", 'Pilanesberg', 'Sun City', 'Bela-Bela',
-  'Sabi Sand', 'Marloth Park', 'Upington', 'Springbok', 'Tzaneen',
+  'Ballito', 'Bela-Bela', 'Bloemfontein', 'Cape Town', 'Clarens',
+  'Durban', 'East London', 'Franschhoek', 'George', 'Gqeberha',
+  'Hartbeespoort', 'Hazyview', 'Hermanus', 'Hoedspruit', "Jeffrey's Bay",
+  'Johannesburg', 'Kimberley', 'Knysna', 'Langebaan', 'Magaliesburg',
+  'Marloth Park', 'Mossel Bay', 'Nelspruit', 'Oudtshoorn', 'Paarl',
+  'Paternoster', 'Pilanesberg', 'Plettenberg Bay', 'Polokwane', 'Pretoria',
+  'Sabi Sand', 'Somerset West', 'Springbok', 'St Lucia', 'Stellenbosch',
+  'Sun City', 'Tzaneen', 'Umhlanga', 'Upington', 'White River',
 ]
+
+// ── Date helpers, all guarded against invalid/empty input ──
+// Native <input type="date"> can briefly emit an empty or partial string
+// while a user is typing digit-by-digit (not just via the picker UI), and
+// new Date('').toISOString() THROWS rather than returning null -- that was
+// crashing the component whenever a date field went through an intermediate
+// invalid state. Every function below now fails safe instead.
+
+function isValidDateStr(str) {
+  if (!str) return false
+  const d = new Date(str)
+  return !isNaN(d.getTime())
+}
 
 function defaultCheckIn() {
   const d = new Date()
   d.setDate(d.getDate() + 1)
   return d.toISOString().split('T')[0]
 }
+
 function addNights(dateStr, nights) {
+  if (!isValidDateStr(dateStr)) return defaultCheckIn()
   const d = new Date(dateStr)
   d.setDate(d.getDate() + nights)
   return d.toISOString().split('T')[0]
 }
+
 function nightsBetween(checkIn, checkOut) {
+  if (!isValidDateStr(checkIn) || !isValidDateStr(checkOut)) return 1
   const ms = new Date(checkOut) - new Date(checkIn)
   return Math.max(1, Math.round(ms / (1000 * 60 * 60 * 24)))
 }
@@ -86,15 +95,18 @@ const s = {
 export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut, initialAdults }) {
   const navigate = useNavigate()
 
-  const [cities, setCities] = useState(CERT_RESTRICTED ? CERT_RESTRICTED_CITIES : MAJOR_CITIES)
-  const [city, setCity] = useState(initialCity || cities[0])
-  const [checkIn, setCheckIn] = useState(initialCheckIn || defaultCheckIn())
-  const [checkOut, setCheckOut] = useState(initialCheckOut || addNights(initialCheckIn || defaultCheckIn(), 2))
+  const initialCities = CERT_RESTRICTED ? CERT_RESTRICTED_CITIES : [...MAJOR_CITIES].sort()
+  const [cities, setCities] = useState(initialCities)
+  const [city, setCity] = useState(initialCity || initialCities[0])
+  const [checkIn, setCheckIn] = useState(isValidDateStr(initialCheckIn) ? initialCheckIn : defaultCheckIn())
+  const [checkOut, setCheckOut] = useState(
+    isValidDateStr(initialCheckOut) ? initialCheckOut : addNights(isValidDateStr(initialCheckIn) ? initialCheckIn : defaultCheckIn(), 2)
+  )
   const [adults, setAdults] = useState(initialAdults || 2)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (CERT_RESTRICTED) return // skip the dynamic fetch entirely while restricted
+    if (CERT_RESTRICTED) return
     async function fetchListedCities() {
       const { data, error } = await supabase.from('hg_cities').select('city')
       if (error) {
@@ -103,22 +115,29 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
       }
       if (data) {
         const listed = data.map(row => row.city).filter(Boolean)
-        const merged = Array.from(new Set([...MAJOR_CITIES, ...listed])).sort()
+        // Always alphabetical -- merge major cities + live-synced cities,
+        // dedupe, then sort once as the final step so ordering is
+        // consistent regardless of which list contributed a given city.
+        const merged = Array.from(new Set([...MAJOR_CITIES, ...listed])).sort((a, b) => a.localeCompare(b))
         setCities(merged)
       }
     }
     fetchListedCities()
   }, [])
 
+  // Only auto-adjust checkOut when checkIn is actually a valid date --
+  // an in-progress/invalid checkIn should never cascade into breaking
+  // checkOut too.
   useEffect(() => {
-    if (new Date(checkOut) <= new Date(checkIn)) {
+    if (!isValidDateStr(checkIn)) return
+    if (!isValidDateStr(checkOut) || new Date(checkOut) <= new Date(checkIn)) {
       setCheckOut(addNights(checkIn, 1))
     }
   }, [checkIn])
 
   const go = () => {
     setError('')
-    if (!checkIn || !checkOut) {
+    if (!isValidDateStr(checkIn) || !isValidDateStr(checkOut)) {
       setError('Please select your check-in and check-out dates.')
       return
     }
@@ -138,6 +157,10 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
     })
     navigate(`/search?${params}`)
   }
+
+  // Safe fallback for the checkout field's min attribute -- never throws
+  // even if checkIn is momentarily invalid while being edited.
+  const checkoutMin = isValidDateStr(checkIn) ? addNights(checkIn, 1) : undefined
 
   return (
     <div>
@@ -161,7 +184,7 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
           <span style={s.icon}>📅</span>
           <input
             type="date" style={s.input} value={checkOut}
-            min={addNights(checkIn, 1)}
+            min={checkoutMin}
             onChange={e => setCheckOut(e.target.value)}
             aria-label="Check-out date"
           />
