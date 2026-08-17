@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import DatePicker from './DatePicker'
 
 // CERTIFICATION RESTRICTION LIFTED 2026-08-14 -- HyperGuest issued the live
 // token and Phase 3 (live property booking) is underway. Full city search
@@ -173,20 +174,20 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
         </div>
         <div style={s.field}>
           <span style={s.icon}>📅</span>
-          <input
-            type="date" style={s.input} value={checkIn}
+          <DatePicker
+            value={checkIn}
+            onChange={setCheckIn}
             min={new Date().toISOString().split('T')[0]}
-            onChange={e => setCheckIn(e.target.value)}
-            aria-label="Check-in date"
+            label="Check-in date"
           />
         </div>
         <div style={s.field}>
           <span style={s.icon}>📅</span>
-          <input
-            type="date" style={s.input} value={checkOut}
+          <DatePicker
+            value={checkOut}
+            onChange={setCheckOut}
             min={checkoutMin}
-            onChange={e => setCheckOut(e.target.value)}
-            aria-label="Check-out date"
+            label="Check-out date"
           />
         </div>
         <div style={s.fieldLast}>
