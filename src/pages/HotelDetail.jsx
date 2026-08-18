@@ -339,19 +339,12 @@ export default function HotelDetail() {
                       </div>
                       <div style={s.offerPrice}>{guestPrice?.currency} {Number(guestPrice?.totalAmount).toLocaleString()}</div>
                     </div>
+                    <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'right', marginTop: -6, marginBottom: 6 }}>Taxes and fees included</div>
                     <div style={s.offerBadges}>
                       {offer.plan.ratePlanInfo?.isPackageRate && <span style={s.packageBadge}>Package rate</span>}
                       {offer.plan.ratePlanInfo?.isPromotion && <span style={s.packageBadge}>Promo</span>}
                       {offer.plan.isImmediate && <span style={s.badge}>Instant confirmation</span>}
                     </div>
-
-                    <details style={s.details} onClick={e => e.stopPropagation()}>
-                      <summary style={s.summary}>Price breakdown</summary>
-                      <div style={s.priceRow}><span>Bly. Rate</span><span>{guestPrice?.currency} {guestPrice?.blyRateAmount}</span></div>
-                      <div style={s.priceRow}><span>VAT</span><span>{guestPrice?.currency} {guestPrice?.vatAmount}</span></div>
-                      <div style={s.priceRow}><span>Tourism Levy</span><span>{guestPrice?.currency} {guestPrice?.levyAmount}</span></div>
-                      <div style={{ ...s.priceRow, ...s.priceRowTotal }}><span>Total</span><span>{guestPrice?.currency} {guestPrice?.totalAmount}</span></div>
-                    </details>
 
                     <details style={s.details} onClick={e => e.stopPropagation()}>
                       <summary style={s.summary}>Cancellation policy</summary>
