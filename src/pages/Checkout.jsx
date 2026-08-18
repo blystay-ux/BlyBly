@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { calculateGuestPrice } from '../lib/pricing'
 
 function addNights(dateStr, nights) {
   const d = new Date(dateStr)
@@ -83,6 +84,9 @@ export default function Checkout() {
   const info = property.propertyInfo
   const confirmedRoom = prebookResult.content?.rooms?.[0]
   const sell = confirmedRoom?.prices?.sell ?? selectedOffer.plan.prices?.sell
+  // Guest-facing price only. `sell` above (HyperGuest's raw rate) is what
+  // actually gets sent as expectedPrice to hyperguest-book -- never this.
+  const guestPrice = sell ? calculateGuestPrice(sell.price, sell.currency) : null
 
   function updateLeadGuest(field, value) {
     setLeadGuest(prev => ({ ...prev, [field]: value }))
@@ -211,7 +215,10 @@ export default function Checkout() {
             <div style={s.summaryRow}><span>Dates</span><span>{checkIn} → {addNights(checkIn, nights)}</span></div>
             <div style={s.summaryRow}><span>Guests</span><span>{adults} {adults === 1 ? 'adult' : 'adults'}</span></div>
             <div style={s.summaryRow}><span>Board</span><span>{selectedOffer.plan.board}</span></div>
-            <div style={s.summaryTotal}><span>Total</span><span>{sell?.currency} {Number(sell?.price).toLocaleString()}</span></div>
+            <div style={s.summaryRow}><span>Bly. Rate</span><span>{guestPrice?.currency} {guestPrice?.blyRateAmount}</span></div>
+            <div style={s.summaryRow}><span>VAT</span><span>{guestPrice?.currency} {guestPrice?.vatAmount}</span></div>
+            <div style={s.summaryRow}><span>Tourism Levy</span><span>{guestPrice?.currency} {guestPrice?.levyAmount}</span></div>
+            <div style={s.summaryTotal}><span>Total</span><span>{guestPrice?.currency} {Number(guestPrice?.totalAmount).toLocaleString()}</span></div>
           </div>
 
           <div style={s.sectionTitle}>Your details</div>
@@ -302,7 +309,7 @@ export default function Checkout() {
         </div>
 
         <div style={s.ctaBar}>
-          <div style={{ fontSize: 14, fontWeight: 700 }}>{sell?.currency} {Number(sell?.price).toLocaleString()}</div>
+          <div style={{ fontSize: 14, fontWeight: 700 }}>{guestPrice?.currency} {Number(guestPrice?.totalAmount).toLocaleString()}</div>
           <button
             style={{ ...s.ctaBtn, ...(!leadGuestValid() || !roomGuestsValid() || booking ? s.ctaBtnDisabled : {}) }}
             disabled={!leadGuestValid() || !roomGuestsValid() || booking}
