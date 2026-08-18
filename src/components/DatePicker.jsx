@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -8,11 +9,8 @@ const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
 
 function toDateStr(d) {
   // Build the string from LOCAL date parts directly -- NEVER use
-  // .toISOString() here. toISOString() converts to UTC first, and for any
-  // timezone ahead of UTC (like SAST, UTC+2), local midnight rolls back to
-  // the previous day in UTC -- meaning every single date click was silently
-  // storing the day BEFORE the one actually clicked. This was the root
-  // cause of "the selector doesn't work."
+  // .toISOString() here, since that converts to UTC first and rolls the
+  // date back by one day for any timezone ahead of UTC (like SAST, UTC+2).
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
@@ -38,11 +36,14 @@ const s = {
     fontSize: 13, color: '#111', width: '100%', textAlign: 'left',
     fontFamily: 'var(--font-body)', cursor: 'pointer', padding: 0,
   },
-  popover: {
-    position: 'absolute', top: 'calc(100% + 10px)', left: 0, zIndex: 50,
-    background: '#fff', borderRadius: 16, boxShadow: '0 12px 40px rgba(0,0,0,0.15)',
+  // Rendered via portal into document.body -- position: fixed with
+  // coordinates computed from the trigger's actual screen position, since
+  // it's no longer nested inside the search bar's local layout at all.
+  popover: (top, left) => ({
+    position: 'fixed', top, left, zIndex: 9999,
+    background: '#fff', borderRadius: 16, boxShadow: '0 12px 40px rgba(0,0,0,0.18)',
     padding: 16, width: 280,
-  },
+  }),
   header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   monthLabel: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, color: '#111' },
   navBtn: {
@@ -65,12 +66,16 @@ const s = {
 
 export default function DatePicker({ value, onChange, min, label }) {
   const [open, setOpen] = useState(false)
+  const [coords, setCoords] = useState({ top: 0, left: 0 })
   const [viewDate, setViewDate] = useState(() => (isValidDateStr(value) ? parseLocal(value) : new Date()))
-  const ref = useRef(null)
+  const triggerRef = useRef(null)
+  const popoverRef = useRef(null)
 
   useEffect(() => {
     function onClickOutside(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+      const clickedTrigger = triggerRef.current && triggerRef.current.contains(e.target)
+      const clickedPopover = popoverRef.current && popoverRef.current.contains(e.target)
+      if (!clickedTrigger && !clickedPopover) setOpen(false)
     }
     document.addEventListener('mousedown', onClickOutside)
     return () => document.removeEventListener('mousedown', onClickOutside)
@@ -79,6 +84,14 @@ export default function DatePicker({ value, onChange, min, label }) {
   useEffect(() => {
     if (isValidDateStr(value)) setViewDate(parseLocal(value))
   }, [value])
+
+  function openCalendar() {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect()
+      setCoords({ top: rect.bottom + 10, left: rect.left })
+    }
+    setOpen(o => !o)
+  }
 
   const minDate = isValidDateStr(min) ? parseLocal(min) : null
   const selectedDate = isValidDateStr(value) ? parseLocal(value) : null
@@ -111,13 +124,13 @@ export default function DatePicker({ value, onChange, min, label }) {
     : 'Select date'
 
   return (
-    <div style={s.wrap} ref={ref}>
-      <button type="button" style={s.trigger} onClick={() => setOpen(o => !o)} aria-label={label}>
+    <div style={s.wrap}>
+      <button type="button" ref={triggerRef} style={s.trigger} onClick={openCalendar} aria-label={label}>
         {displayLabel}
       </button>
 
-      {open && (
-        <div style={s.popover}>
+      {open && createPortal(
+        <div ref={popoverRef} style={s.popover(coords.top, coords.left)}>
           <div style={s.header}>
             <button type="button" style={s.navBtn} onClick={goPrevMonth} aria-label="Previous month">‹</button>
             <span style={s.monthLabel}>{MONTH_NAMES[month]} {year}</span>
@@ -149,7 +162,8 @@ export default function DatePicker({ value, onChange, min, label }) {
               )
             })}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
