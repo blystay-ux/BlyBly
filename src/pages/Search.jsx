@@ -82,6 +82,7 @@ function ResultCard({ property, checkIn, nights, adults }) {
                   {offer.currency} {Number(offer.totalAmount).toLocaleString()}
                 </span>
                 <span style={{ fontSize: 13, color: 'var(--text-muted)' }}> / night</span>
+                <span style={{ fontSize: 10, color: 'var(--text-muted)', display: 'block', marginTop: 2 }}>Taxes and fees included</span>
               </>
             ) : (
               <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>No availability for these dates</span>
