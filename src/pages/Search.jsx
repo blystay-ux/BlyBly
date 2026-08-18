@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import SearchBar from '../components/SearchBar'
+import { calculateGuestPrice } from '../lib/pricing'
 
 const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80'
 
@@ -29,7 +30,10 @@ function cheapestOffer(property) {
 
 function ResultCard({ property, checkIn, nights, adults }) {
   const navigate = useNavigate()
-  const offer = cheapestOffer(property)
+  const cheapestRaw = cheapestOffer(property)
+  // Guest-facing price includes BLY's commission/levy/VAT -- the raw
+  // HyperGuest rate is never shown to the guest directly.
+  const offer = cheapestRaw ? calculateGuestPrice(cheapestRaw.price, cheapestRaw.currency) : null
   const info = property.propertyInfo
 
   const handleView = () => {
@@ -75,7 +79,7 @@ function ResultCard({ property, checkIn, nights, adults }) {
               <>
                 <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block' }}>from</span>
                 <span style={{ fontWeight: 800, fontSize: 18, color: 'var(--text)' }}>
-                  {offer.currency} {Number(offer.price).toLocaleString()}
+                  {offer.currency} {Number(offer.totalAmount).toLocaleString()}
                 </span>
                 <span style={{ fontSize: 13, color: 'var(--text-muted)' }}> / night</span>
               </>
