@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { calculateGuestPrice } from '../lib/pricing'
 
 const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80'
 
@@ -323,11 +324,12 @@ export default function HotelDetail() {
               {offers.map((offer, i) => {
                 const isSelected = selectedOffer === offer
                 const sell = offer.plan.prices?.sell
-                const net = offer.plan.prices?.net
-                const bar = offer.plan.prices?.bar
-                const taxes = sell?.taxes || []
-                const fees = offer.plan.prices?.fees || []
                 const policies = offer.plan.cancellationPolicies || []
+                // Guest-facing price only -- `sell` above (HyperGuest's raw
+                // rate) is what actually gets sent as expectedPrice to
+                // hyperguest-prebook/hyperguest-book, completely unaffected
+                // by this calculation.
+                const guestPrice = sell ? calculateGuestPrice(sell.price, sell.currency) : null
                 return (
                   <div key={i} style={s.offerCard(isSelected)} onClick={() => { setSelectedOffer(offer); setPrebookError(null) }}>
                     <div style={s.offerTop}>
@@ -335,7 +337,7 @@ export default function HotelDetail() {
                         <div style={s.offerName}>{offer.room.roomName} — {offer.plan.ratePlanName}</div>
                         <div style={s.offerBoard}>{offer.plan.board} board · up to {offer.room.settings?.maxOccupancy} guests</div>
                       </div>
-                      <div style={s.offerPrice}>{sell?.currency} {Number(sell?.price).toLocaleString()}</div>
+                      <div style={s.offerPrice}>{guestPrice?.currency} {Number(guestPrice?.totalAmount).toLocaleString()}</div>
                     </div>
                     <div style={s.offerBadges}>
                       {offer.plan.ratePlanInfo?.isPackageRate && <span style={s.packageBadge}>Package rate</span>}
@@ -344,12 +346,11 @@ export default function HotelDetail() {
                     </div>
 
                     <details style={s.details} onClick={e => e.stopPropagation()}>
-                      <summary style={s.summary}>Taxes & fees breakdown</summary>
-                      <div style={s.priceRow}><span>Net rate</span><span>{net?.currency} {net?.price}</span></div>
-                      <div style={s.priceRow}><span>BAR rate</span><span>{bar?.currency} {bar?.price}</span></div>
-                      <div style={{ ...s.priceRow, ...s.priceRowTotal }}><span>Sell rate (total)</span><span>{sell?.currency} {sell?.price}</span></div>
-                      {taxes.map((t, ti) => <div key={ti} style={s.taxItem}>Tax — {t.name}: {t.currency} {t.amount} ({t.relation}, {t.scope}, {t.frequency})</div>)}
-                      {fees.map((f, fi) => <div key={fi} style={s.taxItem}>Fee — {f.name}: {f.currency} {f.amount} ({f.relation}, {f.scope}, {f.frequency})</div>)}
+                      <summary style={s.summary}>Price breakdown</summary>
+                      <div style={s.priceRow}><span>Bly. Rate</span><span>{guestPrice?.currency} {guestPrice?.blyRateAmount}</span></div>
+                      <div style={s.priceRow}><span>VAT</span><span>{guestPrice?.currency} {guestPrice?.vatAmount}</span></div>
+                      <div style={s.priceRow}><span>Tourism Levy</span><span>{guestPrice?.currency} {guestPrice?.levyAmount}</span></div>
+                      <div style={{ ...s.priceRow, ...s.priceRowTotal }}><span>Total</span><span>{guestPrice?.currency} {guestPrice?.totalAmount}</span></div>
                     </details>
 
                     <details style={s.details} onClick={e => e.stopPropagation()}>
