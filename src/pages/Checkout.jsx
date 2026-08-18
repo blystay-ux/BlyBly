@@ -215,10 +215,8 @@ export default function Checkout() {
             <div style={s.summaryRow}><span>Dates</span><span>{checkIn} → {addNights(checkIn, nights)}</span></div>
             <div style={s.summaryRow}><span>Guests</span><span>{adults} {adults === 1 ? 'adult' : 'adults'}</span></div>
             <div style={s.summaryRow}><span>Board</span><span>{selectedOffer.plan.board}</span></div>
-            <div style={s.summaryRow}><span>Bly. Rate</span><span>{guestPrice?.currency} {guestPrice?.blyRateAmount}</span></div>
-            <div style={s.summaryRow}><span>VAT</span><span>{guestPrice?.currency} {guestPrice?.vatAmount}</span></div>
-            <div style={s.summaryRow}><span>Tourism Levy</span><span>{guestPrice?.currency} {guestPrice?.levyAmount}</span></div>
             <div style={s.summaryTotal}><span>Total</span><span>{guestPrice?.currency} {Number(guestPrice?.totalAmount).toLocaleString()}</span></div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'right', marginTop: 4 }}>Taxes and fees included</div>
           </div>
 
           <div style={s.sectionTitle}>Your details</div>
