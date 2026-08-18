@@ -34,14 +34,20 @@ const s = {
   page: { maxWidth: 860, margin: '0 auto' },
 
   lockedHeader: {
-    position: 'sticky', top: 'var(--nav-height)', zIndex: 15,
-    background: 'var(--bg)', boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
+    background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', padding: '14px 24px',
   },
   back: {
-    display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 700,
-    color: '#fff', cursor: 'pointer', background: 'rgba(0,0,0,0.35)', border: 'none',
-    position: 'absolute', top: 14, left: 14, zIndex: 2, padding: '7px 14px', borderRadius: 99,
+    display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 500,
+    color: 'var(--text-muted)', cursor: 'pointer', background: 'none', border: 'none',
+    padding: 0, marginBottom: 12,
   },
+  compactHeaderRow: { display: 'flex', gap: 14, alignItems: 'flex-start' },
+  compactThumb: { width: 96, height: 76, borderRadius: 12, objectFit: 'cover', flexShrink: 0 },
+  compactInfo: { minWidth: 0, flex: 1 },
+  compactName: { fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, letterSpacing: '-0.02em', color: 'var(--text)', lineHeight: 1.15 },
+  compactMeta: { display: 'flex', alignItems: 'center', gap: 12, fontSize: 12, color: 'var(--text-muted)', marginTop: 4 },
+  remarkPills: { display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 },
+  remarkPill: { background: '#F5D6DE', borderRadius: 99, padding: '4px 10px', fontSize: 11, color: '#000' },
   hero: {
     position: 'relative', width: '100%', aspectRatio: '1 / 1',
     maxHeight: 560, overflow: 'hidden',
@@ -51,12 +57,14 @@ const s = {
   heroText: { position: 'absolute', left: 24, right: 24, bottom: 20, color: '#fff' },
   heroName: { fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(24px, 4vw, 34px)', letterSpacing: '-0.02em', marginBottom: 4, lineHeight: 1.1 },
   heroMeta: { display: 'flex', alignItems: 'center', gap: 14, fontSize: 13, color: 'rgba(255,255,255,0.9)' },
-  thumbStrip: { display: 'flex', gap: 8, overflowX: 'auto', padding: '10px 24px', scrollbarWidth: 'thin' },
-  thumb: { flexShrink: 0, width: 68, height: 48, objectFit: 'cover', borderRadius: 8, cursor: 'pointer' },
+  thumbStrip: { display: 'flex', gap: 8, overflowX: 'auto', padding: '10px 0', scrollbarWidth: 'thin' },
+  thumb: { flexShrink: 0, width: 90, height: 64, objectFit: 'cover', borderRadius: 10, cursor: 'pointer' },
 
   ctaBar: {
+    position: 'sticky', bottom: 0, zIndex: 15,
     display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
-    padding: '10px 24px 14px',
+    padding: '14px 24px', background: 'var(--bg-card)', borderTop: '1px solid var(--border)',
+    boxShadow: '0 -4px 20px rgba(0,0,0,0.06)',
   },
   ctaInfo: { minWidth: 0, flex: 1 },
   ctaDates: { fontSize: 12, color: 'var(--text-muted)' },
@@ -65,9 +73,8 @@ const s = {
   ctaBtnDisabled: { opacity: 0.4, cursor: 'not-allowed' },
   errorBar: { background: '#FDEBEC', color: '#ef4056', fontSize: 12, fontWeight: 600, padding: '8px 24px' },
 
-  content: { padding: '20px 24px 60px' },
-  remark: { background: '#F5D6DE', borderRadius: 12, padding: '12px 16px', fontSize: 13, color: '#000', marginBottom: 10, lineHeight: 1.5 },
-  sectionTitle: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 18, marginTop: 28, marginBottom: 12, letterSpacing: '-0.3px', color: 'var(--text)' },
+  content: { padding: '20px 24px 24px' },
+  sectionTitle: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 18, marginBottom: 12, letterSpacing: '-0.3px', color: 'var(--text)' },
   facilities: { display: 'flex', flexWrap: 'wrap', gap: 8 },
   facilityTag: { background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 99, padding: '6px 14px', fontSize: 12 },
   offerCard: (selected) => ({
@@ -84,10 +91,12 @@ const s = {
   packageBadge: { padding: '4px 10px', background: '#F5D6DE', borderRadius: 99, fontSize: 11, color: '#000', fontWeight: 600 },
   details: { marginTop: 10, fontSize: 12 },
   summary: { cursor: 'pointer', fontWeight: 700, color: '#ef4056', fontSize: 12 },
-  priceRow: { display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px dashed var(--border)', fontSize: 12 },
-  priceRowTotal: { fontWeight: 700, borderBottom: 'none', paddingTop: 8 },
-  taxItem: { fontSize: 11, color: 'var(--text-muted)', padding: '3px 0' },
   policyItem: { fontSize: 12, padding: '4px 0' },
+
+  moreSection: { marginTop: 8, borderTop: '1px solid var(--border)', paddingTop: 8 },
+  moreSummary: { cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 15, color: 'var(--text)', padding: '10px 0' },
+  moreGallery: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 8, marginTop: 14, marginBottom: 16 },
+  moreGalleryImg: { width: '100%', height: 90, objectFit: 'cover', borderRadius: 10 },
 }
 
 export default function HotelDetail() {
@@ -261,63 +270,35 @@ export default function HotelDetail() {
   const ctaLabel = selectedOffer ? `${selectedOffer.room.roomName} — ${selectedOffer.plan.ratePlanName}` : 'Select a room & rate below'
 
   return (
-    <main>
-      <div style={s.page}>
+    <main style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - var(--nav-height))' }}>
+      <div style={{ ...s.page, flex: 1, display: 'flex', flexDirection: 'column' }}>
 
+        {/* ── COMPACT HEADER: small photo + name/rating/location, gets out of the way fast ── */}
         <div style={s.lockedHeader}>
-          <div style={s.hero}>
-            <button style={s.back} onClick={() => navigate(-1)}>← Back to results</button>
-            <img src={photos[activePhoto]?.uri || property.thumbnailImage || PLACEHOLDER_IMG} alt={info.name} style={s.heroImg} />
-            <div style={s.heroScrim} />
-            <div style={s.heroText}>
-              <div style={s.heroName}>{info.name}</div>
-              <div style={s.heroMeta}>
+          <button style={s.back} onClick={() => navigate(-1)}>← Back to results</button>
+          <div style={s.compactHeaderRow}>
+            <img src={property.thumbnailImage || photos[0]?.uri || PLACEHOLDER_IMG} alt={info.name} style={s.compactThumb} />
+            <div style={s.compactInfo}>
+              <div style={s.compactName}>{info.name}</div>
+              <div style={s.compactMeta}>
                 {info.starRating > 0 && <span>★ {info.starRating}</span>}
                 <span>📍 {info.cityName}, {info.countryCode}</span>
               </div>
+              {property.remarks?.length > 0 && (
+                <div style={s.remarkPills}>
+                  {property.remarks.slice(0, 3).map((r, i) => (
+                    <span key={i} style={s.remarkPill}>{r.length > 40 ? r.slice(0, 40) + '…' : r}</span>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
-
-          {photos.length > 1 && (
-            <div style={s.thumbStrip}>
-              {photos.slice(0, 12).map((p, i) => (
-                <img key={i} src={p.uri} style={s.thumb} onClick={() => setActivePhoto(i)} alt="" />
-              ))}
-            </div>
-          )}
-
-          {prebookError && <div style={s.errorBar}>{prebookError}</div>}
-
-          <div style={s.ctaBar}>
-            <div style={s.ctaInfo}>
-              <div style={s.ctaDates}>{checkIn} → {addNights(checkIn, nights)} · {nights}n · {adults}a</div>
-              <div style={s.ctaSelection}>{ctaLabel}</div>
-            </div>
-            <button
-              style={{ ...s.ctaBtn, ...(!selectedOffer || prebooking ? s.ctaBtnDisabled : {}) }}
-              disabled={!selectedOffer || prebooking}
-              onClick={handlePrebook}
-            >
-              {prebooking ? 'Checking…' : 'Check price'}
-            </button>
           </div>
         </div>
 
-        <div style={s.content}>
-          {description && <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>{description}</p>}
-          {property.remarks?.map((r, i) => (
-            <div key={i} style={{ ...s.remark, marginTop: i === 0 ? 16 : 0 }}>{r}</div>
-          ))}
+        {prebookError && <div style={s.errorBar}>{prebookError}</div>}
 
-          {facilities.length > 0 && (
-            <>
-              <div style={s.sectionTitle}>Facilities</div>
-              <div style={s.facilities}>
-                {facilities.map((f, i) => <span key={i} style={s.facilityTag}>{f.name}</span>)}
-              </div>
-            </>
-          )}
-
+        {/* ── ROOMS FIRST: the whole point of this layout ── */}
+        <div style={{ ...s.content, flex: 1 }}>
           {offers.length > 0 && (
             <>
               <div style={s.sectionTitle}>Choose your room & rate</div>
@@ -357,6 +338,45 @@ export default function HotelDetail() {
               })}
             </>
           )}
+
+          {/* ── "MORE ABOUT THIS PROPERTY": full gallery, description, facilities -- moved down here since they're secondary to booking speed ── */}
+          <details style={s.moreSection}>
+            <summary style={s.moreSummary}>More about this property</summary>
+
+            {photos.length > 0 && (
+              <div style={s.moreGallery}>
+                {photos.slice(0, 12).map((p, i) => (
+                  <img key={i} src={p.uri} style={s.moreGalleryImg} alt="" />
+                ))}
+              </div>
+            )}
+
+            {description && <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 16 }}>{description}</p>}
+
+            {facilities.length > 0 && (
+              <>
+                <div style={{ ...s.sectionTitle, fontSize: 15, marginBottom: 8 }}>Facilities</div>
+                <div style={s.facilities}>
+                  {facilities.map((f, i) => <span key={i} style={s.facilityTag}>{f.name}</span>)}
+                </div>
+              </>
+            )}
+          </details>
+        </div>
+
+        {/* ── STICKY BOTTOM: dates/selection + Check price, always reachable ── */}
+        <div style={s.ctaBar}>
+          <div style={s.ctaInfo}>
+            <div style={s.ctaDates}>{checkIn} → {addNights(checkIn, nights)} · {nights}n · {adults}a</div>
+            <div style={s.ctaSelection}>{ctaLabel}</div>
+          </div>
+          <button
+            style={{ ...s.ctaBtn, ...(!selectedOffer || prebooking ? s.ctaBtnDisabled : {}) }}
+            disabled={!selectedOffer || prebooking}
+            onClick={handlePrebook}
+          >
+            {prebooking ? 'Checking…' : 'Check price'}
+          </button>
         </div>
       </div>
     </main>
