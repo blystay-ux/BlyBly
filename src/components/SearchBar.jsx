@@ -10,49 +10,67 @@ import DatePicker from './DatePicker'
 const CERT_RESTRICTED = false
 const CERT_RESTRICTED_CITIES = ['Haifa']
 
-// Kept alphabetical for readability in the source, though the dropdown
-// re-sorts everything anyway once the live city list merges in.
-const MAJOR_CITIES = [
-  'Ballito', 'Bela-Bela', 'Bloemfontein', 'Cape Town', 'Clarens',
-  'Durban', 'East London', 'Franschhoek', 'George', 'Gqeberha',
+// Always shown first, in this exact order -- not alphabetized among
+// themselves, unlike everything else in the dropdown.
+const PRIORITY_CITIES = ['Cape Town', 'Johannesburg', 'Pretoria', 'Durban']
+
+// Fallback South African cities shown before the live hg_cities fetch
+// completes (or if it fails). Priority cities are deliberately excluded
+// here since they're always rendered separately, above this list.
+const FALLBACK_SA_CITIES = [
+  'Ballito', 'Bela-Bela', 'Bloemfontein', 'Clarens',
+  'East London', 'Franschhoek', 'George', 'Gqeberha',
   'Hartbeespoort', 'Hazyview', 'Hermanus', 'Hoedspruit', "Jeffrey's Bay",
-  'Johannesburg', 'Kimberley', 'Knysna', 'Langebaan', 'Magaliesburg',
+  'Kimberley', 'Knysna', 'Langebaan', 'Magaliesburg',
   'Marloth Park', 'Mossel Bay', 'Nelspruit', 'Oudtshoorn', 'Paarl',
-  'Paternoster', 'Pilanesberg', 'Plettenberg Bay', 'Polokwane', 'Pretoria',
+  'Paternoster', 'Pilanesberg', 'Plettenberg Bay', 'Polokwane',
   'Sabi Sand', 'Somerset West', 'Springbok', 'St Lucia', 'Stellenbosch',
   'Sun City', 'Tzaneen', 'Umhlanga', 'Upington', 'White River',
-]
+].sort((a, b) => a.localeCompare(b))
+
+// Converts an ISO country code (e.g. "ZA") to a readable name (e.g. "South
+// Africa") using the browser's built-in Intl API -- no need to hand-maintain
+// a country code lookup table. Falls back to the raw code if unsupported.
+let countryNamer = null
+try {
+  countryNamer = new Intl.DisplayNames(['en'], { type: 'region' })
+} catch {
+  countryNamer = null
+}
+function countryName(code) {
+  if (!code) return 'Other'
+  try {
+    return (countryNamer && countryNamer.of(code)) || code
+  } catch {
+    return code
+  }
+}
 
 // ── Date helpers, all guarded against invalid/empty input ──
-// Native <input type="date"> can briefly emit an empty or partial string
-// while a user is typing digit-by-digit (not just via the picker UI), and
-// new Date('').toISOString() THROWS rather than returning null -- that was
-// crashing the component whenever a date field went through an intermediate
-// invalid state. Every function below now fails safe instead.
-
 function isValidDateStr(str) {
   if (!str) return false
   const d = new Date(str)
   return !isNaN(d.getTime())
 }
-
 function defaultCheckIn() {
   const d = new Date()
   d.setDate(d.getDate() + 1)
   return d.toISOString().split('T')[0]
 }
-
 function addNights(dateStr, nights) {
   if (!isValidDateStr(dateStr)) return defaultCheckIn()
   const d = new Date(dateStr)
   d.setDate(d.getDate() + nights)
   return d.toISOString().split('T')[0]
 }
-
 function nightsBetween(checkIn, checkOut) {
   if (!isValidDateStr(checkIn) || !isValidDateStr(checkOut)) return 1
   const ms = new Date(checkOut) - new Date(checkIn)
   return Math.max(1, Math.round(ms / (1000 * 60 * 60 * 24)))
+}
+
+function buildFallbackGroups() {
+  return [{ label: 'South Africa', cities: FALLBACK_SA_CITIES }]
 }
 
 const s = {
@@ -96,32 +114,50 @@ const s = {
 export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut, initialAdults }) {
   const navigate = useNavigate()
 
-  const initialCities = CERT_RESTRICTED ? CERT_RESTRICTED_CITIES : [...MAJOR_CITIES].sort()
-  const [cities, setCities] = useState(initialCities)
-  const [city, setCity] = useState(initialCity || initialCities[0])
+  const [cityGroups, setCityGroups] = useState(CERT_RESTRICTED ? [] : buildFallbackGroups())
+  const [city, setCity] = useState(initialCity || (CERT_RESTRICTED ? CERT_RESTRICTED_CITIES[0] : PRIORITY_CITIES[0]))
   const [checkIn, setCheckIn] = useState(isValidDateStr(initialCheckIn) ? initialCheckIn : defaultCheckIn())
   const [checkOut, setCheckOut] = useState(
     isValidDateStr(initialCheckOut) ? initialCheckOut : addNights(isValidDateStr(initialCheckIn) ? initialCheckIn : defaultCheckIn(), 2)
   )
-  const [adults, setAdults] = useState(initialAdults || 2)
+  // Default is 1 adult, not 2.
+  const [adults, setAdults] = useState(initialAdults || 1)
   const [error, setError] = useState('')
 
   useEffect(() => {
     if (CERT_RESTRICTED) return
     async function fetchListedCities() {
-      const { data, error } = await supabase.from('hg_cities').select('city')
+      const { data, error } = await supabase.from('hg_cities').select('city, country')
       if (error) {
         console.error('Failed to load HyperGuest city list:', error)
         return
       }
-      if (data) {
-        const listed = data.map(row => row.city).filter(Boolean)
-        // Always alphabetical -- merge major cities + live-synced cities,
-        // dedupe, then sort once as the final step so ordering is
-        // consistent regardless of which list contributed a given city.
-        const merged = Array.from(new Set([...MAJOR_CITIES, ...listed])).sort((a, b) => a.localeCompare(b))
-        setCities(merged)
+      if (!data) return
+
+      // Group everything (except the 4 priority cities, shown separately
+      // above) by country, cities alphabetical within each group, groups
+      // alphabetical by their resolved display name.
+      const byCountry = {}
+      for (const row of data) {
+        if (!row.city || PRIORITY_CITIES.includes(row.city)) continue
+        const label = countryName(row.country)
+        if (!byCountry[label]) byCountry[label] = new Set()
+        byCountry[label].add(row.city)
       }
+      // Make sure the South Africa group exists and includes the fallback
+      // list too, in case live data is sparse for some SA cities.
+      const saLabel = countryName('ZA')
+      if (!byCountry[saLabel]) byCountry[saLabel] = new Set()
+      for (const c of FALLBACK_SA_CITIES) byCountry[saLabel].add(c)
+
+      const groups = Object.entries(byCountry)
+        .map(([label, citySet]) => ({
+          label,
+          cities: Array.from(citySet).sort((a, b) => a.localeCompare(b)),
+        }))
+        .sort((a, b) => a.label.localeCompare(b.label))
+
+      setCityGroups(groups)
     }
     fetchListedCities()
   }, [])
@@ -169,7 +205,20 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
         <div style={s.field}>
           <span style={s.icon}>📍</span>
           <select style={s.select} value={city} onChange={e => setCity(e.target.value)}>
-            {cities.map(c => <option key={c}>{c}</option>)}
+            {CERT_RESTRICTED ? (
+              CERT_RESTRICTED_CITIES.map(c => <option key={c}>{c}</option>)
+            ) : (
+              <>
+                <optgroup label="Popular">
+                  {PRIORITY_CITIES.map(c => <option key={c}>{c}</option>)}
+                </optgroup>
+                {cityGroups.map(group => (
+                  <optgroup key={group.label} label={group.label}>
+                    {group.cities.map(c => <option key={c}>{c}</option>)}
+                  </optgroup>
+                ))}
+              </>
+            )}
           </select>
         </div>
         <div style={s.field}>
