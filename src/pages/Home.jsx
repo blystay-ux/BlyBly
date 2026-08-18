@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import SearchBar from '../components/SearchBar'
@@ -7,19 +7,53 @@ import SearchBar from '../components/SearchBar'
 const HERO_IMG =
   'https://images.unsplash.com/photo-1580060839134-75a5edca2e99?auto=format&fit=crop&w=1920&q=80'
 
-// Brand city lines — the signature BLY. destination copy.
+// Brand city lines — the signature BLY. destination copy. Same 4 priority
+// cities as the search bar's "Popular" group, in the same order.
 const CITIES = [
   { name: 'Cape Town',    line: 'Beautiful enough to make your ex jealous.' },
+  { name: 'Johannesburg', line: 'More than gold. More than business.' },
   { name: 'Pretoria',     line: 'Come for the Jacarandas, stay for the braai!' },
   { name: 'Durban',       line: 'Beach, bunny chow and repeat!' },
-  { name: 'Johannesburg', line: 'More than gold. More than business.' },
 ]
+const PRIORITY_CITIES = CITIES.map(c => c.name)
 
-function FeaturedCard({ hotel }) {
+const FEATURED_POOL_LIMIT = 60   // how many candidates to fetch and rotate through
+const FEATURED_VISIBLE_COUNT = 8 // how many show on screen at once
+const ROTATE_INTERVAL_MS = 9000  // how often the visible set reshuffles
+
+function defaultCheckIn() {
+  const d = new Date()
+  d.setDate(d.getDate() + 1)
+  return d.toISOString().split('T')[0]
+}
+
+// Fisher-Yates -- unbiased shuffle, unlike naively sorting on Math.random().
+function shuffle(arr) {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
+
+function FeaturedCard({ property }) {
   const navigate = useNavigate()
+  const photo = (property.images || []).find(img => img.type === 'photo')?.uri
+
+  const goToCity = () => {
+    const params = new URLSearchParams({
+      city: property.city,
+      checkIn: defaultCheckIn(),
+      nights: '2',
+      adults: '1',
+    })
+    navigate(`/search?${params}`)
+  }
+
   return (
     <div
-      onClick={() => navigate(`/hotel/${hotel.slug}`)}
+      onClick={goToCity}
       style={{
         background: 'var(--bg-card)', borderRadius: 20, overflow: 'hidden',
         boxShadow: '0 2px 16px rgba(0,0,0,0.06)', cursor: 'pointer',
@@ -27,8 +61,8 @@ function FeaturedCard({ hotel }) {
     >
       <div style={{ position: 'relative', height: 200, overflow: 'hidden' }}>
         <img
-          src={hotel.image_url || HERO_IMG}
-          alt={hotel.name}
+          src={photo || HERO_IMG}
+          alt={property.name}
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         />
         <div style={{
@@ -43,28 +77,16 @@ function FeaturedCard({ hotel }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
           <div>
             <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 17, letterSpacing: '-0.03em' }}>
-              {hotel.name}
+              {property.name}
             </h3>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 2 }}>📍 {hotel.location || hotel.city}</p>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 2 }}>📍 {property.city}</p>
           </div>
-          {hotel.rating ? (
+          {property.star_rating ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
               <span style={{ color: '#f59e0b', fontSize: 14 }}>★</span>
-              <span style={{ fontWeight: 700, fontSize: 14 }}>{hotel.rating}</span>
+              <span style={{ fontWeight: 700, fontSize: 14 }}>{property.star_rating}</span>
             </div>
           ) : null}
-        </div>
-        <div style={{ marginTop: 14 }}>
-          {hotel.price_per_night ? (
-            <>
-              <span style={{ fontWeight: 800, fontSize: 18 }}>
-                R {Number(hotel.price_per_night).toLocaleString('en-ZA')}
-              </span>
-              <span style={{ fontSize: 13, color: 'var(--text-muted)' }}> / night</span>
-            </>
-          ) : (
-            <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>Price on request</span>
-          )}
         </div>
       </div>
     </div>
@@ -73,28 +95,71 @@ function FeaturedCard({ hotel }) {
 
 export default function Home() {
   const navigate = useNavigate()
-  const [featured, setFeatured] = useState([])
+  const [pool, setPool] = useState([])       // full candidate set, fetched once
+  const [visible, setVisible] = useState([]) // the random subset currently shown
   const [loading, setLoading] = useState(true)
+  const rotateTimer = useRef(null)
 
   useEffect(() => {
     (async () => {
       setLoading(true)
-      const cols = 'id, name, slug, city, location, image_url, price_per_night, rating, is_featured'
-      let { data } = await supabase
-        .from('hotels').select(cols)
-        .eq('is_active', true).eq('is_featured', true)
-        .order('created_at', { ascending: false }).limit(7)
-      if (!data || data.length === 0) {
-        const res = await supabase
-          .from('hotels').select(cols)
-          .eq('is_active', true)
-          .order('created_at', { ascending: false }).limit(7)
-        data = res.data || []
+      try {
+        // Candidate properties from the 4 priority cities.
+        const { data: indexRows, error: indexErr } = await supabase
+          .from('hg_property_index')
+          .select('hotel_id, name, city, country')
+          .in('city', PRIORITY_CITIES)
+          .limit(FEATURED_POOL_LIMIT * 3) // over-fetch since not all will have cached photos yet
+
+        if (indexErr) throw indexErr
+        if (!indexRows?.length) {
+          setPool([])
+          setLoading(false)
+          return
+        }
+
+        const ids = indexRows.map(r => r.hotel_id)
+        const { data: staticRows, error: staticErr } = await supabase
+          .from('hg_property_static')
+          .select('hotel_id, images, star_rating')
+          .in('hotel_id', ids)
+
+        if (staticErr) throw staticErr
+
+        const indexByCity = new Map(indexRows.map(r => [r.hotel_id, r]))
+        const merged = (staticRows || [])
+          .filter(row => (row.images || []).some(img => img.type === 'photo')) // only properties with a real photo cached
+          .map(row => {
+            const idx = indexByCity.get(row.hotel_id)
+            return {
+              hotelId: row.hotel_id,
+              name: idx?.name || 'Property',
+              city: idx?.city || '',
+              images: row.images,
+              star_rating: row.star_rating,
+            }
+          })
+          .slice(0, FEATURED_POOL_LIMIT)
+
+        setPool(merged)
+        setVisible(shuffle(merged).slice(0, FEATURED_VISIBLE_COUNT))
+      } catch (err) {
+        console.error('Failed to load featured properties:', err)
+        setPool([])
       }
-      setFeatured(data || [])
       setLoading(false)
     })()
   }, [])
+
+  // Rotates the visible subset from the already-fetched pool every few
+  // seconds -- no new network requests needed, just a fresh random sample.
+  useEffect(() => {
+    if (pool.length <= FEATURED_VISIBLE_COUNT) return // nothing to rotate if the pool isn't bigger than what's shown
+    rotateTimer.current = setInterval(() => {
+      setVisible(shuffle(pool).slice(0, FEATURED_VISIBLE_COUNT))
+    }, ROTATE_INTERVAL_MS)
+    return () => clearInterval(rotateTimer.current)
+  }, [pool])
 
   return (
     <main style={{ fontFamily: 'var(--font-body)', background: 'var(--bg)', color: 'var(--text)' }}>
@@ -181,15 +246,15 @@ export default function Home() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 22 }}>
             {[1, 2, 3].map(i => <div key={i} style={{ height: 320, borderRadius: 20, background: 'var(--bg-card)', opacity: 0.7 }} />)}
           </div>
-        ) : featured.length === 0 ? (
+        ) : visible.length === 0 ? (
           <div style={{ background: 'var(--bg-card)', borderRadius: 20, padding: '56px 24px', textAlign: 'center' }}>
             <div style={{ fontSize: 44, marginBottom: 12 }}>🏨</div>
             <p style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 18, color: 'var(--text)' }}>Featured stays are on their way</p>
-            <p style={{ color: 'var(--text-muted)', fontSize: 14, marginTop: 6 }}>New South African properties are being approved right now. Check back soon.</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: 14, marginTop: 6 }}>We're still gathering photos for properties in Cape Town, Johannesburg, Pretoria, and Durban. Check back soon.</p>
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 22 }}>
-            {featured.map(h => <FeaturedCard key={h.id} hotel={h} />)}
+            {visible.map(p => <FeaturedCard key={p.hotelId} property={p} />)}
           </div>
         )}
       </section>
