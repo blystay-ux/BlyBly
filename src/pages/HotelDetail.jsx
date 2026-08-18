@@ -96,7 +96,25 @@ const s = {
   moreSection: { marginTop: 8, borderTop: '1px solid var(--border)', paddingTop: 8 },
   moreSummary: { cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 15, color: 'var(--text)', padding: '10px 0' },
   moreGallery: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 8, marginTop: 14, marginBottom: 16 },
-  moreGalleryImg: { width: '100%', height: 90, objectFit: 'cover', borderRadius: 10 },
+  moreGalleryImg: { width: '100%', height: 90, objectFit: 'cover', borderRadius: 10, cursor: 'pointer' },
+
+  lightboxOverlay: {
+    position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.92)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column',
+  },
+  lightboxImg: { maxWidth: '90vw', maxHeight: '78vh', objectFit: 'contain', borderRadius: 8 },
+  lightboxClose: {
+    position: 'absolute', top: 20, right: 20, width: 40, height: 40, borderRadius: '50%',
+    background: 'rgba(255,255,255,0.12)', color: '#fff', border: 'none', fontSize: 20,
+    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+  },
+  lightboxNav: (side) => ({
+    position: 'absolute', top: '50%', [side]: 20, transform: 'translateY(-50%)',
+    width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.12)',
+    color: '#fff', border: 'none', fontSize: 22, cursor: 'pointer',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  }),
+  lightboxCounter: { color: 'rgba(255,255,255,0.7)', fontSize: 13, marginTop: 16, fontFamily: 'var(--font-body)' },
 }
 
 export default function HotelDetail() {
@@ -129,6 +147,8 @@ export default function HotelDetail() {
 
   const [staticDetail, setStaticDetail] = useState(null)
   const [activePhoto, setActivePhoto] = useState(0)
+  const [galleryOpen, setGalleryOpen] = useState(false)
+  const [galleryIndex, setGalleryIndex] = useState(0)
 
   useEffect(() => {
     if (!isCertDirectLink) return
@@ -189,6 +209,25 @@ export default function HotelDetail() {
   const photos = (staticDetail?.images || []).filter(i => i.type === 'photo')
   const facilities = (staticDetail?.facilities || []).filter(f => f.name)
   const description = (staticDetail?.descriptions || []).find(d => d.type === 'general')?.description
+
+  function goPrevPhoto() {
+    setGalleryIndex(i => (i - 1 + photos.length) % photos.length)
+  }
+  function goNextPhoto() {
+    setGalleryIndex(i => (i + 1) % photos.length)
+  }
+
+  useEffect(() => {
+    if (!galleryOpen) return
+    function onKeyDown(e) {
+      if (e.key === 'Escape') setGalleryOpen(false)
+      if (e.key === 'ArrowLeft') goPrevPhoto()
+      if (e.key === 'ArrowRight') goNextPhoto()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [galleryOpen, photos.length])
 
   async function handlePrebook() {
     if (!selectedOffer || !property) return
@@ -277,7 +316,12 @@ export default function HotelDetail() {
         <div style={s.lockedHeader}>
           <button style={s.back} onClick={() => navigate(-1)}>← Back to results</button>
           <div style={s.compactHeaderRow}>
-            <img src={property.thumbnailImage || photos[0]?.uri || PLACEHOLDER_IMG} alt={info.name} style={s.compactThumb} />
+            <img
+              src={property.thumbnailImage || photos[0]?.uri || PLACEHOLDER_IMG}
+              alt={info.name}
+              style={{ ...s.compactThumb, cursor: photos.length > 0 ? 'pointer' : 'default' }}
+              onClick={() => { if (photos.length > 0) { setGalleryIndex(0); setGalleryOpen(true) } }}
+            />
             <div style={s.compactInfo}>
               <div style={s.compactName}>{info.name}</div>
               <div style={s.compactMeta}>
@@ -346,7 +390,10 @@ export default function HotelDetail() {
             {photos.length > 0 && (
               <div style={s.moreGallery}>
                 {photos.slice(0, 12).map((p, i) => (
-                  <img key={i} src={p.uri} style={s.moreGalleryImg} alt="" />
+                  <img
+                    key={i} src={p.uri} style={s.moreGalleryImg} alt=""
+                    onClick={() => { setGalleryIndex(i); setGalleryOpen(true) }}
+                  />
                 ))}
               </div>
             )}
@@ -379,6 +426,26 @@ export default function HotelDetail() {
           </button>
         </div>
       </div>
+
+      {/* ── LIGHTBOX: full-screen photo viewer, opened by clicking any photo ── */}
+      {galleryOpen && photos.length > 0 && (
+        <div style={s.lightboxOverlay} onClick={() => setGalleryOpen(false)}>
+          <button style={s.lightboxClose} onClick={() => setGalleryOpen(false)} aria-label="Close gallery">✕</button>
+          {photos.length > 1 && (
+            <button style={s.lightboxNav('left')} onClick={e => { e.stopPropagation(); goPrevPhoto() }} aria-label="Previous photo">‹</button>
+          )}
+          <img
+            src={photos[galleryIndex]?.uri}
+            alt=""
+            style={s.lightboxImg}
+            onClick={e => e.stopPropagation()}
+          />
+          {photos.length > 1 && (
+            <button style={s.lightboxNav('right')} onClick={e => { e.stopPropagation(); goNextPhoto() }} aria-label="Next photo">›</button>
+          )}
+          <div style={s.lightboxCounter}>{galleryIndex + 1} / {photos.length}</div>
+        </div>
+      )}
     </main>
   )
 }
