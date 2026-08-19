@@ -10,7 +10,7 @@ const s = {
   title:   { fontWeight: 800, fontSize: 26, letterSpacing: '-0.05em' },
   badge:   { background: '#fff0f0', color: '#ef4056', borderRadius: 99, padding: '4px 14px', fontSize: 12, fontWeight: 700, letterSpacing: '0.06em' },
   body:    { maxWidth: 1280, margin: '0 auto', padding: '32px 40px' },
-  tabs:    { display: 'flex', gap: 8, marginBottom: 32 },
+  tabs:    { display: 'flex', gap: 8, marginBottom: 32, flexWrap: 'wrap' },
   tab:     (a) => ({ padding: '9px 22px', borderRadius: 99, border: 'none', fontWeight: 700, fontSize: 14, cursor: 'pointer', background: a ? '#111' : '#fff', color: a ? '#fff' : '#666', transition: 'all 0.15s', fontFamily: 'var(--font-body)' }),
   grid:    { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 20 },
   statCard:{ background: '#fff', borderRadius: 16, padding: '22px 24px', boxShadow: '0 1px 8px rgba(0,0,0,0.05)' },
@@ -22,9 +22,10 @@ const s = {
   pill:    (c) => ({ display: 'inline-block', borderRadius: 99, padding: '3px 12px', fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', background: c === 'green' ? '#dcfce7' : c === 'yellow' ? '#fef9c3' : c === 'red' ? '#fee2e2' : '#f1f5f9', color: c === 'green' ? '#16a34a' : c === 'yellow' ? '#ca8a04' : c === 'red' ? '#dc2626' : '#475569' }),
   btn:     (v) => ({ padding: '6px 14px', borderRadius: 99, border: 'none', fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'var(--font-body)', background: v === 'green' ? '#dcfce7' : v === 'red' ? '#fee2e2' : v === 'accent' ? '#ef4056' : '#f1f5f9', color: v === 'green' ? '#16a34a' : v === 'red' ? '#dc2626' : v === 'accent' ? '#fff' : '#333' }),
   empty:   { textAlign: 'center', padding: '60px 20px', color: '#aaa', fontSize: 15 },
+  note:    { fontSize: 12, color: '#aaa', marginBottom: 16 },
 }
 
-const STATUS_COLOR = { confirmed: 'green', pending: 'yellow', cancelled: 'red', completed: 'green' }
+const STATUS_COLOR = { Confirmed: 'green', Pending: 'yellow', Cancelled: 'red', Rejected: 'red', Failed: 'red' }
 
 // ── Sub-components ────────────────────────────────────────────
 
@@ -39,130 +40,90 @@ function StatCard({ icon, label, value, sub }) {
   )
 }
 
-const HOTEL_STATUS = {
-  draft:          { c: 'default', label: 'Draft' },
-  pending_review: { c: 'yellow',  label: 'Pending' },
-  approved:       { c: 'green',   label: 'Approved' },
-  rejected:       { c: 'red',     label: 'Rejected' },
-  suspended:      { c: 'red',     label: 'Suspended' },
-}
-
-function HotelsTab({ hotels, onApprove, onReject, onToggleActive, onToggleFeatured }) {
-  if (!hotels.length) return <div style={s.empty}>No hotels listed yet.</div>
+// Real HyperGuest properties that have actually been booked through BLY,
+// grouped with booking counts and revenue -- replaces the old "Hotels" tab,
+// which managed individually-listed properties from before the pivot to
+// HyperGuest as the supply source (BLY no longer approves/lists properties
+// one at a time; HyperGuest supplies all of them).
+function PropertiesTab({ properties }) {
+  if (!properties.length) return <div style={s.empty}>No properties booked yet.</div>
   return (
     <div style={{ overflowX: 'auto' }}>
       <table style={s.table}>
         <thead>
           <tr>
-            {['Property', 'City', 'Submitted', 'Rate / night', 'Status', 'Live', 'Featured', 'Actions'].map(h => (
+            {['Property', 'HyperGuest ID', 'Bookings', 'Revenue'].map(h => (
               <th key={h} style={s.th}>{h}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {hotels.map(h => {
-            const st = HOTEL_STATUS[h.status] || HOTEL_STATUS.draft
-            const submitted = h.submitted_at || h.created_at
-            const awaiting = h.status === 'pending_review' || h.status === 'draft' || h.status === 'rejected'
-            return (
-              <tr key={h.id}>
-                <td style={s.td}>
-                  <div style={{ fontWeight: 700 }}>{h.name}</div>
-                  <div style={{ fontSize: 12, color: '#aaa' }}>{h.slug}</div>
-                </td>
-                <td style={s.td}>{h.city}</td>
-                <td style={{ ...s.td, fontSize: 12, color: '#888' }}>
-                  {submitted ? new Date(submitted).toLocaleDateString('en-ZA') : '—'}
-                </td>
-                <td style={s.td}>
-                  {h.price_per_night
-                    ? `R ${Number(h.price_per_night).toLocaleString('en-ZA')}`
-                    : '—'}
-                </td>
-                <td style={s.td}>
-                  <span style={s.pill(st.c)}>{st.label}</span>
-                </td>
-                <td style={{ ...s.td, textAlign: 'center' }}>{h.is_active ? '🟢' : '—'}</td>
-                <td style={{ ...s.td, textAlign: 'center' }}>{h.is_featured ? '⭐' : '—'}</td>
-                <td style={s.td}>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    {awaiting && (
-                      <>
-                        <button style={s.btn('green')} onClick={() => onApprove(h)}>Approve</button>
-                        <button style={s.btn('red')} onClick={() => onReject(h)}>Reject</button>
-                      </>
-                    )}
-                    {h.status === 'approved' && (
-                      <button
-                        style={s.btn(h.is_active ? 'red' : 'green')}
-                        onClick={() => onToggleActive(h)}
-                      >
-                        {h.is_active ? 'Deactivate' : 'Reactivate'}
-                      </button>
-                    )}
-                    <button
-                      style={s.btn(h.is_featured ? 'red' : 'default')}
-                      onClick={() => onToggleFeatured(h)}
-                    >
-                      {h.is_featured ? 'Unfeature' : 'Feature'}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            )
-          })}
+          {properties.map(p => (
+            <tr key={p.propertyId}>
+              <td style={s.td}><div style={{ fontWeight: 700 }}>{p.name}</div></td>
+              <td style={{ ...s.td, fontSize: 12, color: '#aaa' }}>{p.propertyId}</td>
+              <td style={{ ...s.td, textAlign: 'center' }}>{p.bookingCount}</td>
+              <td style={s.td}>
+                {Object.entries(p.revenueByCurrency).map(([cur, amt]) => (
+                  <div key={cur}>{cur} {amt.toLocaleString('en-ZA')}</div>
+                ))}
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
   )
 }
 
-function BookingsTab({ bookings, onUpdateStatus }) {
+// Real bookings from hg_bookings (HyperGuest) -- replaces the old
+// "Bookings" tab, which read from the unused legacy `bookings` table.
+// Read-only except for Cancel, which calls the real hyperguest-cancel
+// Edge Function -- an actual cancellation with HyperGuest, not just a
+// local status flag.
+function BookingsTab({ bookings, onCancel, cancellingId }) {
   if (!bookings.length) return <div style={s.empty}>No bookings yet.</div>
   return (
     <div style={{ overflowX: 'auto' }}>
       <table style={s.table}>
         <thead>
           <tr>
-            {['Guest', 'Hotel', 'Check-in', 'Check-out', 'Guests', 'Total', 'Status', 'Update'].map(h => (
+            {['Guest', 'Property', 'Check-in', 'Check-out', 'Total', 'Status', 'Reference', 'Action'].map(h => (
               <th key={h} style={s.th}>{h}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {bookings.map(b => (
-            <tr key={b.id}>
-              <td style={s.td}>
-                <div style={{ fontWeight: 600 }}>{b.guest_name || '—'}</div>
-                <div style={{ fontSize: 12, color: '#aaa' }}>{b.guest_email || b.user_id?.slice(0, 8)}</div>
-              </td>
-              <td style={s.td}>{b.hotels?.name || '—'}</td>
-              <td style={s.td}>{b.check_in}</td>
-              <td style={s.td}>{b.check_out}</td>
-              <td style={{ ...s.td, textAlign: 'center' }}>{b.guests}</td>
-              <td style={s.td}>
-                {b.total_price
-                  ? `R ${Number(b.total_price).toLocaleString('en-ZA')}`
-                  : '—'}
-              </td>
-              <td style={s.td}>
-                <span style={s.pill(STATUS_COLOR[b.status] || 'default')}>
-                  {b.status}
-                </span>
-              </td>
-              <td style={s.td}>
-                <select
-                  style={{ fontSize: 13, padding: '4px 8px', borderRadius: 8, border: '1px solid #ddd', cursor: 'pointer' }}
-                  value={b.status}
-                  onChange={e => onUpdateStatus(b.id, e.target.value)}
-                >
-                  {['pending', 'confirmed', 'cancelled', 'completed'].map(st => (
-                    <option key={st} value={st}>{st}</option>
-                  ))}
-                </select>
-              </td>
-            </tr>
-          ))}
+          {bookings.map(b => {
+            const guest = b.lead_guest || {}
+            const sell = b.prices?.sell
+            const canCancel = b.status === 'Confirmed' || b.status === 'Pending'
+            return (
+              <tr key={b.id}>
+                <td style={s.td}>
+                  <div style={{ fontWeight: 600 }}>{[guest.firstName, guest.lastName].filter(Boolean).join(' ') || '—'}</div>
+                  <div style={{ fontSize: 12, color: '#aaa' }}>{guest.email || '—'}</div>
+                </td>
+                <td style={{ ...s.td, fontSize: 12 }}>{b.property_name || `Property ${b.hyperguest_property_id}`}</td>
+                <td style={s.td}>{b.check_in}</td>
+                <td style={s.td}>{b.check_out}</td>
+                <td style={s.td}>{sell ? `${sell.currency} ${Number(sell.price).toLocaleString('en-ZA')}` : '—'}</td>
+                <td style={s.td}><span style={s.pill(STATUS_COLOR[b.status] || 'default')}>{b.status}</span></td>
+                <td style={{ ...s.td, fontSize: 12, color: '#aaa' }}>{b.agency_reference || '—'}</td>
+                <td style={s.td}>
+                  {canCancel && (
+                    <button
+                      style={s.btn('red')}
+                      onClick={() => onCancel(b)}
+                      disabled={cancellingId === b.id}
+                    >
+                      {cancellingId === b.id ? 'Cancelling…' : 'Cancel'}
+                    </button>
+                  )}
+                </td>
+              </tr>
+            )
+          })}
         </tbody>
       </table>
     </div>
@@ -276,12 +237,13 @@ export default function Admin() {
   const isAdmin = role === 'admin'
 
   const [tab,      setTab]      = useState('overview')
-  const [hotels,   setHotels]   = useState([])
-  const [bookings, setBookings] = useState([])
+  const [bookings, setBookings] = useState([])       // real hg_bookings, enriched with property_name
+  const [propertyCount, setPropertyCount] = useState(0) // cached properties (hg_property_static) -- rough proxy for "Featured stays" pool
   const [waitlist, setWaitlist] = useState([])
   const [memberships, setMemberships] = useState([])
   const [memberNames, setMemberNames] = useState({})
   const [loading,  setLoading]  = useState(true)
+  const [cancellingId, setCancellingId] = useState(null)
 
   // Redirect if not admin
   useEffect(() => {
@@ -292,15 +254,32 @@ export default function Admin() {
 
   async function fetchAll() {
     setLoading(true)
-    const [hotelsRes, bookingsRes, waitlistRes, membersRes] = await Promise.all([
-      supabase.from('hotels').select('*').order('created_at', { ascending: false }),
-      supabase.from('bookings').select('*, hotels(name)').order('created_at', { ascending: false }),
+
+    const [bookingsRes, staticCountRes, waitlistRes, membersRes] = await Promise.all([
+      supabase.from('hg_bookings').select('*').order('created_at', { ascending: false }),
+      supabase.from('hg_property_static').select('hotel_id', { count: 'exact', head: true }),
       supabase.from('waitlist').select('*').order('created_at', { ascending: false }),
       supabase.from('industry_memberships').select('*').order('created_at', { ascending: false }),
     ])
-    if (hotelsRes.data)   setHotels(hotelsRes.data)
-    if (bookingsRes.data) setBookings(bookingsRes.data)
+
+    let enrichedBookings = bookingsRes.data || []
+    if (enrichedBookings.length) {
+      const propertyIds = [...new Set(enrichedBookings.map(b => b.hyperguest_property_id).filter(Boolean))]
+      if (propertyIds.length) {
+        const { data: props } = await supabase
+          .from('hg_property_index')
+          .select('hotel_id, name')
+          .in('hotel_id', propertyIds)
+        const nameById = {}
+        ;(props || []).forEach(p => { nameById[p.hotel_id] = p.name })
+        enrichedBookings = enrichedBookings.map(b => ({ ...b, property_name: nameById[b.hyperguest_property_id] || null }))
+      }
+    }
+    setBookings(enrichedBookings)
+    setPropertyCount(staticCountRes.count || 0)
+
     if (waitlistRes.data) setWaitlist(waitlistRes.data)
+
     if (membersRes.data) {
       setMemberships(membersRes.data)
       const ids = [...new Set(membersRes.data.map(m => m.user_id))]
@@ -314,49 +293,20 @@ export default function Admin() {
     setLoading(false)
   }
 
-  async function approveHotel(hotel) {
-    const { error } = await supabase
-      .from('hotels')
-      .update({
-        status: 'approved',
-        is_active: true,
-        approved_at: new Date().toISOString(),
-        approved_by: user.id,
+  async function cancelBooking(booking) {
+    if (!window.confirm(`Cancel booking ${booking.agency_reference || booking.id}? This calls HyperGuest directly.`)) return
+    setCancellingId(booking.id)
+    try {
+      const { data, error } = await supabase.functions.invoke('hyperguest-cancel', {
+        body: { bookingId: booking.id, reason: 'Cancelled by BLY admin', simulation: false },
       })
-      .eq('id', hotel.id)
-    if (!error) setHotels(prev => prev.map(h => h.id === hotel.id
-      ? { ...h, status: 'approved', is_active: true } : h))
-  }
-
-  async function rejectHotel(hotel) {
-    const reason = window.prompt('Reason for rejection (optional, shown to the partner):') ?? null
-    const { error } = await supabase
-      .from('hotels')
-      .update({ status: 'rejected', is_active: false, rejection_reason: reason })
-      .eq('id', hotel.id)
-    if (!error) setHotels(prev => prev.map(h => h.id === hotel.id
-      ? { ...h, status: 'rejected', is_active: false } : h))
-  }
-
-  async function toggleActive(hotel) {
-    const { error } = await supabase
-      .from('hotels')
-      .update({ is_active: !hotel.is_active })
-      .eq('id', hotel.id)
-    if (!error) setHotels(prev => prev.map(h => h.id === hotel.id ? { ...h, is_active: !h.is_active } : h))
-  }
-
-  async function toggleFeatured(hotel) {
-    const { error } = await supabase
-      .from('hotels')
-      .update({ is_featured: !hotel.is_featured })
-      .eq('id', hotel.id)
-    if (!error) setHotels(prev => prev.map(h => h.id === hotel.id ? { ...h, is_featured: !h.is_featured } : h))
-  }
-
-  async function updateBookingStatus(id, status) {
-    const { error } = await supabase.from('bookings').update({ status }).eq('id', id)
-    if (!error) setBookings(prev => prev.map(b => b.id === id ? { ...b, status } : b))
+      if (error) throw error
+      if (data?.error) throw new Error(data.error)
+      setBookings(prev => prev.map(b => b.id === booking.id ? { ...b, status: data.content?.status || 'Cancelled' } : b))
+    } catch (err) {
+      alert(`Cancellation failed: ${err.message}`)
+    }
+    setCancellingId(null)
   }
 
   async function deleteWaitlist(id) {
@@ -387,17 +337,36 @@ export default function Admin() {
     if (!error) setMemberships(prev => prev.map(x => x.id === m.id ? { ...x, status: 'cancelled' } : x))
   }
 
-  // Stats
-  const liveHotels      = hotels.filter(h => h.is_active).length
-  const pendingHotels   = hotels.filter(h => h.status === 'pending_review').length
-  const totalRevenue    = bookings
-    .filter(b => b.status === 'confirmed' || b.status === 'completed')
-    .reduce((sum, b) => sum + (Number(b.total_price) || 0), 0)
-  const confirmedCount  = bookings.filter(b => b.status === 'confirmed').length
+  // ── Real stats, derived from hg_bookings ──
+  const confirmedBookings = bookings.filter(b => b.status === 'Confirmed')
+  const cancelledBookings = bookings.filter(b => b.status === 'Cancelled')
+  const revenueByCurrency = {}
+  confirmedBookings.forEach(b => {
+    const sell = b.prices?.sell
+    if (!sell) return
+    revenueByCurrency[sell.currency] = (revenueByCurrency[sell.currency] || 0) + Number(sell.price || 0)
+  })
+  const distinctPropertyIds = new Set(bookings.map(b => b.hyperguest_property_id).filter(Boolean))
   const activeMembers   = memberships.filter(m => m.status === 'active').length
   const pendingMembers  = memberships.filter(m => m.status === 'pending').length
 
-  const TABS = ['overview', 'hotels', 'bookings', 'waitlist', 'memberships']
+  // Properties grouped for the Properties tab
+  const propertiesMap = {}
+  bookings.forEach(b => {
+    if (!b.hyperguest_property_id) return
+    const id = b.hyperguest_property_id
+    if (!propertiesMap[id]) {
+      propertiesMap[id] = { propertyId: id, name: b.property_name || `Property ${id}`, bookingCount: 0, revenueByCurrency: {} }
+    }
+    propertiesMap[id].bookingCount += 1
+    if (b.status === 'Confirmed' && b.prices?.sell) {
+      const { currency, price } = b.prices.sell
+      propertiesMap[id].revenueByCurrency[currency] = (propertiesMap[id].revenueByCurrency[currency] || 0) + Number(price || 0)
+    }
+  })
+  const propertiesList = Object.values(propertiesMap).sort((a, b) => b.bookingCount - a.bookingCount)
+
+  const TABS = ['overview', 'properties', 'bookings', 'waitlist', 'memberships']
 
   return (
     <div style={s.page}>
@@ -425,17 +394,12 @@ export default function Admin() {
         <div style={s.tabs}>
           {TABS.map(t => (
             <button key={t} style={s.tab(tab === t)} onClick={() => setTab(t)}>
-              {t === 'overview' && '📊 '}
-              {t === 'hotels'   && '🏨 '}
-              {t === 'bookings' && '📅 '}
-              {t === 'waitlist' && '📋 '}
+              {t === 'overview'    && '📊 '}
+              {t === 'properties'  && '🏨 '}
+              {t === 'bookings'    && '📅 '}
+              {t === 'waitlist'    && '📋 '}
               {t === 'memberships' && '🎟️ '}
               {t.charAt(0).toUpperCase() + t.slice(1)}
-              {t === 'hotels'   && pendingHotels > 0 && (
-                <span style={{ marginLeft: 6, background: '#ef4056', color: '#fff', borderRadius: 99, padding: '1px 7px', fontSize: 11 }}>
-                  {pendingHotels}
-                </span>
-              )}
               {t === 'memberships' && pendingMembers > 0 && (
                 <span style={{ marginLeft: 6, background: '#ef4056', color: '#fff', borderRadius: 99, padding: '1px 7px', fontSize: 11 }}>
                   {pendingMembers}
@@ -451,44 +415,49 @@ export default function Admin() {
           </div>
         ) : (
           <>
-            {/* Overview */}
+            {/* Overview -- now sourced from real HyperGuest bookings */}
             {tab === 'overview' && (
               <div style={s.grid}>
-                <StatCard icon="🏨" label="Live properties"   value={liveHotels}    sub={`${pendingHotels} pending approval`} />
-                <StatCard icon="📅" label="Active bookings"   value={confirmedCount} sub={`${bookings.length} total bookings`} />
-                <StatCard icon="💰" label="Total revenue"     value={`R ${totalRevenue.toLocaleString('en-ZA')}`} sub="confirmed + completed" />
-                <StatCard icon="📋" label="Waitlist"          value={waitlist.length} sub="people waiting" />
-                <StatCard icon="⭐" label="Featured stays"    value={hotels.filter(h => h.is_featured).length} />
-                <StatCard icon="🌍" label="Cities covered"    value={new Set(hotels.map(h => h.city)).size} />
-                <StatCard icon="🎟️" label="Industry members"  value={activeMembers} sub={`${pendingMembers} pending approval`} />
+                <StatCard icon="📅" label="Total bookings" value={bookings.length} sub={`${confirmedBookings.length} confirmed`} />
+                <StatCard
+                  icon="💰" label="Revenue (confirmed)"
+                  value={Object.keys(revenueByCurrency).length
+                    ? Object.entries(revenueByCurrency).map(([c, v]) => `${c} ${v.toLocaleString('en-ZA')}`).join(' · ')
+                    : 'R0'}
+                  sub="sell price, per currency"
+                />
+                <StatCard icon="🏨" label="Properties booked" value={distinctPropertyIds.size} sub={`${propertyCount} cached with photos`} />
+                <StatCard icon="✕" label="Cancelled bookings" value={cancelledBookings.length} />
+                <StatCard icon="📋" label="Waitlist" value={waitlist.length} sub="people waiting" />
+                <StatCard icon="🎟️" label="Industry members" value={activeMembers} sub={`${pendingMembers} pending approval`} />
               </div>
             )}
 
-            {/* Hotels */}
-            {tab === 'hotels' && (
-              <HotelsTab
-                hotels={hotels}
-                onApprove={approveHotel}
-                onReject={rejectHotel}
-                onToggleActive={toggleActive}
-                onToggleFeatured={toggleFeatured}
-              />
+            {/* Properties */}
+            {tab === 'properties' && (
+              <>
+                <p style={s.note}>Properties booked through BLY via HyperGuest, with booking counts and revenue. This replaces the old hotel-listing approval workflow, since HyperGuest supplies all properties directly.</p>
+                <PropertiesTab properties={propertiesList} />
+              </>
             )}
 
             {/* Bookings */}
             {tab === 'bookings' && (
-              <BookingsTab
-                bookings={bookings}
-                onUpdateStatus={updateBookingStatus}
-              />
+              <>
+                <p style={s.note}>Real bookings made through HyperGuest. Cancel calls HyperGuest directly and reflects the actual outcome, including any cancellation penalty already applied.</p>
+                <BookingsTab bookings={bookings} onCancel={cancelBooking} cancellingId={cancellingId} />
+              </>
             )}
 
             {/* Waitlist */}
             {tab === 'waitlist' && (
-              <WaitlistTab
-                waitlist={waitlist}
-                onDelete={deleteWaitlist}
-              />
+              <>
+                <p style={s.note}>Note: this reads from the `waitlist` table. If your "Coming Soon" signup form writes to a different table (e.g. `property_leads`), this list may not reflect real signups -- worth double-checking.</p>
+                <WaitlistTab
+                  waitlist={waitlist}
+                  onDelete={deleteWaitlist}
+                />
+              </>
             )}
 
             {/* Industry memberships */}
