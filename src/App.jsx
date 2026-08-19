@@ -12,7 +12,7 @@ import Admin from './pages/Admin'
 import ManageHotel from './pages/ManageHotel'
 import MyBookings from './pages/MyBookings'
 import Extranet from './pages/Extranet'
-import Industry from './pages/Industry'
+import BlyInsiders from './pages/BlyInsiders'
 import ComingSoon from './pages/ComingSoon'
 
 export default function App() {
@@ -31,7 +31,7 @@ export default function App() {
         <Route path="/manage-hotel"  element={<ManageHotel />} />
         <Route path="/my-bookings"   element={<MyBookings />} />
         <Route path="/extranet"      element={<Extranet />} />
-        <Route path="/industry"      element={<Industry />} />
+        <Route path="/insiders"      element={<BlyInsiders />} />
         <Route path="/partners"      element={<ComingSoon />} />
       </Routes>
     </AuthProvider>
