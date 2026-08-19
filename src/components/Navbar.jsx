@@ -70,7 +70,7 @@ export default function Navbar() {
         {/* Links */}
         <div style={styles.actions}>
           <Link to="/manage-booking" style={styles.link}>Manage booking</Link>
-          <Link to="/industry" style={styles.link}>Industry</Link>
+          <Link to="/insiders" style={styles.link}>Bly Insiders</Link>
         </div>
 
       </div>
