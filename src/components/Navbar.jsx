@@ -53,8 +53,9 @@ const styles = {
 }
 
 export default function Navbar() {
-  const { user, signOut } = useAuth()
+  const { user, role, signOut } = useAuth()
   const initial = user?.email?.[0]?.toUpperCase() || '?'
+  const isAdmin = role === 'admin'
 
   return (
     <nav style={styles.nav}>
@@ -75,6 +76,7 @@ export default function Navbar() {
         <div style={styles.actions}>
           <Link to="/manage-booking" style={styles.link}>Manage booking</Link>
           <Link to="/insiders" style={styles.link}>Bly Insiders</Link>
+          {isAdmin && <Link to="/admin" style={styles.linkAccent}>Admin</Link>}
 
           {user ? (
             <>
