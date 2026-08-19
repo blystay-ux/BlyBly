@@ -32,7 +32,7 @@ const label = { display: 'block', fontSize: 12, fontWeight: 700, letterSpacing: 
 const field = { width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #E7E4E0', fontSize: 15, fontFamily: "'Inter', sans-serif", color: '#111', background: '#F8F7F5', boxSizing: 'border-box', outline: 'none' }
 const row2 = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }
 
-function StatusView({ membership, onReapply, applying }) {
+function StatusView({ membership, onReapply, applying, onSignOut }) {
   const navigate = useNavigate()
   const st = membership.status
 
@@ -41,9 +41,10 @@ function StatusView({ membership, onReapply, applying }) {
       <div style={{ ...card, textAlign: 'center' }}>
         <div style={pill('#FBF1DC', '#C98A00')}>Application under review</div>
         <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: 24, margin: '20px 0 8px' }}>You're in the queue</h2>
-        <p style={{ color: '#6B6B6B', fontSize: 15, lineHeight: 1.6 }}>
+        <p style={{ color: '#6B6B6B', fontSize: 15, lineHeight: 1.6, marginBottom: 20 }}>
           Your Bly Insiders request is being reviewed by the BLY. team. You'll be notified once it's approved.
         </p>
+        <span onClick={onSignOut} style={{ fontSize: 13, color: '#6B6B6B', textDecoration: 'underline', cursor: 'pointer' }}>Sign out</span>
       </div>
     )
   }
@@ -59,6 +60,9 @@ function StatusView({ membership, onReapply, applying }) {
         </p>
         {expires && <p style={{ color: '#999', fontSize: 13, marginBottom: 24 }}>Valid until {expires}</p>}
         <button style={btnDark} onClick={() => navigate('/search')}>Browse stays →</button>
+        <div style={{ marginTop: 14 }}>
+          <span onClick={onSignOut} style={{ fontSize: 13, color: '#6B6B6B', textDecoration: 'underline', cursor: 'pointer' }}>Sign out</span>
+        </div>
       </div>
     )
   }
@@ -68,14 +72,17 @@ function StatusView({ membership, onReapply, applying }) {
     <div style={{ ...card, textAlign: 'center' }}>
       <div style={pill('#FDE7EB', '#EF4056')}>{lbl}</div>
       <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: 24, margin: '20px 0 8px' }}>Reapply for access</h2>
-      <p style={{ color: '#6B6B6B', fontSize: 15, lineHeight: 1.6, marginBottom: 24 }}>You can submit a new Bly Insiders request below.</p>
+      <p style={{ color: '#6B6B6B', fontSize: 15, lineHeight: 1.6, marginBottom: 20 }}>You can submit a new Bly Insiders request below.</p>
       <button style={btn} onClick={onReapply} disabled={applying}>{applying ? 'Loading…' : 'Start a new application'}</button>
+      <div style={{ marginTop: 14 }}>
+        <span onClick={onSignOut} style={{ fontSize: 13, color: '#6B6B6B', textDecoration: 'underline', cursor: 'pointer' }}>Sign out</span>
+      </div>
     </div>
   )
 }
 
 export default function BlyInsiders() {
-  const { user, refreshProfile } = useAuth()
+  const { user, refreshProfile, signOut } = useAuth()
   const navigate = useNavigate()
   const [membership, setMembership] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -247,7 +254,7 @@ export default function BlyInsiders() {
             </div>
           </div>
         ) : (
-          <StatusView membership={membership} onReapply={() => setShowForm(true)} applying={applying} />
+          <StatusView membership={membership} onReapply={() => setShowForm(true)} applying={applying} onSignOut={signOut} />
         )}
 
       </div>
