@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 
 const styles = {
   nav: {
@@ -52,6 +53,9 @@ const styles = {
 }
 
 export default function Navbar() {
+  const { user, signOut } = useAuth()
+  const initial = user?.email?.[0]?.toUpperCase() || '?'
+
   return (
     <nav style={styles.nav}>
       <style>{`
@@ -71,6 +75,26 @@ export default function Navbar() {
         <div style={styles.actions}>
           <Link to="/manage-booking" style={styles.link}>Manage booking</Link>
           <Link to="/insiders" style={styles.link}>Bly Insiders</Link>
+
+          {user ? (
+            <>
+              <button
+                style={styles.avatar}
+                title={user.email}
+                aria-label={`Signed in as ${user.email}`}
+              >
+                {initial}
+              </button>
+              <button
+                style={{ ...styles.link, background: 'none', border: 'none', padding: 0 }}
+                onClick={() => signOut()}
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <Link to="/auth" style={styles.link}>Sign in</Link>
+          )}
         </div>
 
       </div>
