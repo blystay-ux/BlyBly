@@ -19,9 +19,13 @@ function cheapestOffer(property) {
   for (const room of property.rooms ?? []) {
     for (const plan of room.ratePlans ?? []) {
       const sell = plan.prices?.sell
+      const net = plan.prices?.net
       if (!sell) continue
-      if (!cheapest || sell.price < cheapest.price) {
-        cheapest = { price: sell.price, currency: sell.currency, roomName: room.roomName, boardBasis: plan.board }
+      if (!cheapest || sell.price < cheapest.sellPrice) {
+        cheapest = {
+          sellPrice: sell.price, netPrice: net?.price ?? sell.price, currency: sell.currency,
+          roomName: room.roomName, boardBasis: plan.board,
+        }
       }
     }
   }
@@ -31,9 +35,9 @@ function cheapestOffer(property) {
 function ResultCard({ property, checkIn, nights, adults }) {
   const navigate = useNavigate()
   const cheapestRaw = cheapestOffer(property)
-  // Guest-facing price includes BLY's commission/levy/VAT -- the raw
-  // HyperGuest rate is never shown to the guest directly.
-  const offer = cheapestRaw ? calculateGuestPrice(cheapestRaw.price, cheapestRaw.currency) : null
+  // Guest-facing price only -- the raw HyperGuest rates are never shown to
+  // the guest directly. See src/lib/pricing.js for the Net/Sell logic.
+  const offer = cheapestRaw ? calculateGuestPrice(cheapestRaw.netPrice, cheapestRaw.sellPrice, cheapestRaw.currency) : null
   const info = property.propertyInfo
 
   const handleView = () => {
