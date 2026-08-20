@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import SearchBar from '../components/SearchBar'
+import { calculateGuestPrice } from '../lib/pricing'
 
 const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80'
 
@@ -11,19 +12,23 @@ function addNights(dateStr, nights) {
   return d.toISOString().split('T')[0]
 }
 
-// Finds the cheapest sell price across all rooms/rate plans for a property,
-// so the card can show one headline "from RXXX/night" figure -- HyperGuest's
-// raw Sell rate, shown directly with no BLY commission added (reverted
-// 2026-08-20 after extended pricing-logic confusion; if commission is
-// revisited later, src/lib/pricing.js still has the working calculation).
+// Finds the cheapest offer across all rooms/rate plans for a property, so
+// the card can show one headline "from RXXX/night" figure -- BLY's
+// commission applied via the Net/Sell conditional logic in
+// src/lib/pricing.js (re-confirmed correct 2026-08-20 after an unrelated
+// file-content bug in HotelDetail.jsx was mistaken for a pricing bug).
 function cheapestOffer(property) {
   let cheapest = null
   for (const room of property.rooms ?? []) {
     for (const plan of room.ratePlans ?? []) {
       const sell = plan.prices?.sell
+      const net = plan.prices?.net
       if (!sell) continue
-      if (!cheapest || sell.price < cheapest.price) {
-        cheapest = { price: sell.price, currency: sell.currency, roomName: room.roomName, boardBasis: plan.board }
+      if (!cheapest || sell.price < cheapest.sellPrice) {
+        cheapest = {
+          sellPrice: sell.price, netPrice: net?.price ?? sell.price, currency: sell.currency,
+          roomName: room.roomName, boardBasis: plan.board,
+        }
       }
     }
   }
@@ -32,7 +37,8 @@ function cheapestOffer(property) {
 
 function ResultCard({ property, checkIn, nights, adults }) {
   const navigate = useNavigate()
-  const offer = cheapestOffer(property)
+  const cheapestRaw = cheapestOffer(property)
+  const offer = cheapestRaw ? calculateGuestPrice(cheapestRaw.netPrice, cheapestRaw.sellPrice, cheapestRaw.currency) : null
   const info = property.propertyInfo
 
   const handleView = () => {
@@ -78,7 +84,7 @@ function ResultCard({ property, checkIn, nights, adults }) {
               <>
                 <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block' }}>from</span>
                 <span style={{ fontWeight: 800, fontSize: 18, color: 'var(--text)' }}>
-                  {offer.currency} {Number(offer.price).toLocaleString()}
+                  {offer.currency} {Number(offer.totalAmount).toLocaleString()}
                 </span>
                 <span style={{ fontSize: 13, color: 'var(--text-muted)' }}> / night</span>
                 <span style={{ fontSize: 10, color: 'var(--text-muted)', display: 'block', marginTop: 2 }}>Taxes and fees included</span>
