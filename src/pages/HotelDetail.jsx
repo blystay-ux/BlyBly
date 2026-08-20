@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { calculateGuestPrice } from '../lib/pricing'
 
 const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80'
 
@@ -352,13 +353,14 @@ export default function HotelDetail() {
               <div style={s.sectionTitle}>Choose your room & rate</div>
               {offers.map((offer, i) => {
                 const isSelected = selectedOffer === offer
+                const net = offer.plan.prices?.net
                 const sell = offer.plan.prices?.sell
                 const policies = offer.plan.cancellationPolicies || []
-                // HyperGuest's raw Sell rate, shown directly -- no BLY
-                // commission added (reverted 2026-08-20 after extended
-                // pricing-logic confusion). This is DISPLAY ONLY; the
-                // separate `net`/`sell` in handlePrebook below (used for
-                // expectedPrice sent to HyperGuest) are unaffected.
+                // Guest-facing price only -- see src/lib/pricing.js for
+                // the Net/Sell logic. `net`/`sell` above are separate from
+                // the `net`/`sell` inside handlePrebook (used for
+                // expectedPrice sent to HyperGuest), which are unaffected.
+                const guestPrice = sell ? calculateGuestPrice(net?.price ?? sell.price, sell.price, sell.currency) : null
                 return (
                   <div key={i} style={s.offerCard(isSelected)} onClick={() => { setSelectedOffer(offer); setPrebookError(null) }}>
                     <div style={s.offerTop}>
@@ -366,7 +368,7 @@ export default function HotelDetail() {
                         <div style={s.offerName}>{offer.room.roomName} — {offer.plan.ratePlanName}</div>
                         <div style={s.offerBoard}>{offer.plan.board} board · up to {offer.room.settings?.maxOccupancy} guests</div>
                       </div>
-                      <div style={s.offerPrice}>{sell?.currency} {Number(sell?.price).toLocaleString()}</div>
+                      <div style={s.offerPrice}>{guestPrice?.currency} {Number(guestPrice?.totalAmount).toLocaleString()}</div>
                     </div>
                     <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'right', marginTop: -6, marginBottom: 6 }}>Taxes and fees included</div>
                     <div style={s.offerBadges}>
