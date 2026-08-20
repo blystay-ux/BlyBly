@@ -83,10 +83,12 @@ export default function Checkout() {
 
   const info = property.propertyInfo
   const confirmedRoom = prebookResult.content?.rooms?.[0]
+  const net = confirmedRoom?.prices?.net ?? selectedOffer.plan.prices?.net
   const sell = confirmedRoom?.prices?.sell ?? selectedOffer.plan.prices?.sell
-  // Guest-facing price only. `sell` above (HyperGuest's raw rate) is what
-  // actually gets sent as expectedPrice to hyperguest-book -- never this.
-  const guestPrice = sell ? calculateGuestPrice(sell.price, sell.currency) : null
+  // Guest-facing price only -- see src/lib/pricing.js for the Net/Sell
+  // logic. `net`/`sell` below are what actually get sent as expectedPrice
+  // to hyperguest-book (always Net), completely unaffected by this.
+  const guestPrice = sell ? calculateGuestPrice(net?.price ?? sell.price, sell.price, sell.currency) : null
 
   function updateLeadGuest(field, value) {
     setLeadGuest(prev => ({ ...prev, [field]: value }))
@@ -106,6 +108,10 @@ export default function Checkout() {
     setBooking(true)
     setBookingError(null)
     const ref = `BLY-${Date.now()}`
+    // expectedPrice sent to HyperGuest is ALWAYS the Net rate, per their
+    // explicit guidance (2026-08-17). Never change this to sell without
+    // re-confirming with HyperGuest first.
+    const priceForHyperGuest = net || sell
     try {
       const { data, error } = await supabase.functions.invoke('hyperguest-book', {
         body: {
@@ -117,7 +123,7 @@ export default function Checkout() {
           rooms: [{
             roomId: selectedOffer.room.roomId,
             ratePlanId: selectedOffer.plan.ratePlanId,
-            expectedPrice: { amount: sell.price, currency: sell.currency },
+            expectedPrice: { amount: priceForHyperGuest.price, currency: priceForHyperGuest.currency },
             guests: roomGuests,
             ...(specialRequests ? { specialRequests: [specialRequests] } : {}),
           }],
