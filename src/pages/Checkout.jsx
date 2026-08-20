@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { calculateGuestPrice } from '../lib/pricing'
 
 function addNights(dateStr, nights) {
   const d = new Date(dateStr)
@@ -84,9 +85,10 @@ export default function Checkout() {
   const confirmedRoom = prebookResult.content?.rooms?.[0]
   const net = confirmedRoom?.prices?.net ?? selectedOffer.plan.prices?.net
   const sell = confirmedRoom?.prices?.sell ?? selectedOffer.plan.prices?.sell
-  // HyperGuest's raw Sell rate, shown directly -- no BLY commission added
-  // (reverted 2026-08-20 after extended pricing-logic confusion). `net`
-  // above still feeds expectedPrice sent to HyperGuest, unaffected.
+  // Guest-facing price only -- see src/lib/pricing.js for the Net/Sell
+  // logic. `net` above still separately feeds expectedPrice sent to
+  // HyperGuest (always Net), unaffected by this display calculation.
+  const guestPrice = sell ? calculateGuestPrice(net?.price ?? sell.price, sell.price, sell.currency) : null
 
   function updateLeadGuest(field, value) {
     setLeadGuest(prev => ({ ...prev, [field]: value }))
@@ -219,7 +221,7 @@ export default function Checkout() {
             <div style={s.summaryRow}><span>Dates</span><span>{checkIn} → {addNights(checkIn, nights)}</span></div>
             <div style={s.summaryRow}><span>Guests</span><span>{adults} {adults === 1 ? 'adult' : 'adults'}</span></div>
             <div style={s.summaryRow}><span>Board</span><span>{selectedOffer.plan.board}</span></div>
-            <div style={s.summaryTotal}><span>Total</span><span>{sell?.currency} {Number(sell?.price).toLocaleString()}</span></div>
+            <div style={s.summaryTotal}><span>Total</span><span>{guestPrice?.currency} {Number(guestPrice?.totalAmount).toLocaleString()}</span></div>
             <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'right', marginTop: 4 }}>Taxes and fees included</div>
           </div>
 
@@ -311,7 +313,7 @@ export default function Checkout() {
         </div>
 
         <div style={s.ctaBar}>
-          <div style={{ fontSize: 14, fontWeight: 700 }}>{sell?.currency} {Number(sell?.price).toLocaleString()}</div>
+          <div style={{ fontSize: 14, fontWeight: 700 }}>{guestPrice?.currency} {Number(guestPrice?.totalAmount).toLocaleString()}</div>
           <button
             style={{ ...s.ctaBtn, ...(!leadGuestValid() || !roomGuestsValid() || booking ? s.ctaBtnDisabled : {}) }}
             disabled={!leadGuestValid() || !roomGuestsValid() || booking}
