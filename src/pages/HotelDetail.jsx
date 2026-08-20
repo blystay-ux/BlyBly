@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import SearchBar from '../components/SearchBar'
 import { calculateGuestPrice } from '../lib/pricing'
 
-const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80'
+const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80'
 
 function addNights(dateStr, nights) {
   const d = new Date(dateStr)
@@ -11,441 +12,224 @@ function addNights(dateStr, nights) {
   return d.toISOString().split('T')[0]
 }
 
-function flattenOffers(property) {
-  const offers = []
+// Finds the cheapest sell price across all rooms/rate plans for a property,
+// so the card can show one headline "from RXXX/night" figure.
+function cheapestOffer(property) {
+  let cheapest = null
   for (const room of property.rooms ?? []) {
     for (const plan of room.ratePlans ?? []) {
-      offers.push({ room, plan })
-    }
-  }
-  return offers.sort((a, b) => (a.plan.prices?.sell?.price ?? 0) - (b.plan.prices?.sell?.price ?? 0))
-}
-
-function describeCancellationPolicy(p) {
-  const penalty = p.penaltyType === 'percent' ? `${p.amount}%`
-    : p.penaltyType === 'nights' ? `${p.amount} night(s)`
-    : `${p.currency} ${p.amount}`
-  const when = p.daysBefore >= 999 ? 'always (non-refundable)' : `${p.daysBefore} day(s) before check-in`
-  const deadline = p.cancellationDeadlineHour ? `, deadline ${p.cancellationDeadlineHour}` : ''
-  return `Penalty: ${penalty} — applies ${when}${deadline}`
-}
-
-const s = {
-  page: { maxWidth: 860, margin: '0 auto' },
-
-  lockedHeader: {
-    background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', padding: '14px 24px',
-  },
-  back: {
-    display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 500,
-    color: 'var(--text-muted)', cursor: 'pointer', background: 'none', border: 'none',
-    padding: 0, marginBottom: 12,
-  },
-  compactHeaderRow: { display: 'flex', gap: 14, alignItems: 'flex-start' },
-  compactThumb: { width: 96, height: 76, borderRadius: 12, objectFit: 'cover', flexShrink: 0 },
-  compactInfo: { minWidth: 0, flex: 1 },
-  compactName: { fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, letterSpacing: '-0.02em', color: 'var(--text)', lineHeight: 1.15 },
-  compactMeta: { display: 'flex', alignItems: 'center', gap: 12, fontSize: 12, color: 'var(--text-muted)', marginTop: 4 },
-  remarkPills: { display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 },
-  remarkPill: { background: '#F5D6DE', borderRadius: 99, padding: '4px 10px', fontSize: 11, color: '#000' },
-  hero: {
-    position: 'relative', width: '100%', aspectRatio: '1 / 1',
-    maxHeight: 560, overflow: 'hidden',
-  },
-  heroImg: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' },
-  heroScrim: { position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,0.7) 100%)' },
-  heroText: { position: 'absolute', left: 24, right: 24, bottom: 20, color: '#fff' },
-  heroName: { fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(24px, 4vw, 34px)', letterSpacing: '-0.02em', marginBottom: 4, lineHeight: 1.1 },
-  heroMeta: { display: 'flex', alignItems: 'center', gap: 14, fontSize: 13, color: 'rgba(255,255,255,0.9)' },
-  thumbStrip: { display: 'flex', gap: 8, overflowX: 'auto', padding: '10px 0', scrollbarWidth: 'thin' },
-  thumb: { flexShrink: 0, width: 90, height: 64, objectFit: 'cover', borderRadius: 10, cursor: 'pointer' },
-
-  ctaBar: {
-    position: 'sticky', bottom: 0, zIndex: 15,
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
-    padding: '14px 24px', background: 'var(--bg-card)', borderTop: '1px solid var(--border)',
-    boxShadow: '0 -4px 20px rgba(0,0,0,0.06)',
-  },
-  ctaInfo: { minWidth: 0, flex: 1 },
-  ctaDates: { fontSize: 12, color: 'var(--text-muted)' },
-  ctaSelection: { fontSize: 14, fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
-  ctaBtn: { flexShrink: 0, padding: '13px 24px', borderRadius: 99, background: '#ef4056', color: '#fff', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' },
-  ctaBtnDisabled: { opacity: 0.4, cursor: 'not-allowed' },
-  errorBar: { background: '#FDEBEC', color: '#ef4056', fontSize: 12, fontWeight: 600, padding: '8px 24px' },
-
-  content: { padding: '20px 24px 24px' },
-  sectionTitle: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 18, marginBottom: 12, letterSpacing: '-0.3px', color: 'var(--text)' },
-  facilities: { display: 'flex', flexWrap: 'wrap', gap: 8 },
-  facilityTag: { background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 99, padding: '6px 14px', fontSize: 12 },
-  offerCard: (selected) => ({
-    border: selected ? '2px solid #000000' : '1.5px solid var(--border)',
-    borderRadius: 16, padding: '16px 18px', marginBottom: 12,
-    cursor: 'pointer', background: selected ? '#F8F7F5' : 'var(--bg-card)',
-  }),
-  offerTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6, gap: 10 },
-  offerName: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 15 },
-  offerBoard: { fontSize: 12, color: 'var(--text-muted)', marginTop: 2 },
-  offerPrice: { fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 18, color: 'var(--text)', whiteSpace: 'nowrap' },
-  offerBadges: { display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 },
-  badge: { padding: '4px 10px', background: 'var(--bg)', borderRadius: 99, fontSize: 11, color: 'var(--text-muted)', border: '1px solid var(--border)' },
-  packageBadge: { padding: '4px 10px', background: '#F5D6DE', borderRadius: 99, fontSize: 11, color: '#000', fontWeight: 600 },
-  details: { marginTop: 10, fontSize: 12 },
-  summary: { cursor: 'pointer', fontWeight: 700, color: '#ef4056', fontSize: 12 },
-  policyItem: { fontSize: 12, padding: '4px 0' },
-
-  moreSection: { marginTop: 8, borderTop: '1px solid var(--border)', paddingTop: 8 },
-  moreSummary: { cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 15, color: 'var(--text)', padding: '10px 0' },
-  moreGallery: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 8, marginTop: 14, marginBottom: 16 },
-  moreGalleryImg: { width: '100%', height: 90, objectFit: 'cover', borderRadius: 10, cursor: 'pointer' },
-
-  lightboxOverlay: {
-    position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.92)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column',
-  },
-  lightboxImg: { maxWidth: '90vw', maxHeight: '78vh', objectFit: 'contain', borderRadius: 8 },
-  lightboxClose: {
-    position: 'absolute', top: 20, right: 20, width: 40, height: 40, borderRadius: '50%',
-    background: 'rgba(255,255,255,0.12)', color: '#fff', border: 'none', fontSize: 20,
-    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-  },
-  lightboxNav: (side) => ({
-    position: 'absolute', top: '50%', [side]: 20, transform: 'translateY(-50%)',
-    width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.12)',
-    color: '#fff', border: 'none', fontSize: 22, cursor: 'pointer',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-  }),
-  lightboxCounter: { color: 'rgba(255,255,255,0.7)', fontSize: 13, marginTop: 16, fontFamily: 'var(--font-body)' },
-}
-
-export default function HotelDetail() {
-  const { slug } = useParams()
-  const navigate = useNavigate()
-  const location = useLocation()
-
-  const isHyperGuest = slug?.startsWith('hg-')
-
-  const stateProperty = location.state?.property
-  const stateCheckIn = location.state?.checkIn
-  const stateNights = location.state?.nights
-  const stateAdults = location.state?.adults
-
-  const CERT_PROPERTY_ID = 19912
-  const isCertDirectLink = slug === `hg-${CERT_PROPERTY_ID}` && !stateProperty
-
-  function defaultCertDates() {
-    const d = new Date()
-    d.setDate(d.getDate() + 14)
-    return d.toISOString().split('T')[0]
-  }
-
-  const [property, setProperty] = useState(stateProperty || null)
-  const [checkIn] = useState(stateCheckIn || (isCertDirectLink ? defaultCertDates() : null))
-  const [nights] = useState(stateNights || (isCertDirectLink ? 2 : null))
-  const [adults] = useState(stateAdults || 2)
-  const [certLinkLoading, setCertLinkLoading] = useState(isCertDirectLink)
-  const [certLinkError, setCertLinkError] = useState(null)
-
-  const [staticDetail, setStaticDetail] = useState(null)
-  const [activePhoto, setActivePhoto] = useState(0)
-  const [galleryOpen, setGalleryOpen] = useState(false)
-  const [galleryIndex, setGalleryIndex] = useState(0)
-
-  useEffect(() => {
-    if (!isCertDirectLink) return
-    async function runCertSearch() {
-      setCertLinkLoading(true)
-      setCertLinkError(null)
-      try {
-        const { data, error } = await supabase.functions.invoke('hyperguest-search', {
-          body: { checkIn, nights: 2, rooms: [{ adults: 2 }], hotelIds: [CERT_PROPERTY_ID], customerNationality: 'ZA' },
-        })
-        if (error) throw error
-        const result = data?.results?.[0]
-        if (!result) throw new Error('No availability returned for the certification property on these dates.')
-        setProperty(result)
-      } catch (err) {
-        console.error('Certification link search failed:', err)
-        setCertLinkError(err.message || 'Could not load the certification property right now.')
+      const sell = plan.prices?.sell
+      const net = plan.prices?.net
+      if (!sell) continue
+      if (!cheapest || sell.price < cheapest.sellPrice) {
+        cheapest = {
+          sellPrice: sell.price, netPrice: net?.price ?? sell.price, currency: sell.currency,
+          roomName: room.roomName, boardBasis: plan.board,
+        }
       }
-      setCertLinkLoading(false)
     }
-    runCertSearch()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCertDirectLink])
-
-  useEffect(() => {
-    const propertyId = property?.propertyId
-    if (!propertyId) return
-    async function loadStatic() {
-      const { data } = await supabase
-        .from('hg_property_static')
-        .select('images, facilities, descriptions')
-        .eq('hotel_id', propertyId)
-        .single()
-      setStaticDetail(data || null)
-    }
-    loadStatic()
-  }, [property?.propertyId])
-
-  const [selectedOffer, setSelectedOffer] = useState(null)
-  const [prebooking, setPrebooking] = useState(false)
-  const [prebookError, setPrebookError] = useState(null)
-
-  const [legacyLoading, setLegacyLoading] = useState(!isHyperGuest)
-  const [legacyProperty, setLegacyProperty] = useState(null)
-
-  useEffect(() => {
-    if (isHyperGuest) return
-    async function loadLegacy() {
-      setLegacyLoading(true)
-      const { data: h } = await supabase.from('hotels').select('*').eq('slug', slug).single()
-      setLegacyProperty(h)
-      setLegacyLoading(false)
-    }
-    loadLegacy()
-  }, [slug, isHyperGuest])
-
-  const offers = property ? flattenOffers(property) : []
-  const photos = (staticDetail?.images || []).filter(i => i.type === 'photo')
-  const facilities = (staticDetail?.facilities || []).filter(f => f.name)
-  const description = (staticDetail?.descriptions || []).find(d => d.type === 'general')?.description
-
-  function goPrevPhoto() {
-    setGalleryIndex(i => (i - 1 + photos.length) % photos.length)
   }
-  function goNextPhoto() {
-    setGalleryIndex(i => (i + 1) % photos.length)
-  }
+  return cheapest
+}
 
-  useEffect(() => {
-    if (!galleryOpen) return
-    function onKeyDown(e) {
-      if (e.key === 'Escape') setGalleryOpen(false)
-      if (e.key === 'ArrowLeft') goPrevPhoto()
-      if (e.key === 'ArrowRight') goNextPhoto()
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [galleryOpen, photos.length])
-
-  async function handlePrebook() {
-    if (!selectedOffer || !property) return
-    setPrebooking(true)
-    setPrebookError(null)
-
-    const sell = selectedOffer.plan.prices?.sell
-    try {
-      const { data, error } = await supabase.functions.invoke('hyperguest-prebook', {
-        body: {
-          propertyId: property.propertyId,
-          checkIn,
-          checkOut: addNights(checkIn, nights),
-          nationality: 'ZA',
-          pax: [{ adults, children: [] }],
-          rooms: [{
-            roomId: selectedOffer.room.roomId,
-            ratePlanId: selectedOffer.plan.ratePlanId,
-            expectedPrice: { amount: sell.price, currency: sell.currency },
-          }],
-        },
-      })
-      if (error) throw error
-      if (data?.error) throw new Error(data.error)
-      navigate('/checkout', {
-        state: { property, selectedOffer, prebookResult: data, checkIn, nights, adults },
-      })
-    } catch (err) {
-      console.error('Pre-book failed:', err)
-      setPrebookError(err.message || 'Something went wrong confirming this price. Please try again.')
-    }
-    setPrebooking(false)
-  }
-
-  if (isCertDirectLink && certLinkLoading) {
-    return <div style={{ padding: 80, textAlign: 'center', color: 'var(--text-muted)' }}>Loading certification property…</div>
-  }
-  if (isCertDirectLink && certLinkError) {
-    return (
-      <div style={{ padding: 80, textAlign: 'center' }}>
-        <p style={{ fontSize: 16, color: '#ef4056', marginBottom: 20 }}>{certLinkError}</p>
-        <button onClick={() => navigate('/')} style={{ background: '#111', color: '#fff', borderRadius: 99, padding: '12px 28px', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
-          ← Back to home
-        </button>
-      </div>
-    )
-  }
-  if (isHyperGuest && !stateProperty && !isCertDirectLink) {
-    return (
-      <div style={{ padding: 80, textAlign: 'center' }}>
-        <p style={{ fontSize: 16, color: 'var(--text-muted)', marginBottom: 20 }}>
-          This page needs search details (dates, guests) that aren't available on a direct link or refresh yet.
-        </p>
-        <button onClick={() => navigate('/')} style={{ background: '#ef4056', color: '#fff', borderRadius: 99, padding: '12px 28px', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
-          ← Search again
-        </button>
-      </div>
-    )
-  }
-  if (!isHyperGuest && legacyLoading) {
-    return <div style={{ padding: 80, textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div>
-  }
-  if (!isHyperGuest && !legacyProperty) {
-    return <div style={{ padding: 80, textAlign: 'center', color: 'var(--text-muted)' }}>Hotel not found.</div>
-  }
-  if (legacyProperty) {
-    return (
-      <main>
-        <div style={s.page}>
-          <button onClick={() => navigate(-1)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 500, color: 'var(--text-muted)', cursor: 'pointer', background: 'none', border: 'none', margin: '20px 24px 16px' }}>← Back to results</button>
-          <h1 style={{ padding: '0 24px', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 30 }}>{legacyProperty.name}</h1>
-          <p style={{ padding: '0 24px', color: 'var(--text-muted)' }}>{legacyProperty.description}</p>
-        </div>
-      </main>
-    )
-  }
-
+function ResultCard({ property, checkIn, nights, adults }) {
+  const navigate = useNavigate()
+  const cheapestRaw = cheapestOffer(property)
+  // Guest-facing price only -- the raw HyperGuest rates are never shown to
+  // the guest directly. See src/lib/pricing.js for the Net/Sell logic.
+  const offer = cheapestRaw ? calculateGuestPrice(cheapestRaw.netPrice, cheapestRaw.sellPrice, cheapestRaw.currency) : null
   const info = property.propertyInfo
-  const ctaLabel = selectedOffer ? `${selectedOffer.room.roomName} — ${selectedOffer.plan.ratePlanName}` : 'Select a room & rate below'
+
+  const handleView = () => {
+    navigate(`/hotel/hg-${property.propertyId}`, {
+      state: { property, checkIn, nights, adults },
+    })
+  }
 
   return (
-    <main style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - var(--nav-height))' }}>
-      <div style={{ ...s.page, flex: 1, display: 'flex', flexDirection: 'column' }}>
-
-        {/* ── COMPACT HEADER: small photo + name/rating/location, gets out of the way fast ── */}
-        <div style={s.lockedHeader}>
-          <button style={s.back} onClick={() => navigate(-1)}>← Back to results</button>
-          <div style={s.compactHeaderRow}>
-            <img
-              src={property.thumbnailImage || photos[0]?.uri || PLACEHOLDER_IMG}
-              alt={info.name}
-              style={{ ...s.compactThumb, cursor: photos.length > 0 ? 'pointer' : 'default' }}
-              onClick={() => { if (photos.length > 0) { setGalleryIndex(0); setGalleryOpen(true) } }}
-            />
-            <div style={s.compactInfo}>
-              <div style={s.compactName}>{info.name}</div>
-              <div style={s.compactMeta}>
-                {info.starRating > 0 && <span>★ {info.starRating}</span>}
-                <span>📍 {info.cityName}, {info.countryCode}</span>
-              </div>
-              {property.remarks?.length > 0 && (
-                <div style={s.remarkPills}>
-                  {property.remarks.slice(0, 3).map((r, i) => (
-                    <span key={i} style={s.remarkPill}>{r.length > 40 ? r.slice(0, 40) + '…' : r}</span>
-                  ))}
-                </div>
-              )}
-            </div>
+    <div
+      onClick={handleView}
+      style={{
+        background: 'var(--bg-card)', borderRadius: 20, overflow: 'hidden',
+        boxShadow: '0 2px 16px rgba(0,0,0,0.06)', cursor: 'pointer',
+      }}
+    >
+      <div style={{ position: 'relative', height: 220, overflow: 'hidden' }}>
+        <img
+          src={property.thumbnailImage || PLACEHOLDER_IMG}
+          alt={info.name}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      </div>
+      <div style={{ padding: '18px 20px 20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+          <div>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 17, letterSpacing: '-0.03em', marginBottom: 2, color: 'var(--text)' }}>
+              {info.name}
+            </h3>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>📍 {info.cityName}, {info.countryCode}</p>
           </div>
-        </div>
-
-        {prebookError && <div style={s.errorBar}>{prebookError}</div>}
-
-        {/* ── ROOMS FIRST: the whole point of this layout ── */}
-        <div style={{ ...s.content, flex: 1 }}>
-          {offers.length > 0 && (
-            <>
-              <div style={s.sectionTitle}>Choose your room & rate</div>
-              {offers.map((offer, i) => {
-                const isSelected = selectedOffer === offer
-                const sell = offer.plan.prices?.sell
-                const policies = offer.plan.cancellationPolicies || []
-                // Guest-facing price only -- `sell` above (HyperGuest's raw
-                // rate) is what actually gets sent as expectedPrice to
-                // hyperguest-prebook/hyperguest-book, completely unaffected
-                // by this calculation.
-                const guestPrice = sell ? calculateGuestPrice(sell.price, sell.currency) : null
-                return (
-                  <div key={i} style={s.offerCard(isSelected)} onClick={() => { setSelectedOffer(offer); setPrebookError(null) }}>
-                    <div style={s.offerTop}>
-                      <div>
-                        <div style={s.offerName}>{offer.room.roomName} — {offer.plan.ratePlanName}</div>
-                        <div style={s.offerBoard}>{offer.plan.board} board · up to {offer.room.settings?.maxOccupancy} guests</div>
-                      </div>
-                      <div style={s.offerPrice}>{guestPrice?.currency} {Number(guestPrice?.totalAmount).toLocaleString()}</div>
-                    </div>
-                    <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'right', marginTop: -6, marginBottom: 6 }}>Taxes and fees included</div>
-                    <div style={s.offerBadges}>
-                      {offer.plan.ratePlanInfo?.isPackageRate && <span style={s.packageBadge}>Package rate</span>}
-                      {offer.plan.ratePlanInfo?.isPromotion && <span style={s.packageBadge}>Promo</span>}
-                      {offer.plan.isImmediate && <span style={s.badge}>Instant confirmation</span>}
-                    </div>
-
-                    <details style={s.details} onClick={e => e.stopPropagation()}>
-                      <summary style={s.summary}>Cancellation policy</summary>
-                      {policies.length === 0
-                        ? <div style={s.policyItem}>No cancellation policy returned for this rate plan.</div>
-                        : policies.map((p, pi) => <div key={pi} style={s.policyItem}>{describeCancellationPolicy(p)}</div>)}
-                    </details>
-                  </div>
-                )
-              })}
-            </>
+          {info.starRating > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+              <span style={{ color: '#f59e0b', fontSize: 14 }}>★</span>
+              <span style={{ fontWeight: 700, fontSize: 14 }}>{info.starRating}</span>
+            </div>
           )}
-
-          {/* ── "MORE ABOUT THIS PROPERTY": full gallery, description, facilities -- moved down here since they're secondary to booking speed ── */}
-          <details style={s.moreSection}>
-            <summary style={s.moreSummary}>More about this property</summary>
-
-            {photos.length > 0 && (
-              <div style={s.moreGallery}>
-                {photos.slice(0, 12).map((p, i) => (
-                  <img
-                    key={i} src={p.uri} style={s.moreGalleryImg} alt=""
-                    onClick={() => { setGalleryIndex(i); setGalleryOpen(true) }}
-                  />
-                ))}
-              </div>
-            )}
-
-            {description && <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 16 }}>{description}</p>}
-
-            {facilities.length > 0 && (
-              <>
-                <div style={{ ...s.sectionTitle, fontSize: 15, marginBottom: 8 }}>Facilities</div>
-                <div style={s.facilities}>
-                  {facilities.map((f, i) => <span key={i} style={s.facilityTag}>{f.name}</span>)}
-                </div>
-              </>
-            )}
-          </details>
         </div>
 
-        {/* ── STICKY BOTTOM: dates/selection + Check price, always reachable ── */}
-        <div style={s.ctaBar}>
-          <div style={s.ctaInfo}>
-            <div style={s.ctaDates}>{checkIn} → {addNights(checkIn, nights)} · {nights}n · {adults}a</div>
-            <div style={s.ctaSelection}>{ctaLabel}</div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>
+          <div>
+            {offer ? (
+              <>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block' }}>from</span>
+                <span style={{ fontWeight: 800, fontSize: 18, color: 'var(--text)' }}>
+                  {offer.currency} {Number(offer.totalAmount).toLocaleString()}
+                </span>
+                <span style={{ fontSize: 13, color: 'var(--text-muted)' }}> / night</span>
+                <span style={{ fontSize: 10, color: 'var(--text-muted)', display: 'block', marginTop: 2 }}>Taxes and fees included</span>
+              </>
+            ) : (
+              <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>No availability for these dates</span>
+            )}
           </div>
           <button
-            style={{ ...s.ctaBtn, ...(!selectedOffer || prebooking ? s.ctaBtnDisabled : {}) }}
-            disabled={!selectedOffer || prebooking}
-            onClick={handlePrebook}
+            style={{
+              background: 'var(--text)', color: '#fff', borderRadius: 99,
+              padding: '10px 20px', fontSize: 13, fontWeight: 700,
+              border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)',
+            }}
           >
-            {prebooking ? 'Checking…' : 'Check price'}
+            View →
           </button>
         </div>
       </div>
+    </div>
+  )
+}
 
-      {/* ── LIGHTBOX: full-screen photo viewer, opened by clicking any photo ── */}
-      {galleryOpen && photos.length > 0 && (
-        <div style={s.lightboxOverlay} onClick={() => setGalleryOpen(false)}>
-          <button style={s.lightboxClose} onClick={() => setGalleryOpen(false)} aria-label="Close gallery">✕</button>
-          {photos.length > 1 && (
-            <button style={s.lightboxNav('left')} onClick={e => { e.stopPropagation(); goPrevPhoto() }} aria-label="Previous photo">‹</button>
-          )}
-          <img
-            src={photos[galleryIndex]?.uri}
-            alt=""
-            style={s.lightboxImg}
-            onClick={e => e.stopPropagation()}
-          />
-          {photos.length > 1 && (
-            <button style={s.lightboxNav('right')} onClick={e => { e.stopPropagation(); goNextPhoto() }} aria-label="Next photo">›</button>
-          )}
-          <div style={s.lightboxCounter}>{galleryIndex + 1} / {photos.length}</div>
-        </div>
-      )}
-    </main>
+function EmptyState({ city, noneAvailable }) {
+  const navigate = useNavigate()
+  return (
+    <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+      <div style={{ fontSize: 56, marginBottom: 16 }}>🔍</div>
+      <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 24, letterSpacing: '-0.04em', marginBottom: 8, color: 'var(--text)' }}>
+        {noneAvailable ? `No availability in ${city} for these dates` : `No stays found in ${city}`}
+      </h2>
+      <p style={{ color: 'var(--text-muted)', fontSize: 15, marginBottom: 28 }}>
+        {noneAvailable
+          ? 'Try different dates or another destination.'
+          : "We don't have any properties there yet — try another destination."}
+      </p>
+      <button
+        onClick={() => navigate('/')}
+        style={{
+          background: 'var(--accent)', color: '#fff', borderRadius: 99,
+          padding: '12px 28px', fontSize: 14, fontWeight: 700,
+          border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)',
+        }}
+      >
+        ← Back to home
+      </button>
+    </div>
+  )
+}
+
+export default function Search() {
+  const [searchParams] = useSearchParams()
+
+  const city = searchParams.get('city') || 'Cape Town'
+  const checkIn = searchParams.get('checkIn')
+  const nights = Number(searchParams.get('nights') || 2)
+  const adults = Number(searchParams.get('adults') || 2)
+
+  const [results, setResults] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    async function runSearch() {
+      setLoading(true)
+      setError(null)
+      try {
+        const { data, error: fnError } = await supabase.functions.invoke('hyperguest-city-search', {
+          body: { city, checkIn, nights, adults, customerNationality: 'ZA', currency: 'ZAR' },
+        })
+        if (fnError) throw fnError
+        const withAvailability = (data?.results ?? []).filter(p => p.rooms?.length > 0)
+        setResults(withAvailability)
+      } catch (err) {
+        console.error('City search failed:', err)
+        setError(err.message || 'Search failed. Please try again.')
+        setResults([])
+      }
+      setLoading(false)
+    }
+    if (checkIn) runSearch()
+  }, [city, checkIn, nights, adults])
+
+  return (
+    <div style={{ minHeight: 'calc(100vh - var(--nav-height))', background: 'var(--bg)' }}>
+      <style>{`
+        .bly-search-bar-wrap { padding: 16px 40px; }
+        .bly-search-results { padding: 40px 40px 60px; }
+        .bly-search-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
+        @media (max-width: 768px) {
+          .bly-search-bar-wrap { padding: 14px 20px; }
+          .bly-search-results { padding: 28px 20px 40px; }
+        }
+        @media (max-width: 480px) {
+          .bly-search-bar-wrap { padding: 12px 16px; }
+          .bly-search-results { padding: 20px 16px 32px; }
+          .bly-search-grid { grid-template-columns: 1fr; gap: 16px; }
+          .bly-search-heading { font-size: 26px !important; }
+          .bly-search-meta { display: block !important; margin-left: 0 !important; margin-top: 6px !important; }
+        }
+      `}</style>
+
+      <div className="bly-search-bar-wrap" style={{
+        background: 'var(--bg-card)', borderBottom: '1px solid var(--border)',
+        display: 'flex', justifyContent: 'center',
+      }}>
+        <SearchBar initialCity={city} initialCheckIn={checkIn} initialCheckOut={addNights(checkIn, nights)} initialAdults={adults} />
+      </div>
+
+      <div className="bly-search-results" style={{ maxWidth: 1280, margin: '0 auto' }}>
+        {!loading && !error && (
+          <div style={{ marginBottom: 28 }}>
+            <p style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+              Search results
+            </p>
+            <h1 className="bly-search-heading" style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 32, letterSpacing: '-0.05em', marginTop: 4, color: 'var(--text)' }}>
+              Stays in {city}
+              <span className="bly-search-meta" style={{ fontWeight: 400, fontSize: 18, color: 'var(--text-muted)', marginLeft: 12 }}>
+                {results.length} {results.length === 1 ? 'property' : 'properties'} · {checkIn} · {nights} {nights === 1 ? 'night' : 'nights'}
+              </span>
+            </h1>
+          </div>
+        )}
+
+        {loading ? (
+          <div className="bly-search-grid">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} style={{ height: 360, borderRadius: 20, background: 'var(--bg-card)', opacity: 0.7 }} />
+            ))}
+          </div>
+        ) : error ? (
+          <div style={{ background: 'var(--bg-card)', borderRadius: 20, padding: '56px 24px', textAlign: 'center' }}>
+            <div style={{ fontSize: 44, marginBottom: 12 }}>⚠️</div>
+            <p style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 18, color: 'var(--text)' }}>Something went wrong</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: 14, marginTop: 6 }}>{error}</p>
+          </div>
+        ) : results.length === 0 ? (
+          <EmptyState city={city} noneAvailable />
+        ) : (
+          <div className="bly-search-grid">
+            {results.map(property => (
+              <ResultCard key={property.propertyId} property={property} checkIn={checkIn} nights={nights} adults={adults} />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
