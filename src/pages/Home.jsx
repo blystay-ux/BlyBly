@@ -95,6 +95,7 @@ function FeaturedCard({ property }) {
 
 export default function Home() {
   const navigate = useNavigate()
+  const [showInsidersBanner, setShowInsidersBanner] = useState(true)
   const [pool, setPool] = useState([])       // full candidate set, fetched once
   const [visible, setVisible] = useState([]) // the random subset currently shown
   const [loading, setLoading] = useState(true)
@@ -193,10 +194,48 @@ export default function Home() {
         }
       `}</style>
 
+      {/* ── BLY INSIDERS BANNER ── */}
+      {showInsidersBanner && (
+        <div style={{
+          background: 'var(--bg-dark)', color: '#fff', padding: '12px 40px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+          fontSize: 14, position: 'relative', flexWrap: 'wrap', textAlign: 'center',
+        }}>
+          <span style={{ color: 'var(--accent)' }}>✨</span>
+          <span>Travel industry professional? Get Insider rates on every stay —</span>
+          <span
+            onClick={() => navigate('/insiders')}
+            style={{ fontWeight: 700, textDecoration: 'underline', textUnderlineOffset: 3, cursor: 'pointer' }}
+          >
+            Join Bly Insiders →
+          </span>
+          <button
+            onClick={() => setShowInsidersBanner(false)}
+            aria-label="Dismiss"
+            style={{
+              position: 'absolute', right: 20, top: '50%', transform: 'translateY(-50%)',
+              background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: 16, cursor: 'pointer',
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* ── HERO ── */}
-      <section style={{ position: 'relative', minHeight: '78vh', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
+      <section style={{ position: 'relative', minHeight: '78vh', display: 'flex', alignItems: 'flex-end', overflow: 'hidden' }}>
         <img src={HERO_IMG} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(10,10,10,0.55) 0%, rgba(10,10,10,0.35) 45%, rgba(10,10,10,0.65) 100%)' }} />
+
+        {/* Big wordmark, layered on the photo itself -- separate from the
+            small logo in the site-wide Navbar above. */}
+        <div style={{
+          position: 'absolute', top: 36, left: 40, zIndex: 2,
+          fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(32px, 5vw, 52px)',
+          letterSpacing: '-2px', color: '#fff', display: 'flex', alignItems: 'center', gap: 4,
+        }}>
+          Bly<span style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--accent)', marginLeft: 2, marginBottom: -4 }} />
+        </div>
 
         <div className="bly-hero-inner bly-fade" style={{ position: 'relative', zIndex: 2, maxWidth: 1100, width: '100%', margin: '0 auto' }}>
           <div style={{
