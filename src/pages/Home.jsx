@@ -232,7 +232,7 @@ export default function Home() {
         <div style={{
           position: 'absolute', top: 48, left: '50%', transform: 'translateX(-50%)', zIndex: 2,
           fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(96px, 8vw, 96px)',
-          letterSpacing: '-3px', color: '#fff', display: 'flex', alignItems: 'center', gap: 6,
+          letterSpacing: '-3px', color: '#fff', display: 'flex', alignItems: 'bottom', gap: 6,
         }}>
           Bly<span style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--accent)', marginLeft: 3, marginBottom: -6 }} />
         </div>
