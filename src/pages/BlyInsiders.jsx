@@ -158,38 +158,43 @@ export default function BlyInsiders() {
           </p>
         </div>
 
+        {/* Value proposition -- shown to EVERYONE, logged in or not, since a
+            bare "Sign in" prompt with zero context doesn't convert anyone
+            who hasn't already heard about Bly Insiders elsewhere. */}
+        <div style={{ display: 'grid', gap: 14, marginBottom: 24 }}>
+          {BENEFITS.map(([icon, title, sub]) => (
+            <div key={title} style={{ ...card, padding: '20px 22px', display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+              <div style={{ fontSize: 24, flexShrink: 0 }}>{icon}</div>
+              <div>
+                <strong style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: 15, display: 'block', marginBottom: 3 }}>{title}</strong>
+                <span style={{ fontSize: 14, color: '#6B6B6B', lineHeight: 1.5 }}>{sub}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
         {!user ? (
           <div style={{ ...card, textAlign: 'center' }}>
-            <div style={{ fontSize: 40, marginBottom: 14 }}>✨</div>
-            <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: 22, marginBottom: 8 }}>Sign in to apply</h2>
-            <p style={{ color: '#6B6B6B', fontSize: 15, marginBottom: 24 }}>You'll need a BLY. account to request Bly Insiders access.</p>
+            <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 900, fontSize: 40, letterSpacing: '-0.04em' }}>
+              R{FEE}<span style={{ fontSize: 16, fontWeight: 500, color: '#999' }}> / year</span>
+            </div>
+            <p style={{ color: '#6B6B6B', fontSize: 14, margin: '8px 0 22px' }}>
+              Sign in (or create a free BLY. account) to submit your application.
+            </p>
             <button style={btn} onClick={() => navigate('/auth')}>Sign in →</button>
           </div>
         ) : loading ? (
           <div style={{ ...card, textAlign: 'center', color: '#999' }}>Loading…</div>
         ) : noActiveApp && !showForm ? (
-          <>
-            <div style={{ display: 'grid', gap: 14, marginBottom: 24 }}>
-              {BENEFITS.map(([icon, title, sub]) => (
-                <div key={title} style={{ ...card, padding: '20px 22px', display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-                  <div style={{ fontSize: 24, flexShrink: 0 }}>{icon}</div>
-                  <div>
-                    <strong style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: 15, display: 'block', marginBottom: 3 }}>{title}</strong>
-                    <span style={{ fontSize: 14, color: '#6B6B6B', lineHeight: 1.5 }}>{sub}</span>
-                  </div>
-                </div>
-              ))}
+          <div style={{ ...card, textAlign: 'center' }}>
+            <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 900, fontSize: 40, letterSpacing: '-0.04em' }}>
+              R{FEE}<span style={{ fontSize: 16, fontWeight: 500, color: '#999' }}> / year</span>
             </div>
-            <div style={{ ...card, textAlign: 'center' }}>
-              <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 900, fontSize: 40, letterSpacing: '-0.04em' }}>
-                R{FEE}<span style={{ fontSize: 16, fontWeight: 500, color: '#999' }}> / year</span>
-              </div>
-              <p style={{ color: '#6B6B6B', fontSize: 14, margin: '8px 0 22px' }}>
-                Submit your application — the BLY. team verifies and approves access. Payment is collected on approval.
-              </p>
-              <button style={btn} onClick={() => setShowForm(true)}>Start application</button>
-            </div>
-          </>
+            <p style={{ color: '#6B6B6B', fontSize: 14, margin: '8px 0 22px' }}>
+              Submit your application — the BLY. team verifies and approves access. Payment is collected on approval.
+            </p>
+            <button style={btn} onClick={() => setShowForm(true)}>Start application</button>
+          </div>
         ) : noActiveApp && showForm ? (
           <div style={card}>
             <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: 22, marginBottom: 4 }}>Bly Insiders application</h2>
