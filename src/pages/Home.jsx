@@ -231,10 +231,10 @@ export default function Home() {
             small logo in the site-wide Navbar above. */}
         <div style={{
           position: 'absolute', top: 48, left: '50%', transform: 'translateX(-50%)', zIndex: 2,
-          fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(84px, 8vw, 96px)',
+          fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(96px, 8vw, 96px)',
           letterSpacing: '-3px', color: '#fff', display: 'flex', alignItems: 'center', gap: 6,
         }}>
-          Bly<span style={{ width: 50, height: 50, borderRadius: '50%', background: 'var(--accent)', marginLeft: 3, marginBottom: -6 }} />
+          Bly<span style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--accent)', marginLeft: 3, marginBottom: -6 }} />
         </div>
 
         <div className="bly-hero-inner bly-fade" style={{ position: 'relative', zIndex: 2, maxWidth: 1100, width: '100%', margin: '0 auto' }}>
