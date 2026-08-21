@@ -73,12 +73,17 @@ function buildFallbackGroups() {
   return [{ label: 'South Africa', cities: FALLBACK_SA_CITIES }]
 }
 
+// Base styles are desktop-first (single row, pill-shaped). The <style>
+// block below overrides these via classes on narrow screens -- inline
+// styles alone can't express @media queries, and trying to force the
+// single-row pill layout to wrap on mobile was exactly what produced the
+// distorted blob shape this rebuild fixes.
 const s = {
   wrapper: {
     background: '#fff', borderRadius: 99,
     padding: '6px 6px 6px 0', display: 'flex', alignItems: 'center',
     boxShadow: '0 2px 24px rgba(0,0,0,0.07)',
-    width: '100%', maxWidth: 720, flexWrap: 'wrap', rowGap: 6,
+    width: '100%', maxWidth: 720,
   },
   field: {
     display: 'flex', alignItems: 'center', gap: 8,
@@ -105,7 +110,7 @@ const s = {
     padding: '12px 22px', fontFamily: 'var(--font-body)',
     fontWeight: 700, fontSize: 14, border: 'none',
     cursor: 'pointer', display: 'flex', alignItems: 'center',
-    gap: 6, whiteSpace: 'nowrap', flexShrink: 0, marginLeft: 6,
+    justifyContent: 'center', gap: 6, whiteSpace: 'nowrap', flexShrink: 0, marginLeft: 6,
   },
   error: { width: '100%', color: '#ef4056', fontSize: 12, fontWeight: 600, padding: '4px 20px 0' },
   notice: { width: '100%', color: '#8a8580', fontSize: 11, padding: '4px 20px 0' },
@@ -201,8 +206,32 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
 
   return (
     <div>
-      <div style={s.wrapper}>
-        <div style={s.field}>
+      <style>{`
+        @media (max-width: 640px) {
+          .bly-searchbar-wrapper {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            border-radius: 20px !important;
+            padding: 8px !important;
+          }
+          .bly-searchbar-field, .bly-searchbar-field-last {
+            width: 100% !important;
+            border-right: none !important;
+            border-bottom: 1px solid #E2DFDB !important;
+            padding: 12px 14px !important;
+          }
+          .bly-searchbar-field-last {
+            border-bottom: none !important;
+          }
+          .bly-searchbar-btn {
+            width: 100% !important;
+            margin: 8px 0 0 0 !important;
+            padding: 14px 22px !important;
+          }
+        }
+      `}</style>
+      <div className="bly-searchbar-wrapper" style={s.wrapper}>
+        <div className="bly-searchbar-field" style={s.field}>
           <span style={s.icon}>📍</span>
           <select style={s.select} value={city} onChange={e => setCity(e.target.value)}>
             {CERT_RESTRICTED ? (
@@ -221,7 +250,7 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
             )}
           </select>
         </div>
-        <div style={s.field}>
+        <div className="bly-searchbar-field" style={s.field}>
           <span style={s.icon}>📅</span>
           <DatePicker
             value={checkIn}
@@ -230,7 +259,7 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
             label="Check-in date"
           />
         </div>
-        <div style={s.field}>
+        <div className="bly-searchbar-field" style={s.field}>
           <span style={s.icon}>📅</span>
           <DatePicker
             value={checkOut}
@@ -239,7 +268,7 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
             label="Check-out date"
           />
         </div>
-        <div style={s.fieldLast}>
+        <div className="bly-searchbar-field-last" style={s.fieldLast}>
           <span style={s.icon}>🧑‍🤝‍🧑</span>
           <select style={s.select} value={adults} onChange={e => setAdults(Number(e.target.value))}>
             {[1, 2, 3, 4, 5, 6].map(n => (
@@ -247,7 +276,7 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
             ))}
           </select>
         </div>
-        <button style={s.searchBtn} onClick={go}>🔍 Search</button>
+        <button className="bly-searchbar-btn" style={s.searchBtn} onClick={go}>🔍 Search</button>
       </div>
       {error && <div style={s.error}>{error}</div>}
       {CERT_RESTRICTED && !error && (
