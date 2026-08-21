@@ -197,11 +197,11 @@ export default function Home() {
       {/* ── BLY INSIDERS BANNER ── */}
       {showInsidersBanner && (
         <div style={{
-          background: 'var(--bg-dark)', color: '#fff', padding: '12px 40px',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-          fontSize: 14, position: 'relative', flexWrap: 'wrap', textAlign: 'center',
+          background: 'var(--bg-dark)', color: '#fff', padding: '18px 40px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
+          fontSize: 16, position: 'relative', flexWrap: 'wrap', textAlign: 'center',
         }}>
-          <span style={{ color: 'var(--accent)' }}>✨</span>
+          <span style={{ color: 'var(--accent)', fontSize: 18 }}>✨</span>
           <span>Travel industry professional? Get Insider rates on every stay —</span>
           <span
             onClick={() => navigate('/insiders')}
@@ -214,7 +214,7 @@ export default function Home() {
             aria-label="Dismiss"
             style={{
               position: 'absolute', right: 20, top: '50%', transform: 'translateY(-50%)',
-              background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: 16, cursor: 'pointer',
+              background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: 18, cursor: 'pointer',
             }}
           >
             ✕
@@ -230,11 +230,11 @@ export default function Home() {
         {/* Big wordmark, layered on the photo itself -- separate from the
             small logo in the site-wide Navbar above. */}
         <div style={{
-          position: 'absolute', top: 36, left: 40, zIndex: 2,
-          fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(32px, 5vw, 52px)',
-          letterSpacing: '-2px', color: '#fff', display: 'flex', alignItems: 'center', gap: 4,
+          position: 'absolute', top: 48, left: '50%', transform: 'translateX(-50%)', zIndex: 2,
+          fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(48px, 8vw, 84px)',
+          letterSpacing: '-3px', color: '#fff', display: 'flex', alignItems: 'center', gap: 6,
         }}>
-          Bly<span style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--accent)', marginLeft: 2, marginBottom: -4 }} />
+          Bly<span style={{ width: 16, height: 16, borderRadius: '50%', background: 'var(--accent)', marginLeft: 3, marginBottom: -6 }} />
         </div>
 
         <div className="bly-hero-inner bly-fade" style={{ position: 'relative', zIndex: 2, maxWidth: 1100, width: '100%', margin: '0 auto' }}>
