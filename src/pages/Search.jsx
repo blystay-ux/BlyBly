@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import SearchBar from '../components/SearchBar'
 import { calculateGuestPrice } from '../lib/pricing'
+import { useAuth } from '../contexts/AuthContext'
 
 const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80'
 
@@ -37,8 +38,9 @@ function cheapestOffer(property) {
 
 function ResultCard({ property, checkIn, nights, adults }) {
   const navigate = useNavigate()
+  const { isInsider } = useAuth()
   const cheapestRaw = cheapestOffer(property)
-  const offer = cheapestRaw ? calculateGuestPrice(cheapestRaw.netPrice, cheapestRaw.sellPrice, cheapestRaw.currency) : null
+  const offer = cheapestRaw ? calculateGuestPrice(cheapestRaw.netPrice, cheapestRaw.sellPrice, cheapestRaw.currency, isInsider) : null
   const info = property.propertyInfo
 
   const handleView = () => {
