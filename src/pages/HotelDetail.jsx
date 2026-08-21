@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { calculateGuestPrice } from '../lib/pricing'
+import { useAuth } from '../contexts/AuthContext'
 
 const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80'
 
@@ -121,6 +122,7 @@ export default function HotelDetail() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
+  const { isInsider } = useAuth()
 
   const isHyperGuest = slug?.startsWith('hg-')
 
@@ -360,7 +362,7 @@ export default function HotelDetail() {
                 // the Net/Sell logic. `net`/`sell` above are separate from
                 // the `net`/`sell` inside handlePrebook (used for
                 // expectedPrice sent to HyperGuest), which are unaffected.
-                const guestPrice = sell ? calculateGuestPrice(net?.price ?? sell.price, sell.price, sell.currency) : null
+                const guestPrice = sell ? calculateGuestPrice(net?.price ?? sell.price, sell.price, sell.currency, isInsider) : null
                 return (
                   <div key={i} style={s.offerCard(isSelected)} onClick={() => { setSelectedOffer(offer); setPrebookError(null) }}>
                     <div style={s.offerTop}>
@@ -370,7 +372,9 @@ export default function HotelDetail() {
                       </div>
                       <div style={s.offerPrice}>{guestPrice?.currency} {Number(guestPrice?.totalAmount).toLocaleString()}</div>
                     </div>
-                    <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'right', marginTop: -6, marginBottom: 6 }}>Taxes and fees included</div>
+                    <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'right', marginTop: -6, marginBottom: 6 }}>
+                      Taxes and fees included{guestPrice?.isInsiderRate && ' · Bly Insiders rate'}
+                    </div>
                     <div style={s.offerBadges}>
                       {offer.plan.ratePlanInfo?.isPackageRate && <span style={s.packageBadge}>Package rate</span>}
                       {offer.plan.ratePlanInfo?.isPromotion && <span style={s.packageBadge}>Promo</span>}
