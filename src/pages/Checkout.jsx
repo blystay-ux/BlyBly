@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { calculateGuestPrice } from '../lib/pricing'
+import { useAuth } from '../contexts/AuthContext'
 
 function addNights(dateStr, nights) {
   const d = new Date(dateStr)
@@ -55,6 +56,7 @@ const s = {
 export default function Checkout() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { isInsider } = useAuth()
 
   const { property, selectedOffer, prebookResult, checkIn, nights, adults } = location.state || {}
 
@@ -88,7 +90,7 @@ export default function Checkout() {
   // Guest-facing price only -- see src/lib/pricing.js for the Net/Sell
   // logic. `net` above still separately feeds expectedPrice sent to
   // HyperGuest (always Net), unaffected by this display calculation.
-  const guestPrice = sell ? calculateGuestPrice(net?.price ?? sell.price, sell.price, sell.currency) : null
+  const guestPrice = sell ? calculateGuestPrice(net?.price ?? sell.price, sell.price, sell.currency, isInsider) : null
 
   function updateLeadGuest(field, value) {
     setLeadGuest(prev => ({ ...prev, [field]: value }))
