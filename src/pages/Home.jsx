@@ -230,8 +230,8 @@ export default function Home() {
         {/* Big wordmark, layered on the photo itself -- separate from the
             small logo in the site-wide Navbar above. */}
         <div style={{
-          position: 'absolute', top: 48, left: '100%', transform: 'translateX(-50%)', zIndex: 2,
-          fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(48px, 8vw, 84px)',
+          position: 'absolute', top: 48, left: '50%', transform: 'translateX(-50%)', zIndex: 2,
+          fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(84px, 8vw, 96px)',
           letterSpacing: '-3px', color: '#fff', display: 'flex', alignItems: 'center', gap: 6,
         }}>
           Bly<span style={{ width: 16, height: 16, borderRadius: '50%', background: 'var(--accent)', marginLeft: 3, marginBottom: -6 }} />
