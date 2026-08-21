@@ -231,7 +231,7 @@ export default function Home() {
             small logo in the site-wide Navbar above. */}
         <div style={{
           position: 'absolute', top: 48, left: '40%', transform: 'translateX(-50%)', zIndex: 2,
-          fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(64px, 10vw, 120px',
+          fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(72px, 12vw, 160px)',
           letterSpacing: '-3px', color: '#fff', display: 'flex', alignItems: 'center', gap: 6,
         }}>
           Bly<span style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--accent)', marginLeft: 3, marginBottom: -6 }} />
