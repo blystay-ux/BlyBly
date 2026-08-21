@@ -230,7 +230,7 @@ export default function Home() {
         {/* Big wordmark, layered on the photo itself -- separate from the
             small logo in the site-wide Navbar above. */}
         <div style={{
-          position: 'absolute', bottom: 250, left: '40%', transform: 'translateX(-50%)', zIndex: 2,
+          position: 'absolute', bottom: 500, left: '40%', transform: 'translateX(-50%)', zIndex: 2,
           fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(72px, 12vw, 160px)',
           letterSpacing: '-3px', color: '#fff', display: 'flex', alignItems: 'center', gap: 6,
         }}>
