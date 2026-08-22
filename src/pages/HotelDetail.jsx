@@ -3,15 +3,12 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { calculateGuestPrice } from '../lib/pricing'
 import { useAuth } from '../contexts/AuthContext'
-
 const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80'
-
 function addNights(dateStr, nights) {
   const d = new Date(dateStr)
   d.setDate(d.getDate() + nights)
   return d.toISOString().split('T')[0]
 }
-
 function flattenOffers(property) {
   const offers = []
   for (const room of property.rooms ?? []) {
@@ -21,7 +18,6 @@ function flattenOffers(property) {
   }
   return offers.sort((a, b) => (a.plan.prices?.sell?.price ?? 0) - (b.plan.prices?.sell?.price ?? 0))
 }
-
 function describeCancellationPolicy(p) {
   const penalty = p.penaltyType === 'percent' ? `${p.amount}%`
     : p.penaltyType === 'nights' ? `${p.amount} night(s)`
@@ -30,10 +26,8 @@ function describeCancellationPolicy(p) {
   const deadline = p.cancellationDeadlineHour ? `, deadline ${p.cancellationDeadlineHour}` : ''
   return `Penalty: ${penalty} — applies ${when}${deadline}`
 }
-
 const s = {
   page: { maxWidth: 860, margin: '0 auto' },
-
   lockedHeader: {
     background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', padding: '14px 24px',
   },
@@ -60,7 +54,6 @@ const s = {
   heroMeta: { display: 'flex', alignItems: 'center', gap: 14, fontSize: 13, color: 'rgba(255,255,255,0.9)' },
   thumbStrip: { display: 'flex', gap: 8, overflowX: 'auto', padding: '10px 0', scrollbarWidth: 'thin' },
   thumb: { flexShrink: 0, width: 90, height: 64, objectFit: 'cover', borderRadius: 10, cursor: 'pointer' },
-
   ctaBar: {
     position: 'sticky', bottom: 0, zIndex: 15,
     display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
@@ -73,7 +66,6 @@ const s = {
   ctaBtn: { flexShrink: 0, padding: '13px 24px', borderRadius: 99, background: '#ef4056', color: '#fff', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' },
   ctaBtnDisabled: { opacity: 0.4, cursor: 'not-allowed' },
   errorBar: { background: '#FDEBEC', color: '#ef4056', fontSize: 12, fontWeight: 600, padding: '8px 24px' },
-
   content: { padding: '20px 24px 24px' },
   sectionTitle: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 18, marginBottom: 12, letterSpacing: '-0.3px', color: 'var(--text)' },
   facilities: { display: 'flex', flexWrap: 'wrap', gap: 8 },
@@ -93,12 +85,10 @@ const s = {
   details: { marginTop: 10, fontSize: 12 },
   summary: { cursor: 'pointer', fontWeight: 700, color: '#ef4056', fontSize: 12 },
   policyItem: { fontSize: 12, padding: '4px 0' },
-
   moreSection: { marginTop: 8, borderTop: '1px solid var(--border)', paddingTop: 8 },
   moreSummary: { cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 15, color: 'var(--text)', padding: '10px 0' },
   moreGallery: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 8, marginTop: 14, marginBottom: 16 },
   moreGalleryImg: { width: '100%', height: 90, objectFit: 'cover', borderRadius: 10, cursor: 'pointer' },
-
   lightboxOverlay: {
     position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.92)',
     display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column',
@@ -117,41 +107,33 @@ const s = {
   }),
   lightboxCounter: { color: 'rgba(255,255,255,0.7)', fontSize: 13, marginTop: 16, fontFamily: 'var(--font-body)' },
 }
-
 export default function HotelDetail() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
   const { isInsider } = useAuth()
-
   const isHyperGuest = slug?.startsWith('hg-')
-
   const stateProperty = location.state?.property
   const stateCheckIn = location.state?.checkIn
   const stateNights = location.state?.nights
   const stateAdults = location.state?.adults
-
   const CERT_PROPERTY_ID = 19912
   const isCertDirectLink = slug === `hg-${CERT_PROPERTY_ID}` && !stateProperty
-
   function defaultCertDates() {
     const d = new Date()
     d.setDate(d.getDate() + 14)
     return d.toISOString().split('T')[0]
   }
-
   const [property, setProperty] = useState(stateProperty || null)
   const [checkIn] = useState(stateCheckIn || (isCertDirectLink ? defaultCertDates() : null))
   const [nights] = useState(stateNights || (isCertDirectLink ? 2 : null))
   const [adults] = useState(stateAdults || 2)
   const [certLinkLoading, setCertLinkLoading] = useState(isCertDirectLink)
   const [certLinkError, setCertLinkError] = useState(null)
-
   const [staticDetail, setStaticDetail] = useState(null)
   const [activePhoto, setActivePhoto] = useState(0)
   const [galleryOpen, setGalleryOpen] = useState(false)
   const [galleryIndex, setGalleryIndex] = useState(0)
-
   useEffect(() => {
     if (!isCertDirectLink) return
     async function runCertSearch() {
@@ -174,7 +156,6 @@ export default function HotelDetail() {
     runCertSearch()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCertDirectLink])
-
   useEffect(() => {
     const propertyId = property?.propertyId
     if (!propertyId) return
@@ -188,14 +169,11 @@ export default function HotelDetail() {
     }
     loadStatic()
   }, [property?.propertyId])
-
   const [selectedOffer, setSelectedOffer] = useState(null)
   const [prebooking, setPrebooking] = useState(false)
   const [prebookError, setPrebookError] = useState(null)
-
   const [legacyLoading, setLegacyLoading] = useState(!isHyperGuest)
   const [legacyProperty, setLegacyProperty] = useState(null)
-
   useEffect(() => {
     if (isHyperGuest) return
     async function loadLegacy() {
@@ -206,19 +184,16 @@ export default function HotelDetail() {
     }
     loadLegacy()
   }, [slug, isHyperGuest])
-
   const offers = property ? flattenOffers(property) : []
   const photos = (staticDetail?.images || []).filter(i => i.type === 'photo')
   const facilities = (staticDetail?.facilities || []).filter(f => f.name)
   const description = (staticDetail?.descriptions || []).find(d => d.type === 'general')?.description
-
   function goPrevPhoto() {
     setGalleryIndex(i => (i - 1 + photos.length) % photos.length)
   }
   function goNextPhoto() {
     setGalleryIndex(i => (i + 1) % photos.length)
   }
-
   useEffect(() => {
     if (!galleryOpen) return
     function onKeyDown(e) {
@@ -231,16 +206,49 @@ export default function HotelDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [galleryOpen, photos.length])
 
+  // ── LODGING SCHEMA: injects LodgingBusiness JSON-LD for Google rich results ──
+  useEffect(() => {
+    if (!property?.propertyInfo) return
+    const pi = property.propertyInfo
+    const allOffers = flattenOffers(property)
+    const cheapest = allOffers[0]
+    const firstPhoto = (staticDetail?.images || []).find(i => i.type === 'photo')?.uri
+      || property.thumbnailImage
+      || PLACEHOLDER_IMG
+    const desc = (staticDetail?.descriptions || []).find(d => d.type === 'general')?.description || ''
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'LodgingBusiness',
+      name: pi.name,
+      description: desc.slice(0, 300),
+      url: `https://blytravel.co.za/hotel/${slug}`,
+      image: firstPhoto,
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: pi.cityName,
+        addressCountry: pi.countryCode || 'ZA',
+      },
+      ...(pi.starRating > 0 && {
+        starRating: { '@type': 'Rating', ratingValue: pi.starRating },
+      }),
+      ...(cheapest?.plan?.prices?.sell && {
+        priceRange: `From ${cheapest.plan.prices.sell.currency} ${Number(cheapest.plan.prices.sell.price).toLocaleString()}/night`,
+      }),
+    }
+    const el = document.createElement('script')
+    el.type = 'application/ld+json'
+    el.id = 'bly-hotel-schema'
+    el.innerHTML = JSON.stringify(schema)
+    document.head.appendChild(el)
+    return () => { document.getElementById('bly-hotel-schema')?.remove() }
+  }, [property, staticDetail, slug])
+
   async function handlePrebook() {
     if (!selectedOffer || !property) return
     setPrebooking(true)
     setPrebookError(null)
-
     const net = selectedOffer.plan.prices?.net
     const sell = selectedOffer.plan.prices?.sell
-    // expectedPrice sent to HyperGuest is ALWAYS the Net rate, per their
-    // explicit guidance (2026-08-17) -- regardless of the guest-facing
-    // Net/Sell markup logic used for display elsewhere.
     const priceForHyperGuest = net || sell
     try {
       const { data, error } = await supabase.functions.invoke('hyperguest-prebook', {
@@ -268,7 +276,6 @@ export default function HotelDetail() {
     }
     setPrebooking(false)
   }
-
   if (isCertDirectLink && certLinkLoading) {
     return <div style={{ padding: 80, textAlign: 'center', color: 'var(--text-muted)' }}>Loading certification property…</div>
   }
@@ -311,14 +318,11 @@ export default function HotelDetail() {
       </main>
     )
   }
-
   const info = property.propertyInfo
   const ctaLabel = selectedOffer ? `${selectedOffer.room.roomName} — ${selectedOffer.plan.ratePlanName}` : 'Select a room & rate below'
-
   return (
     <main style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - var(--nav-height))' }}>
       <div style={{ ...s.page, flex: 1, display: 'flex', flexDirection: 'column' }}>
-
         {/* ── COMPACT HEADER: small photo + name/rating/location, gets out of the way fast ── */}
         <div style={s.lockedHeader}>
           <button style={s.back} onClick={() => navigate(-1)}>← Back to results</button>
@@ -345,9 +349,7 @@ export default function HotelDetail() {
             </div>
           </div>
         </div>
-
         {prebookError && <div style={s.errorBar}>{prebookError}</div>}
-
         {/* ── ROOMS FIRST: the whole point of this layout ── */}
         <div style={{ ...s.content, flex: 1 }}>
           {offers.length > 0 && (
@@ -358,10 +360,6 @@ export default function HotelDetail() {
                 const net = offer.plan.prices?.net
                 const sell = offer.plan.prices?.sell
                 const policies = offer.plan.cancellationPolicies || []
-                // Guest-facing price only -- see src/lib/pricing.js for
-                // the Net/Sell logic. `net`/`sell` above are separate from
-                // the `net`/`sell` inside handlePrebook (used for
-                // expectedPrice sent to HyperGuest), which are unaffected.
                 const guestPrice = sell ? calculateGuestPrice(net?.price ?? sell.price, sell.price, sell.currency, isInsider) : null
                 return (
                   <div key={i} style={s.offerCard(isSelected)} onClick={() => { setSelectedOffer(offer); setPrebookError(null) }}>
@@ -380,7 +378,6 @@ export default function HotelDetail() {
                       {offer.plan.ratePlanInfo?.isPromotion && <span style={s.packageBadge}>Promo</span>}
                       {offer.plan.isImmediate && <span style={s.badge}>Instant confirmation</span>}
                     </div>
-
                     <details style={s.details} onClick={e => e.stopPropagation()}>
                       <summary style={s.summary}>Cancellation policy</summary>
                       {policies.length === 0
@@ -392,11 +389,9 @@ export default function HotelDetail() {
               })}
             </>
           )}
-
-          {/* ── "MORE ABOUT THIS PROPERTY": full gallery, description, facilities -- moved down here since they're secondary to booking speed ── */}
+          {/* ── "MORE ABOUT THIS PROPERTY" ── */}
           <details style={s.moreSection}>
             <summary style={s.moreSummary}>More about this property</summary>
-
             {photos.length > 0 && (
               <div style={s.moreGallery}>
                 {photos.slice(0, 12).map((p, i) => (
@@ -407,9 +402,7 @@ export default function HotelDetail() {
                 ))}
               </div>
             )}
-
             {description && <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 16 }}>{description}</p>}
-
             {facilities.length > 0 && (
               <>
                 <div style={{ ...s.sectionTitle, fontSize: 15, marginBottom: 8 }}>Facilities</div>
@@ -420,8 +413,7 @@ export default function HotelDetail() {
             )}
           </details>
         </div>
-
-        {/* ── STICKY BOTTOM: dates/selection + Check price, always reachable ── */}
+        {/* ── STICKY BOTTOM CTA ── */}
         <div style={s.ctaBar}>
           <div style={s.ctaInfo}>
             <div style={s.ctaDates}>{checkIn} → {addNights(checkIn, nights)} · {nights}n · {adults}a</div>
@@ -436,8 +428,7 @@ export default function HotelDetail() {
           </button>
         </div>
       </div>
-
-      {/* ── LIGHTBOX: full-screen photo viewer, opened by clicking any photo ── */}
+      {/* ── LIGHTBOX ── */}
       {galleryOpen && photos.length > 0 && (
         <div style={s.lightboxOverlay} onClick={() => setGalleryOpen(false)}>
           <button style={s.lightboxClose} onClick={() => setGalleryOpen(false)} aria-label="Close gallery">✕</button>
