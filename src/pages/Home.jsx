@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import SearchBar from '../components/SearchBar'
 // Swap this for your own BLY. hero photography (real SA landscape/urban per the CI).
 const HERO_IMG =
-  'https://images.unsplash.com/photo-1580060839134-75a5edca2e99?auto=format&fit=crop&w=1920&q=80'
+  'https://images.unsplash.com/photo-1580060839134-75a5edca2e99?auto=format&fit=crop&w=1200&q=75&fm=webp'
 // Brand city lines — the signature BLY. destination copy. Same 4 priority
 // cities as the search bar's "Popular" group, in the same order.
 const CITIES = [
@@ -202,7 +202,7 @@ export default function Home() {
       )}
       {/* ── HERO ── */}
       <section style={{ position: 'relative', minHeight: '78vh', display: 'flex', alignItems: 'flex-end', overflow: 'hidden' }}>
-        <img src={HERO_IMG} alt="Accommodation in South Africa" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+        <img src={HERO_IMG} alt="Accommodation in South Africa" fetchPriority="high" loading="eager" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(10,10,10,0.55) 0%, rgba(10,10,10,0.35) 45%, rgba(10,10,10,0.65) 100%)' }} />
         {/* Big wordmark, layered on the photo itself -- separate from the
             small logo in the site-wide Navbar above. */}
