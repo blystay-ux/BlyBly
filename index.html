@@ -17,6 +17,43 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <!-- Organisation + WebSite schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://blytravel.co.za/#organization",
+          "name": "Bly Travel",
+          "url": "https://blytravel.co.za",
+          "logo": "https://blytravel.co.za/logo.png",
+          "description": "South Africa's direct accommodation booking platform — connecting travellers with local properties at better value, with no hidden fees.",
+          "areaServed": "ZA",
+          "sameAs": [
+            "https://www.instagram.com/blytravel",
+            "https://www.facebook.com/blytravel"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://blytravel.co.za/#website",
+          "url": "https://blytravel.co.za",
+          "name": "Bly Travel",
+          "publisher": { "@id": "https://blytravel.co.za/#organization" },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://blytravel.co.za/search?city={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <!-- Google Tag Manager (noscript) -->
