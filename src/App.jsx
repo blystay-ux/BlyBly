@@ -14,38 +14,29 @@ import MyBookings from './pages/MyBookings'
 import Extranet from './pages/Extranet'
 import BlyInsiders from './pages/BlyInsiders'
 import ComingSoon from './pages/ComingSoon'
-import { Link } from 'react-router-dom'
- 
-<Link to="/destinations" style={{
-  fontFamily: "'Inter', sans-serif",
-  fontSize: 14,
-  fontWeight: 600,
-  textDecoration: 'none',
-  color: 'inherit',   // match your other nav link colour
-}}>
-  Destinations
-</Link>
+import DestinationsPage from './pages/DestinationsPage'
+import DestinationPage from './pages/DestinationPage'
 
 export default function App() {
   return (
     <AuthProvider>
       <Navbar />
       <Routes>
-        <Route path="/"              element={<Home />} />
-        <Route path="/search"        element={<Search />} />
-        <Route path="/hotel/:slug"   element={<HotelDetail />} />
-        <Route path="/checkout"      element={<Checkout />} />
-        <Route path="/manage-booking" element={<ManageBooking />} />
-        <Route path="/auth"          element={<Auth />} />
-        <Route path="/list-hotel"    element={<ListHotel />} />
-        <Route path="/admin"         element={<Admin />} />
-        <Route path="/manage-hotel"  element={<ManageHotel />} />
-        <Route path="/my-bookings"   element={<MyBookings />} />
-        <Route path="/extranet"      element={<Extranet />} />
-        <Route path="/insiders"      element={<BlyInsiders />} />
-        <Route path="/partners"      element={<ComingSoon />} />
-        import DestinationsPage from './pages/DestinationsPage'
-        import DestinationPage  from './pages/DestinationPage'
+        <Route path="/"                    element={<Home />} />
+        <Route path="/search"              element={<Search />} />
+        <Route path="/hotel/:slug"         element={<HotelDetail />} />
+        <Route path="/checkout"            element={<Checkout />} />
+        <Route path="/manage-booking"      element={<ManageBooking />} />
+        <Route path="/auth"                element={<Auth />} />
+        <Route path="/list-hotel"          element={<ListHotel />} />
+        <Route path="/admin"               element={<Admin />} />
+        <Route path="/manage-hotel"        element={<ManageHotel />} />
+        <Route path="/my-bookings"         element={<MyBookings />} />
+        <Route path="/extranet"            element={<Extranet />} />
+        <Route path="/insiders"            element={<BlyInsiders />} />
+        <Route path="/partners"            element={<ComingSoon />} />
+        <Route path="/destinations"        element={<DestinationsPage />} />
+        <Route path="/accommodation/:slug" element={<DestinationPage />} />
       </Routes>
     </AuthProvider>
   )
