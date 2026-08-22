@@ -75,9 +75,9 @@ export default function Navbar() {
         {/* Links */}
         <div style={styles.actions}>
           <Link to="/manage-booking" style={styles.link}>Manage booking</Link>
+          <Link to="/destinations" style={styles.link}>Destinations</Link>
           <Link to="/insiders" style={styles.link}>Bly Insiders</Link>
           {isAdmin && <Link to="/admin" style={styles.linkAccent}>Admin</Link>}
-
           {user ? (
             <>
               <button
