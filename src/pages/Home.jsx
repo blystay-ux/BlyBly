@@ -2,11 +2,9 @@ import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import SearchBar from '../components/SearchBar'
-
 // Swap this for your own BLY. hero photography (real SA landscape/urban per the CI).
 const HERO_IMG =
   'https://images.unsplash.com/photo-1580060839134-75a5edca2e99?auto=format&fit=crop&w=1920&q=80'
-
 // Brand city lines — the signature BLY. destination copy. Same 4 priority
 // cities as the search bar's "Popular" group, in the same order.
 const CITIES = [
@@ -16,17 +14,14 @@ const CITIES = [
   { name: 'Durban',       line: 'Beach, bunny chow and repeat!' },
 ]
 const PRIORITY_CITIES = CITIES.map(c => c.name)
-
 const FEATURED_POOL_LIMIT = 60   // how many candidates to fetch and rotate through
 const FEATURED_VISIBLE_COUNT = 8 // how many show on screen at once
 const ROTATE_INTERVAL_MS = 9000  // how often the visible set reshuffles
-
 function defaultCheckIn() {
   const d = new Date()
   d.setDate(d.getDate() + 1)
   return d.toISOString().split('T')[0]
 }
-
 // Fisher-Yates -- unbiased shuffle, unlike naively sorting on Math.random().
 function shuffle(arr) {
   const a = [...arr]
@@ -36,11 +31,9 @@ function shuffle(arr) {
   }
   return a
 }
-
 function FeaturedCard({ property }) {
   const navigate = useNavigate()
   const photo = (property.images || []).find(img => img.type === 'photo')?.uri
-
   const goToCity = () => {
     const params = new URLSearchParams({
       city: property.city,
@@ -50,7 +43,6 @@ function FeaturedCard({ property }) {
     })
     navigate(`/search?${params}`)
   }
-
   return (
     <div
       onClick={goToCity}
@@ -92,7 +84,6 @@ function FeaturedCard({ property }) {
     </div>
   )
 }
-
 export default function Home() {
   const navigate = useNavigate()
   const [showInsidersBanner, setShowInsidersBanner] = useState(true)
@@ -100,7 +91,6 @@ export default function Home() {
   const [visible, setVisible] = useState([]) // the random subset currently shown
   const [loading, setLoading] = useState(true)
   const rotateTimer = useRef(null)
-
   useEffect(() => {
     (async () => {
       setLoading(true)
@@ -111,22 +101,18 @@ export default function Home() {
           .select('hotel_id, name, city, country')
           .in('city', PRIORITY_CITIES)
           .limit(FEATURED_POOL_LIMIT * 3) // over-fetch since not all will have cached photos yet
-
         if (indexErr) throw indexErr
         if (!indexRows?.length) {
           setPool([])
           setLoading(false)
           return
         }
-
         const ids = indexRows.map(r => r.hotel_id)
         const { data: staticRows, error: staticErr } = await supabase
           .from('hg_property_static')
           .select('hotel_id, images, star_rating')
           .in('hotel_id', ids)
-
         if (staticErr) throw staticErr
-
         const indexByCity = new Map(indexRows.map(r => [r.hotel_id, r]))
         const merged = (staticRows || [])
           .filter(row => (row.images || []).some(img => img.type === 'photo')) // only properties with a real photo cached
@@ -141,7 +127,6 @@ export default function Home() {
             }
           })
           .slice(0, FEATURED_POOL_LIMIT)
-
         setPool(merged)
         setVisible(shuffle(merged).slice(0, FEATURED_VISIBLE_COUNT))
       } catch (err) {
@@ -151,7 +136,6 @@ export default function Home() {
       setLoading(false)
     })()
   }, [])
-
   // Rotates the visible subset from the already-fetched pool every few
   // seconds -- no new network requests needed, just a fresh random sample.
   useEffect(() => {
@@ -161,19 +145,16 @@ export default function Home() {
     }, ROTATE_INTERVAL_MS)
     return () => clearInterval(rotateTimer.current)
   }, [pool])
-
   return (
     <main style={{ fontFamily: 'var(--font-body)', background: 'var(--bg)', color: 'var(--text)' }}>
       <style>{`
         .bly-fade { animation: blyFade 0.7s ease both; }
         @keyframes blyFade { from { opacity:0; transform:translateY(20px) } to { opacity:1; transform:translateY(0) } }
-
         .bly-hero-inner { padding: 90px 40px; }
         .bly-h1 { font-size: clamp(52px, 8vw, 96px); }
         .bly-section { padding: 64px 40px 20px; }
         .bly-section-tight { padding: 48px 40px 72px; }
         .bly-city-card { min-height: 150px; padding: 26px 24px; }
-
         /* Tablet */
         @media (max-width: 768px) {
           .bly-hero-inner { padding: 56px 24px; }
@@ -181,7 +162,6 @@ export default function Home() {
           .bly-section { padding: 44px 24px 16px; }
           .bly-section-tight { padding: 36px 24px 56px; }
         }
-
         /* Phone */
         @media (max-width: 480px) {
           .bly-hero-inner { padding: 40px 18px; }
@@ -193,7 +173,6 @@ export default function Home() {
           .bly-featured-header { flex-direction: column; align-items: flex-start !important; gap: 14px !important; }
         }
       `}</style>
-
       {/* ── BLY INSIDERS BANNER ── */}
       {showInsidersBanner && (
         <div style={{
@@ -221,12 +200,10 @@ export default function Home() {
           </button>
         </div>
       )}
-
       {/* ── HERO ── */}
       <section style={{ position: 'relative', minHeight: '78vh', display: 'flex', alignItems: 'flex-end', overflow: 'hidden' }}>
-        <img src={HERO_IMG} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+        <img src={HERO_IMG} alt="Accommodation in South Africa" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(10,10,10,0.55) 0%, rgba(10,10,10,0.35) 45%, rgba(10,10,10,0.65) 100%)' }} />
-
         {/* Big wordmark, layered on the photo itself -- separate from the
             small logo in the site-wide Navbar above. */}
         <div style={{
@@ -236,7 +213,6 @@ export default function Home() {
         }}>
           Bly<span style={{ width: 16, height: 16, borderRadius: '50%', background: 'var(--accent)', marginLeft: 3, marginBottom: -6 }} />
         </div>
-
         <div className="bly-hero-inner bly-fade" style={{ position: 'relative', zIndex: 2, maxWidth: 1100, width: '100%', margin: '0 auto' }}>
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 9, background: 'rgba(255,255,255,0.14)',
@@ -247,21 +223,25 @@ export default function Home() {
             <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent-light)', display: 'inline-block' }} />
             Find. Book. Bly.
           </div>
-
+          {/* SEO: brand tagline above, keyword H1 below — best of both */}
+          <p style={{
+            fontFamily: 'var(--font-display)', fontWeight: 800, color: 'rgba(255,255,255,0.65)',
+            fontSize: 'clamp(18px, 2.5vw, 28px)', letterSpacing: '-0.03em', marginBottom: 8,
+          }}>
+            Stay where it matters.
+          </p>
           <h1 className="bly-h1" style={{
             fontFamily: 'var(--font-display)', fontWeight: 800, color: '#fff',
             lineHeight: 0.92, letterSpacing: '-0.06em', marginBottom: 18,
           }}>
-            Stay where<br />it matters<span style={{ color: 'var(--accent-light)' }}>.</span>
+            Book Accommodation<br />in South Africa<span style={{ color: 'var(--accent-light)' }}>.</span>
           </h1>
           <p className="bly-hero-sub" style={{ color: 'rgba(255,255,255,0.85)', fontSize: 'clamp(16px, 2vw, 20px)', maxWidth: 540, lineHeight: 1.6, marginBottom: 40 }}>
             Discover real stays across Cape Town, Joburg, Durban and Pretoria — direct from the host, better value.
           </p>
-
           <SearchBar />
         </div>
       </section>
-
       {/* ── FEATURED ── */}
       <section className="bly-section" style={{ maxWidth: 1280, margin: '0 auto' }}>
         <div className="bly-featured-header" style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, marginBottom: 26 }}>
@@ -280,7 +260,6 @@ export default function Home() {
             Browse all stays →
           </button>
         </div>
-
         {loading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 22 }}>
             {[1, 2, 3].map(i => <div key={i} style={{ height: 320, borderRadius: 20, background: 'var(--bg-card)', opacity: 0.7 }} />)}
@@ -297,7 +276,6 @@ export default function Home() {
           </div>
         )}
       </section>
-
       {/* ── EXPLORE BY CITY ── */}
       <section className="bly-section-tight" style={{ maxWidth: 1280, margin: '0 auto' }}>
         <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(24px, 3.5vw, 38px)', letterSpacing: '-0.05em', marginBottom: 22, color: 'var(--text)' }}>
@@ -325,7 +303,6 @@ export default function Home() {
           ))}
         </div>
       </section>
-
       {/* ── FOOTER ── */}
       <footer style={{ background: 'var(--bg-dark)', padding: '28px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, letterSpacing: '-0.05em', color: '#fff' }}>
