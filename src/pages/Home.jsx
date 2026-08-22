@@ -234,7 +234,7 @@ export default function Home() {
             fontFamily: 'var(--font-display)', fontWeight: 800, color: '#fff',
             lineHeight: 0.92, letterSpacing: '-0.06em', marginBottom: 18,
           }}>
-            Book Accommodation<br />in South Africa<span style={{ color: 'var(--accent-light)' }}>.</span>
+            Book Accommodation,<br />South Africa &amp; Beyond<span style={{ color: 'var(--accent-light)' }}>.</span>
           </h1>
           <p className="bly-hero-sub" style={{ color: 'rgba(255,255,255,0.85)', fontSize: 'clamp(16px, 2vw, 20px)', maxWidth: 540, lineHeight: 1.6, marginBottom: 40 }}>
             Discover real stays across Cape Town, Joburg, Durban and Pretoria — direct from the host, better value.
