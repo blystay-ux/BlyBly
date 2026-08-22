@@ -255,7 +255,7 @@ export default function Home() {
             Stay where<br />it matters<span style={{ color: 'var(--accent-light)' }}>.</span>
           </h1>
           <p className="bly-hero-sub" style={{ color: 'rgba(255,255,255,0.85)', fontSize: 'clamp(16px, 2vw, 20px)', maxWidth: 540, lineHeight: 1.6, marginBottom: 40 }}>
-            Discover and book real South African stays — direct, simple, and better value.
+            Discover real stays across Cape Town, Joburg, Durban and Pretoria — direct from the host, better value.
           </p>
 
           <SearchBar />
