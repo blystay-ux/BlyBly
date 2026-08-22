@@ -14,6 +14,17 @@ import MyBookings from './pages/MyBookings'
 import Extranet from './pages/Extranet'
 import BlyInsiders from './pages/BlyInsiders'
 import ComingSoon from './pages/ComingSoon'
+import { Link } from 'react-router-dom'
+ 
+<Link to="/destinations" style={{
+  fontFamily: "'Inter', sans-serif",
+  fontSize: 14,
+  fontWeight: 600,
+  textDecoration: 'none',
+  color: 'inherit',   // match your other nav link colour
+}}>
+  Destinations
+</Link>
 
 export default function App() {
   return (
@@ -33,6 +44,8 @@ export default function App() {
         <Route path="/extranet"      element={<Extranet />} />
         <Route path="/insiders"      element={<BlyInsiders />} />
         <Route path="/partners"      element={<ComingSoon />} />
+        import DestinationsPage from './pages/DestinationsPage'
+        import DestinationPage  from './pages/DestinationPage'
       </Routes>
     </AuthProvider>
   )
