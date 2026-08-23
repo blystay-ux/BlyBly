@@ -62,7 +62,7 @@ export default function DestinationPage() {
  
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <section style={{
-        background: DARK,
+        background: '#1a1a1a',
         minHeight: 480,
         display: 'flex',
         flexDirection: 'column',
@@ -78,14 +78,14 @@ export default function DestinationPage() {
             backgroundImage: `url(${dest.heroImage})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            opacity: 0.65,
+            opacity: 1,
           }} />
         )}
         {/* Gradient */}
         <div style={{
           position: 'absolute',
           inset: 0,
-          background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.2) 55%, transparent 100%)',
+          background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.15) 40%, transparent 100%)',
         }} />
  
         {/* Content */}
