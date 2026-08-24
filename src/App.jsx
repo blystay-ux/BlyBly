@@ -13,6 +13,7 @@ import ManageHotel from './pages/ManageHotel'
 import MyBookings from './pages/MyBookings'
 import Extranet from './pages/Extranet'
 import BlyInsiders from './pages/BlyInsiders'
+import Terms from './pages/Terms'
 import ComingSoon from './pages/ComingSoon'
 import DestinationsPage from './pages/DestinationsPage'
 import DestinationPage from './pages/DestinationPage'
@@ -34,6 +35,7 @@ export default function App() {
         <Route path="/my-bookings"         element={<MyBookings />} />
         <Route path="/extranet"            element={<Extranet />} />
         <Route path="/insiders"            element={<BlyInsiders />} />
+        <Route path="/terms"               element={<Terms />} />
         <Route path="/partners"            element={<ComingSoon />} />
         <Route path="/destinations"        element={<DestinationsPage />} />
         <Route path="/accommodation/:slug" element={<DestinationPage />} />
