@@ -308,7 +308,15 @@ export default function Home() {
         <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, letterSpacing: '-0.05em', color: '#fff' }}>
           Bly<span style={{ color: 'var(--accent)' }}>.</span>
         </span>
-        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>© 2026 BLY. — Bly waar dit saak maak.</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <span
+            onClick={() => navigate('/terms')}
+            style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 2 }}
+          >
+            Terms & Conditions
+          </span>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>© 2026 BLY. — Bly waar dit saak maak.</p>
+        </div>
       </footer>
     </main>
   )
