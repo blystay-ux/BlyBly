@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hotels in Cape Town: The Complete Guide to Where to Stay in 2026 | BLY.</title>
+<meta name="description" content="Find hotels in Cape Town across every neighbourhood — from Camps Bay beach to the CBD. Book on BLY. with honest rates and no hidden markups. blytravel.co.za">
+<meta property="og:title" content="Hotels in Cape Town: The Complete Guide to Where to Stay in 2026 | BLY.">
+<meta property="og:description" content="Find hotels in Cape Town across every neighbourhood — from Camps Bay to the CBD. Book on BLY. with honest rates.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://blytravel.co.za/blog/hotels-cape-town-guide">
+<link rel="canonical" href="https://blytravel.co.za/blog/hotels-cape-town-guide">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0D0D0D;
+    --surface: #1A1A1A;
+    --border: #2A2A2A;
+    --text: #F0F0F0;
+    --muted: #888;
+    --pink: #EF4056;
+    --green: #3DD68C;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(13,13,13,0.95);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .nav-logo {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 900;
+    font-size: 22px;
+    color: #fff;
+    text-decoration: none;
+    letter-spacing: -0.5px;
+  }
+  .nav-logo span { color: var(--pink); }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+
+  .nav-cta {
+    background: var(--pink);
+    color: #fff !important;
+    padding: 7px 18px;
+    border-radius: 8px;
+    font-weight: 700 !important;
+    font-size: 13px;
+    text-decoration: none;
+    transition: opacity 0.2s;
+  }
+  .nav-cta:hover { opacity: 0.9; }
+
+  /* HERO */
+  .hero {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 56px 24px 40px;
+  }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+  .breadcrumb a { color: var(--muted); text-decoration: none; }
+  .breadcrumb a:hover { color: var(--text); }
+  .breadcrumb span { color: var(--border); }
+
+  .article-tag {
+    display: inline-block;
+    background: rgba(239,64,86,0.12);
+    border: 1px solid rgba(239,64,86,0.3);
+    color: var(--pink);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+  }
+
+  .hero h1 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 900;
+    font-size: clamp(28px, 5vw, 40px);
+    line-height: 1.15;
+    letter-spacing: -1px;
+    margin-bottom: 20px;
+  }
+
+  .hero-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 13px;
+    color: var(--muted);
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+  .hero-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border); }
+
+  /* ARTICLE */
+  article {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  article p {
+    margin-bottom: 20px;
+    color: #D0D0D0;
+    font-size: 17px;
+    line-height: 1.8;
+  }
+
+  article h2 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 900;
+    font-size: 22px;
+    color: #fff;
+    margin: 40px 0 14px;
+    letter-spacing: -0.3px;
+  }
+
+  article ul {
+    margin: 0 0 20px 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  article ul li {
+    padding: 10px 0 10px 20px;
+    color: #D0D0D0;
+    font-size: 16px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  article ul li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--pink);
+    font-weight: 700;
+  }
+  article ul li:last-child { border-bottom: none; }
+  article ul li strong { color: #fff; }
+
+  /* CTA BLOCK */
+  .cta-block {
+    background: linear-gradient(135deg, rgba(239,64,86,0.12) 0%, rgba(239,64,86,0.05) 100%);
+    border: 1px solid rgba(239,64,86,0.3);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin: 36px 0;
+  }
+
+  .cta-block .cta-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--pink);
+    margin-bottom: 8px;
+  }
+
+  .cta-block h3 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 900;
+    font-size: 20px;
+    color: #fff;
+    margin-bottom: 10px;
+    letter-spacing: -0.3px;
+  }
+
+  .cta-block p {
+    font-size: 15px !important;
+    color: #aaa !important;
+    margin-bottom: 16px !important;
+  }
+
+  .cta-btn {
+    display: inline-block;
+    background: var(--pink);
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 11px 22px;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: opacity 0.2s;
+  }
+  .cta-btn:hover { opacity: 0.9; }
+
+  /* INSIDERS BLOCK */
+  .insiders-block {
+    background: rgba(61,214,140,0.06);
+    border: 1px solid rgba(61,214,140,0.2);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin: 36px 0;
+  }
+  .insiders-block .ins-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 8px;
+  }
+  .insiders-block h3 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 900;
+    font-size: 20px;
+    color: #fff;
+    margin-bottom: 10px;
+    letter-spacing: -0.3px;
+  }
+  .insiders-block p {
+    font-size: 15px !important;
+    color: #aaa !important;
+    margin-bottom: 16px !important;
+  }
+  .ins-btn {
+    display: inline-block;
+    background: var(--green);
+    color: #000;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 11px 22px;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: opacity 0.2s;
+  }
+  .ins-btn:hover { opacity: 0.85; }
+
+  /* SUMMARY TABLE */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 24px 0;
+  }
+  .summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .summary-card .sc-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .summary-card .sc-body {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* FOOTER */
+  footer {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 40px 24px;
+    text-align: center;
+  }
+  footer .f-logo {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 900;
+    font-size: 28px;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+  footer .f-logo span { color: var(--pink); }
+  footer .f-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+  footer .f-links { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+  footer .f-links a { color: var(--muted); text-decoration: none; font-size: 13px; }
+  footer .f-links a:hover { color: var(--text); }
+  footer .f-bottom { font-size: 12px; color: #555; margin-top: 24px; }
+
+  @media (max-width: 600px) {
+    .summary-grid { grid-template-columns: 1fr; }
+    .cta-block, .insiders-block { padding: 20px; }
+    .hero-meta { flex-wrap: wrap; gap: 8px; }
+    .nav-links { gap: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="https://blytravel.co.za">BLY<span>.</span></a>
+  <div class="nav-links">
+    <a href="/blog">Blog</a>
+    <a href="https://blytravel.co.za/insiders">Insiders</a>
+    <a href="https://blytravel.co.za" class="nav-cta">Search Stays 🔴</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="breadcrumb">
+    <a href="https://blytravel.co.za">Home</a>
+    <span>/</span>
+    <a href="/blog">Blog</a>
+    <span>/</span>
+    Hotels in Cape Town
+  </div>
+  <div class="article-tag">Travel Guide</div>
+  <h1>Hotels in Cape Town: The Complete Guide to Where to Stay in 2026</h1>
+  <div class="hero-meta">
+    <span>By BLY.</span>
+    <span class="dot"></span>
+    <span>August 2026</span>
+    <span class="dot"></span>
+    <span>8 min read</span>
+  </div>
+</div>
+
+<!-- ARTICLE -->
+<article>
+
+  <p>Cape Town is one of the most searched destinations in South Africa — and for good reason. Whether you're heading to the Atlantic Seaboard, the Winelands, or the CBD, finding the right place to stay makes the whole trip. Here's how to navigate it.</p>
+
+  <h2>Why Cape Town is Different from Every Other City</h2>
+  <p>Cape Town doesn't have one centre — it has about seven. The Atlantic Seaboard runs from Sea Point down to Camps Bay and Hout Bay. The City Bowl sits beneath Table Mountain. Green Point and De Waterkant are walkable from the V&A Waterfront. Each area has a completely different feel, price point, and reason to be there. Getting your neighbourhood right is the first decision.</p>
+  <p>On BLY., Cape Town is one of our most active destinations. You'll find everything from guesthouses in the suburb of Pinelands to boutique hotels on Camps Bay beachfront — with honest pricing and no hidden markups.</p>
+
+  <div class="cta-block">
+    <div class="cta-label">🔴 Book on BLY.</div>
+    <h3>Search Hotels in Cape Town</h3>
+    <p>Real rates, every neighbourhood, no hidden fees at checkout.</p>
+    <a href="https://blytravel.co.za" class="cta-btn">Find your Cape Town stay →</a>
+  </div>
+
+  <h2>The Atlantic Seaboard: Camps Bay, Sea Point, Green Point</h2>
+  <p>This is Cape Town's most iconic strip. Camps Bay has the mountain-meets-beach backdrop that ends up on every Instagram grid. Sea Point is where locals actually live — a long beachside promenade, great restaurants, and hotels that cost significantly less than Camps Bay for a similar experience. Green Point sits between the two and is close to the stadium and Waterfront.</p>
+  <p>Best for: beach, sunsets, the full Atlantic Seaboard experience. Busiest in December–January. Book early.</p>
+
+  <h2>The City Bowl and CBD</h2>
+  <p>The CBD has changed dramatically in the last decade. Long Street is the classic — bars, backpackers, boutique hotels in heritage buildings. De Waterkant is quieter and more upmarket. Gardens is residential and walkable to the Company's Garden and the museums on Government Avenue. If you're in Cape Town for business or a short city break, the CBD puts you close to everything without the Atlantic Seaboard price tag.</p>
+
+  <h2>The V&amp;A Waterfront</h2>
+  <p>Staying at the Waterfront means you're walking distance from the ferry to Robben Island, the Two Oceans Aquarium, the best restaurants in the city, and the Cape Wheel. It's the most convenient base for a first-time Cape Town visit. Prices reflect that — expect to pay more here — but you save on transport and get a lot of atmosphere without trying.</p>
+
+  <h2>Constantia and the Winelands Edge</h2>
+  <p>If you want to stay outside the city but still be 20–30 minutes from the action, Constantia is worth considering. It's wine farm country right on Cape Town's doorstep — quieter, greener, and with a very different pace from the Atlantic Seaboard. Good for families or couples who want space without driving to Stellenbosch.</p>
+
+  <h2>When to Visit Cape Town</h2>
+  <p>December and January are peak summer — hot, busy, and expensive. February and March stay warm but quieter, and prices drop. April and May are arguably the best months: the summer crowds have left, the weather is still excellent, and you'll get better availability across the board. Winter (June–August) brings cold Atlantic weather but also the cheapest rates and whale watching season along the coast.</p>
+
+  <h2>What Does a Hotel in Cape Town Cost?</h2>
+  <p>Budget stays in the CBD or Sea Point start from around R600–R900 per night. Mid-range boutique hotels — the sweet spot for most travellers — run R1,200–R2,500. Camps Bay beachfront and Waterfront hotels go from R2,500 upward, and significantly more in peak December.</p>
+  <p>On BLY., you'll see real rates. We charge properties 10% — compared to the 15–25% most OTAs take — which means properties don't need to inflate their rack rates to cover the difference. What you see is what it actually costs.</p>
+
+  <div class="insiders-block">
+    <div class="ins-label">Free to join</div>
+    <h3>Join Bly Insiders</h3>
+    <p>Early access to new stays, exclusive picks, and a community that actually travels. Free. Always free.</p>
+    <a href="https://blytravel.co.za/insiders" class="ins-btn">Join Bly Insiders →</a>
+  </div>
+
+  <h2>Quick Summary: Which Neighbourhood is Right for You?</h2>
+
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="sc-title">First time in Cape Town?</div>
+      <div class="sc-body">V&A Waterfront or Green Point. Central, walkable, everything close.</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-title">Beach holiday?</div>
+      <div class="sc-body">Camps Bay or Sea Point. Budget: Sea Point. Splurge: Camps Bay.</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-title">City break / business?</div>
+      <div class="sc-body">CBD or De Waterkant. Lower price, easy access to everything.</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-title">Quiet escape?</div>
+      <div class="sc-body">Constantia. Wine farms on your doorstep, city 25 minutes away.</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-title">December peak?</div>
+      <div class="sc-body">Book now. The best properties fill months in advance.</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-title">Best value months?</div>
+      <div class="sc-body">April and May. Weather still great, crowds gone, prices drop.</div>
+    </div>
+  </div>
+
+  <p style="color:#666;font-size:14px;margin-top:32px;">BLY. is a South African online travel platform built to make booking a stay in SA simple, honest, and enjoyable. Search hotels in Cape Town and across South Africa at <a href="https://blytravel.co.za" style="color:var(--pink);">blytravel.co.za</a>.</p>
+
+</article>
+
+<!-- FOOTER -->
+<footer>
+  <div class="f-logo">BLY<span>.</span></div>
+  <div class="f-sub">South Africa's honest travel platform.</div>
+  <div class="f-links">
+    <a href="https://blytravel.co.za">Search Stays</a>
+    <a href="/blog">Blog</a>
+    <a href="https://blytravel.co.za/insiders">Bly Insiders</a>
+    <a href="https://blytravel.co.za">blytravel.co.za</a>
+  </div>
+  <div class="f-bottom">© 2026 BLY. All rights reserved.</div>
+</footer>
+
+</body>
+</html>
