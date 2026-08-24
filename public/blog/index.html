@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BLY. Blog — Travel Guides & Hotel Picks for South Africa</title>
+<meta name="description" content="Hotel guides, travel tips and destination deep-dives for South Africa. Find it. Book it. Go. — blytravel.co.za">
+<meta property="og:title" content="BLY. Blog — Travel Guides for South Africa">
+<meta property="og:description" content="Hotel guides, travel tips and destination deep-dives for South Africa. Powered by BLY.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://blytravel.co.za/blog">
+<link rel="canonical" href="https://blytravel.co.za/blog">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0D0D0D;
+    --surface: #1A1A1A;
+    --border: #2A2A2A;
+    --text: #F0F0F0;
+    --muted: #888;
+    --pink: #EF4056;
+    --green: #3DD68C;
+    --amber: #F5A623;
+    --blue: #5B9CF6;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(13,13,13,0.95);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .nav-logo {
+    font-family: 'Poppins', sans-serif;
+    font-size: 22px;
+    color: var(--text);
+    text-decoration: none;
+    letter-spacing: -0.5px;
+  }
+  .nav-logo span { color: var(--pink); }
+  .nav-links { display: flex; align-items: center; gap: 24px; }
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta {
+    background: var(--pink);
+    color: #fff !important;
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+  }
+  .nav-cta:hover { opacity: 0.9; }
+
+  /* HERO SECTION */
+  .blog-hero {
+    padding: 80px 24px 60px;
+    max-width: 860px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .hero-tag {
+    display: inline-block;
+    background: rgba(239,64,86,0.12);
+    color: var(--pink);
+    border: 1px solid rgba(239,64,86,0.3);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .blog-hero h1 {
+    font-family: 'Poppins', sans-serif;
+    font-size: clamp(32px, 6vw, 52px);
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+  .blog-hero h1 span { color: var(--pink); }
+  .blog-hero p {
+    color: var(--muted);
+    font-size: 18px;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  /* FILTER BAR */
+  .filter-bar {
+    max-width: 1100px;
+    margin: 0 auto 48px;
+    padding: 0 24px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .filter-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .filter-btn:hover, .filter-btn.active {
+    background: var(--pink);
+    border-color: var(--pink);
+    color: #fff;
+  }
+
+  /* ARTICLE GRID */
+  .articles-section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+  .section-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 28px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* FEATURED (first article — full width) */
+  .featured-card {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 32px;
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .featured-card:hover {
+    border-color: var(--pink);
+    transform: translateY(-2px);
+  }
+  .featured-image {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+    min-height: 340px;
+    display: flex;
+    align-items: flex-end;
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .featured-image::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23EF4056' fill-opacity='0.06'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+  .img-destination-badge {
+    position: absolute;
+    top: 24px;
+    left: 24px;
+    background: rgba(0,0,0,0.7);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .img-emoji {
+    font-size: 80px;
+    line-height: 1;
+    filter: drop-shadow(0 4px 20px rgba(0,0,0,0.5));
+  }
+  .featured-body {
+    padding: 40px 40px 40px 36px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .card-tag {
+    display: inline-block;
+    background: rgba(239,64,86,0.12);
+    color: var(--pink);
+    border: 1px solid rgba(239,64,86,0.25);
+    border-radius: 20px;
+    padding: 3px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .featured-body h2 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 26px;
+    line-height: 1.25;
+    margin-bottom: 12px;
+  }
+  .featured-body p {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.65;
+    margin-bottom: 24px;
+  }
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+  .card-meta span { display: flex; align-items: center; gap: 5px; }
+  .read-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--pink);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .read-link:hover { text-decoration: underline; }
+
+  /* ARTICLE GRID (smaller cards) */
+  .articles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+    margin-bottom: 60px;
+  }
+  .article-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.2s, transform 0.2s;
+    display: flex;
+    flex-direction: column;
+  }
+  .article-card:hover {
+    border-color: var(--pink);
+    transform: translateY(-2px);
+  }
+  .card-image {
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .card-image-emoji { font-size: 56px; }
+  .card-content {
+    padding: 22px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .card-content h3 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 17px;
+    line-height: 1.3;
+    margin-bottom: 10px;
+  }
+  .card-content p {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+    flex: 1;
+    margin-bottom: 16px;
+  }
+
+  /* COMING SOON CARD */
+  .coming-soon-card {
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    padding: 36px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 12px;
+  }
+  .coming-soon-card .cs-emoji { font-size: 32px; }
+  .coming-soon-card h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .coming-soon-card p { font-size: 13px; color: var(--muted); opacity: 0.7; }
+  .coming-soon-tag {
+    background: rgba(245,166,35,0.12);
+    color: var(--amber);
+    border: 1px solid rgba(245,166,35,0.25);
+    border-radius: 20px;
+    padding: 3px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* CTA BANNER */
+  .cta-banner {
+    background: linear-gradient(135deg, rgba(239,64,86,0.1) 0%, rgba(61,214,140,0.05) 100%);
+    border: 1px solid rgba(239,64,86,0.2);
+    border-radius: 16px;
+    padding: 48px 40px;
+    text-align: center;
+    margin-bottom: 60px;
+  }
+  .cta-banner h2 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 28px;
+    margin-bottom: 10px;
+  }
+  .cta-banner p {
+    color: var(--muted);
+    font-size: 16px;
+    margin-bottom: 28px;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .cta-buttons { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn-pink {
+    background: var(--pink);
+    color: #fff;
+    padding: 14px 28px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 15px;
+    text-decoration: none;
+    transition: opacity 0.2s;
+    font-family: inherit;
+  }
+  .btn-pink:hover { opacity: 0.9; }
+  .btn-outline {
+    background: transparent;
+    color: var(--text);
+    padding: 14px 28px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-weight: 600;
+    font-size: 15px;
+    text-decoration: none;
+    transition: border-color 0.2s;
+  }
+  .btn-outline:hover { border-color: var(--pink); }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 40px 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .footer-logo {
+    font-family: 'Poppins', sans-serif;
+    font-size: 18px;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .footer-logo span { color: var(--pink); }
+  .footer-links { display: flex; gap: 20px; }
+  .footer-links a {
+    color: var(--muted);
+    font-size: 13px;
+    text-decoration: none;
+  }
+  .footer-links a:hover { color: var(--text); }
+  .footer-copy {
+    font-size: 12px;
+    color: var(--muted);
+    width: 100%;
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    margin-top: 16px;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .featured-card { grid-template-columns: 1fr; }
+    .featured-image { min-height: 220px; }
+    .featured-body { padding: 28px; }
+    .featured-body h2 { font-size: 20px; }
+    nav .nav-links a:not(.nav-cta) { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="https://blytravel.co.za" class="nav-logo">BLY<span>.</span></a>
+  <div class="nav-links">
+    <a href="https://blytravel.co.za/blog">Blog</a>
+    <a href="https://blytravel.co.za/insiders">Insiders</a>
+    <a href="https://blytravel.co.za" class="nav-cta">Search Stays 🔴</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="blog-hero">
+  <div class="hero-tag">BLY. Journal</div>
+  <h1>Find your stay.<br><span>Read first.</span></h1>
+  <p>Hotel guides, destination picks, and insider travel tips for South Africa — written by the BLY. team.</p>
+</section>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <button class="filter-btn active">All</button>
+  <button class="filter-btn">Cape Town</button>
+  <button class="filter-btn">Johannesburg</button>
+  <button class="filter-btn">Garden Route</button>
+  <button class="filter-btn">Winelands</button>
+  <button class="filter-btn">Beach Escapes</button>
+  <button class="filter-btn">Budget Picks</button>
+</div>
+
+<!-- ARTICLES -->
+<section class="articles-section">
+  <div class="section-label">Latest Articles</div>
+
+  <!-- FEATURED ARTICLE -->
+  <a href="/blog/hotels-cape-town-guide" class="featured-card">
+    <div class="featured-image">
+      <div class="img-destination-badge">📍 Cape Town</div>
+      <div class="img-emoji">🏔️</div>
+    </div>
+    <div class="featured-body">
+      <div class="card-tag">Hotels · Cape Town</div>
+      <h2>Hotels in Cape Town: The Complete Guide to Where to Stay in 2026</h2>
+      <p>Atlantic Seaboard, City Bowl, Waterfront, Constantia — every neighbourhood broken down so you stay in the right spot for your trip.</p>
+      <div class="card-meta">
+        <span>✍️ BLY. Team</span>
+        <span>📅 August 2026</span>
+        <span>⏱ 8 min read</span>
+      </div>
+      <div class="read-link">Read the guide →</div>
+    </div>
+  </a>
+
+  <!-- GRID: COMING SOON CARDS -->
+  <div class="articles-grid">
+
+    <div class="coming-soon-card">
+      <div class="cs-emoji">🌇</div>
+      <div class="coming-soon-tag">Coming Soon</div>
+      <h3>Hotels in Johannesburg: Where to Stay in Jozi</h3>
+      <p>Sandton, Maboneng, Rosebank — we're breaking it all down.</p>
+    </div>
+
+    <div class="coming-soon-card">
+      <div class="cs-emoji">🌿</div>
+      <div class="coming-soon-tag">Coming Soon</div>
+      <h3>Garden Route Road Trip: Best Hotels Along the Way</h3>
+      <p>From Mossel Bay to Tsitsikamma — every stop, ranked.</p>
+    </div>
+
+    <div class="coming-soon-card">
+      <div class="cs-emoji">🍷</div>
+      <div class="coming-soon-tag">Coming Soon</div>
+      <h3>Stellenbosch vs Franschhoek: Which Winelands Town to Stay In</h3>
+      <p>Two beautiful towns, one weekend. We help you decide.</p>
+    </div>
+
+    <div class="coming-soon-card">
+      <div class="cs-emoji">🐘</div>
+      <div class="coming-soon-tag">Coming Soon</div>
+      <h3>Best Safari Lodges in South Africa: Kruger to Private Reserves</h3>
+      <p>Not just five-star. Every budget, every experience.</p>
+    </div>
+
+    <div class="coming-soon-card">
+      <div class="cs-emoji">🏖️</div>
+      <div class="coming-soon-tag">Coming Soon</div>
+      <h3>Best Beach Hotels in South Africa (Indian Ocean vs Atlantic)</h3>
+      <p>The two coasts feel completely different. Here's why that matters.</p>
+    </div>
+
+    <div class="coming-soon-card">
+      <div class="cs-emoji">💸</div>
+      <div class="coming-soon-tag">Coming Soon</div>
+      <h3>Best Budget Hotels in South Africa Under R1,000/night</h3>
+      <p>Honest picks. No compromises on the ones that count.</p>
+    </div>
+
+  </div>
+
+  <!-- CTA BANNER -->
+  <div class="cta-banner">
+    <h2>Ready to book your stay?</h2>
+    <p>Search 45,000+ hotels across South Africa on BLY. — honest rates, no hidden markups, 10% more back every time.</p>
+    <div class="cta-buttons">
+      <a href="https://blytravel.co.za" class="btn-pink">Search Hotels on BLY. 🔴</a>
+      <a href="https://blytravel.co.za/insiders" class="btn-outline">Join Bly Insiders — Free</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <a href="https://blytravel.co.za" class="footer-logo">BLY<span>.</span></a>
+  <div class="footer-links">
+    <a href="https://blytravel.co.za/blog">Blog</a>
+    <a href="https://blytravel.co.za/insiders">Insiders</a>
+    <a href="https://blytravel.co.za">Search Stays</a>
+  </div>
+  <div class="footer-copy">© 2026 BLY. Travel · Find it. Book it. Go. · blytravel.co.za</div>
+</footer>
+
+<script>
+  // Filter buttons — visual toggle only (all articles visible, coming soon labelled)
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>
