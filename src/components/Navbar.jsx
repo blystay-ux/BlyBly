@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-
 const styles = {
   nav: {
     position: 'sticky', top: 0, zIndex: 100,
@@ -51,12 +50,10 @@ const styles = {
     fontFamily: 'var(--font-body)', flexShrink: 0,
   },
 }
-
 export default function Navbar() {
   const { user, role, signOut } = useAuth()
   const initial = user?.email?.[0]?.toUpperCase() || '?'
   const isAdmin = role === 'admin'
-
   return (
     <nav style={styles.nav}>
       <style>{`
@@ -66,15 +63,14 @@ export default function Navbar() {
         }
       `}</style>
       <div className="bly-navbar-inner" style={styles.inner}>
-
         {/* Logo */}
         <Link to="/" className="bly-navbar-logo" style={styles.logo}>
           Bly<span style={styles.dot} />
         </Link>
-
         {/* Links */}
         <div style={styles.actions}>
           <Link to="/destinations" style={styles.link}>Destinations</Link>
+          <Link to="/blog" style={styles.link}>Blog</Link>
           <Link to="/insiders" style={styles.link}>Bly Insiders</Link>
           <Link to="/manage-booking" style={styles.link}>Manage booking</Link>
           {isAdmin && <Link to="/admin" style={styles.linkAccent}>Admin</Link>}
@@ -98,7 +94,6 @@ export default function Navbar() {
             <Link to="/auth" style={styles.link}>Sign in</Link>
           )}
         </div>
-
       </div>
     </nav>
   )
