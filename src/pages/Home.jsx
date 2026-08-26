@@ -304,17 +304,24 @@ export default function Home() {
         </div>
       </section>
       {/* ── FOOTER ── */}
-      <footer style={{ background: 'var(--bg-dark)', padding: '28px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-        <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, letterSpacing: '-0.05em', color: '#fff' }}>
-          Bly<span style={{ color: 'var(--accent)' }}>.</span>
-        </span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+      <footer style={{ background: 'var(--bg-dark)', padding: '28px 40px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+          <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, letterSpacing: '-0.05em', color: '#fff' }}>
+            Bly<span style={{ color: 'var(--accent)' }}>.</span>
+          </span>
           <span
             onClick={() => navigate('/terms')}
             style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 2 }}
           >
             Terms & Conditions
           </span>
+        </div>
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12,
+          paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.1)',
+        }}>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>Pretorius Ave, Lyttelton, Centurion, Pretoria</p>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>All transactions are processed in South African Rand (ZAR)</p>
           <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>© 2026 BLY. — Bly waar dit saak maak.</p>
         </div>
       </footer>
