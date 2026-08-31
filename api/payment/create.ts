@@ -9,7 +9,7 @@ import crypto from 'crypto'
 const IK_APP_ID     = process.env.IKHOKHA_APP_ID     ?? ''
 const IK_APP_SECRET = process.env.IKHOKHA_APP_SECRET ?? ''
 const IK_API_URL    = 'https://api.ikhokha.com/public-api/v1/api/payment'
-const BASE_URL      = process.env.BASE_URL ?? ''   // e.g. https://blytravel.co.za
+const BASE_URL      = process.env.VITE_BASE_URL ?? ''   // e.g. https://blytravel.co.za
 
 // iKhokha escaping: \  →  \\   |   "  →  \"   |   '  →  \'   |   space  →  \ (backslash+space)
 function ikEscape(str: string): string {
