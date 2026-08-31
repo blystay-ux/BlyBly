@@ -1,7 +1,3 @@
-// api/payment/payfast-webhook.ts
-// PayFast ITN (Instant Transaction Notification) handler.
-// PayFast POSTs here after every payment attempt (success or failure).
-
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
