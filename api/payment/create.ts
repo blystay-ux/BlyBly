@@ -96,13 +96,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const urlPath   = new URL(IK_API_URL).pathname   // /public-api/v1/api/payment
   const signature = signRequest(urlPath, bodyStr)
 
-  console.log('[iKhokha] Sending payment request:', {
-    appIdHead: IK_APP_ID.slice(0, 8),
-    urlPath,
-    amountCents,
-    externalTxId,
-    signatureHead: signature.slice(0, 12),
-  })
+  const escapedPayload = ikEscape(urlPath + bodyStr)
+  console.log('[iKhokha] bodyStr:', bodyStr)
+  console.log('[iKhokha] escapedPayload:', escapedPayload)
+  console.log('[iKhokha] signature:', signature)
+  console.log('[iKhokha] APP_SECRET length:', IK_APP_SECRET.length, 'first4:', IK_APP_SECRET.slice(0,4))
 
   let ikRes: Response
   let ikData: any
