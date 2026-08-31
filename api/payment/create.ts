@@ -13,7 +13,7 @@ const BASE_URL      = process.env.VITE_BASE_URL!   // e.g. https://blytravel.co.
 
 // iKhokha requires this exact escaping before HMAC signing
 function ikEscape(str: string): string {
-  return str.replace(/[\\"']/g, '\\$&').replace(/ /g, '\\0')
+     return str.replace(/[\\"']/g, '\\$&').replace(/ /g, '\\ ')
 }
 
 function signRequest(urlPath: string, body: string): string {
