@@ -6,8 +6,9 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
 
-const IK_APP_ID     = process.env.IKHOKHA_APP_ID     ?? ''
-const IK_APP_SECRET = process.env.IKHOKHA_APP_SECRET ?? ''
+const IK_APP_ID     = process.env.IKHOKHA_APP_ID      ?? ''
+const IK_APP_SECRET = process.env.IKHOKHA_APP_SECRET  ?? ''
+const IK_ENTITY_ID  = process.env.IKHOKHA_ENTITY_ID   ?? '585144'
 const IK_API_URL    = 'https://api.ikhokha.com/public-api/v1/api/payment'
 const BASE_URL      = process.env.VITE_BASE_URL ?? ''   // e.g. https://blytravel.co.za
 
@@ -77,12 +78,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const guestName    = `${firstName} ${lastName}`.trim()
 
   const requestBody = {
-    entityID:              IK_APP_ID,
+    entityID:              IK_ENTITY_ID,
+    externalEntityID:      IK_ENTITY_ID,
     amount:                amountCents,
     currency:              'ZAR',
     requesterUrl:          BASE_URL,
-    externalTransactionID: externalTxId,
     description:           `BLY Travel - ${guestName}`,
+    paymentReference:      externalTxId,
+    mode:                  'live',
+    externalTransactionID: externalTxId,
     urls: {
       callbackUrl:    `${BASE_URL}/api/payment/webhook`,
       successPageUrl: `${BASE_URL}/booking/success?id=${bookingId}`,
