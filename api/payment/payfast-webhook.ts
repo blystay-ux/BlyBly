@@ -6,7 +6,6 @@ const PF_MERCHANT_ID = process.env.PAYFAST_MERCHANT_ID ?? ''
 const PF_PASSPHRASE  = process.env.PAYFAST_PASSPHRASE  ?? ''
 const BASE_URL       = process.env.VITE_BASE_URL        ?? ''
 
-// PayFast's server IPs — reject webhooks from anywhere else
 const PF_VALID_IPS = [
   '197.97.145.144',
   '197.97.145.145',
