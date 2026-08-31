@@ -11,19 +11,18 @@ const IK_APP_SECRET = process.env.IKHOKHA_APP_SECRET ?? ''
 const IK_API_URL    = 'https://api.ikhokha.com/public-api/v1/api/payment'
 const BASE_URL      = process.env.VITE_BASE_URL ?? ''   // e.g. https://blytravel.co.za
 
-// iKhokha escaping: \  →  \\   |   "  →  \"   |   '  →  \'   |   space  →  \ (backslash+space)
+// iKhokha escaping — from official ik-pay-api-examples/nodejs:
+// escape \, ", ' with leading backslash; replace null chars with \0; spaces are NOT escaped
 function ikEscape(str: string): string {
   return str
-    .replace(/\\/g, '\\\\')
-    .replace(/"/g,  '\\"')
-    .replace(/'/g,  "\\'")
-    .replace(/ /g,  '\\ ')
+    .replace(/[\\"']/g, '\\$&')
+    .replace(/\0/g, '\\0')
 }
 
 function signRequest(urlPath: string, body: string): string {
   const payload = ikEscape(urlPath + body)
   return crypto
-    .createHmac('sha256', IK_APP_SECRET)
+    .createHmac('sha256', IK_APP_SECRET.trim())
     .update(payload, 'utf8')
     .digest('hex')
 }
@@ -93,14 +92,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const bodyStr   = JSON.stringify(requestBody)
-  const urlPath   = new URL(IK_API_URL).pathname   // /public-api/v1/api/payment
+  const urlPath   = new URL(IK_API_URL).pathname
   const signature = signRequest(urlPath, bodyStr)
 
-  const escapedPayload = ikEscape(urlPath + bodyStr)
-  console.log('[iKhokha] bodyStr:', bodyStr)
-  console.log('[iKhokha] escapedPayload:', escapedPayload)
-  console.log('[iKhokha] signature:', signature)
-  console.log('[iKhokha] APP_SECRET length:', IK_APP_SECRET.length, 'first4:', IK_APP_SECRET.slice(0,4))
+  console.log('[iKhokha] Request:', {
+    appIdHead:     IK_APP_ID.slice(0, 8),
+    secretLen:     IK_APP_SECRET.trim().length,
+    urlPath,
+    amountCents,
+    sigHead:       signature.slice(0, 16),
+  })
 
   let ikRes: Response
   let ikData: any
@@ -109,26 +110,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ikRes = await fetch(IK_API_URL, {
       method:  'POST',
       headers: {
+        'Accept':       'application/json',
         'Content-Type': 'application/json',
-        'IK-APPID':     IK_APP_ID,
+        'IK-APPID':     IK_APP_ID.trim(),
         'IK-SIGN':      signature,
       },
       body: bodyStr,
     })
     ikData = await ikRes.json()
   } catch (fetchErr) {
-    console.error('[iKhokha] Network error calling iKhokha API:', fetchErr)
+    console.error('[iKhokha] Network error:', fetchErr)
     return res.status(502).json({ error: 'Could not reach payment provider' })
   }
 
-  console.log('[iKhokha] Response status:', ikRes.status, '| body:', JSON.stringify(ikData))
+  console.log('[iKhokha] Response:', ikRes.status, JSON.stringify(ikData))
 
   if (!ikData.paylinkUrl) {
-    console.error('[iKhokha] Payment link creation failed:', ikData)
+    console.error('[iKhokha] Failed:', ikData)
     return res.status(502).json({ error: 'Could not create payment link', detail: ikData })
   }
 
-  // Save paylink details to hg_bookings for audit + reconciliation
+  // Save paylink details for audit + reconciliation
   await supabase
     .from('hg_bookings')
     .update({
