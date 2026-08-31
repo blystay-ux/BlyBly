@@ -17,6 +17,8 @@ import Terms from './pages/Terms'
 import ComingSoon from './pages/ComingSoon'
 import DestinationsPage from './pages/DestinationsPage'
 import DestinationPage from './pages/DestinationPage'
+import BookingSuccess from './pages/BookingSuccess'
+import BookingPaymentFailed from './pages/BookingPaymentFailed'
 
 export default function App() {
   return (
@@ -39,6 +41,10 @@ export default function App() {
         <Route path="/partners"            element={<ComingSoon />} />
         <Route path="/destinations"        element={<DestinationsPage />} />
         <Route path="/accommodation/:slug" element={<DestinationPage />} />
+
+        {/* iKhokha redirects here after payment */}
+        <Route path="/booking/success"       element={<BookingSuccess />} />
+        <Route path="/booking/payment-failed" element={<BookingPaymentFailed />} />
       </Routes>
     </AuthProvider>
   )
