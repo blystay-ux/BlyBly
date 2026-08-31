@@ -12,8 +12,15 @@ const PF_URL = 'https://www.payfast.co.za/eng/process'
 // const PF_URL = 'https://sandbox.payfast.co.za/eng/process'
 
 function generateSignature(data: Record<string, string>): string {
-  // 1. Sort keys alphabetically
   const sorted = Object.keys(data).sort()
+  let paramStr = sorted
+    .map(k => `${k}=${encodeURIComponent(data[k].trim()).replace(/%20/g, '+')}`)
+    .join('&')
+  if (PF_PASSPHRASE) {
+    paramStr += `&passphrase=${encodeURIComponent(PF_PASSPHRASE.trim()).replace(/%20/g, '+')}`
+  }
+  return crypto.createHash('md5').update(paramStr).digest('hex')
+}
 
   // 2. Build param string: key=encodeURIComponent(value) joined with &
   let paramStr = sorted
