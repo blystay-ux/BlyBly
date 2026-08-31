@@ -41,6 +41,11 @@ const s = {
   formTextarea: { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, fontFamily: 'var(--font-body)', boxSizing: 'border-box', minHeight: 70 },
   formRow: { display: 'flex', gap: 8 },
   guestBlock: { marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border)' },
+  paymentNote: {
+    background: 'var(--bg-card)', border: '1px solid var(--border)',
+    borderRadius: 12, padding: '12px 16px', marginTop: 20,
+    fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5,
+  },
   ctaBar: {
     position: 'sticky', bottom: 0, zIndex: 10,
     background: 'var(--bg-card)', borderTop: '1px solid var(--border)',
@@ -50,14 +55,12 @@ const s = {
   ctaBtn: { flexShrink: 0, padding: '13px 28px', borderRadius: 99, background: '#ef4056', color: '#fff', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer' },
   ctaBtnDisabled: { opacity: 0.4, cursor: 'not-allowed' },
   errorBox: { background: '#FDEBEC', color: '#ef4056', fontSize: 13, fontWeight: 600, padding: '10px 14px', borderRadius: 10, marginTop: 12 },
-  confirmBox: { background: 'var(--bg-card)', borderRadius: 20, padding: 40, textAlign: 'center', boxShadow: '0 4px 32px rgba(0,0,0,0.08)', margin: '40px 24px' },
 }
 
 export default function Checkout() {
   const navigate = useNavigate()
   const location = useLocation()
   const { isInsider } = useAuth()
-
   const { property, selectedOffer, prebookResult, checkIn, nights, adults } = location.state || {}
 
   const [leadGuest, setLeadGuest] = useState(emptyLeadGuest())
@@ -65,10 +68,8 @@ export default function Checkout() {
     property && adults ? Array.from({ length: adults }, emptyGuest) : []
   )
   const [specialRequests, setSpecialRequests] = useState('')
-  const [booking, setBooking] = useState(false)
-  const [bookingResult, setBookingResult] = useState(null)
+  const [redirecting, setRedirecting] = useState(false)
   const [bookingError, setBookingError] = useState(null)
-  const [agencyReference, setAgencyReference] = useState(null)
 
   if (!property || !selectedOffer || !prebookResult) {
     return (
@@ -83,14 +84,15 @@ export default function Checkout() {
     )
   }
 
-  const info = property.propertyInfo
+  const info         = property.propertyInfo
   const confirmedRoom = prebookResult.content?.rooms?.[0]
-  const net = confirmedRoom?.prices?.net ?? selectedOffer.plan.prices?.net
+  const net  = confirmedRoom?.prices?.net  ?? selectedOffer.plan.prices?.net
   const sell = confirmedRoom?.prices?.sell ?? selectedOffer.plan.prices?.sell
-  // Guest-facing price only -- see src/lib/pricing.js for the Net/Sell
-  // logic. `net` above still separately feeds expectedPrice sent to
-  // HyperGuest (always Net), unaffected by this display calculation.
-  const guestPrice = sell ? calculateGuestPrice(net?.price ?? sell.price, sell.price, sell.currency, isInsider) : null
+
+  // Guest-facing price only — net feeds HyperGuest expectedPrice, untouched
+  const guestPrice = sell
+    ? calculateGuestPrice(net?.price ?? sell.price, sell.price, sell.currency, isInsider)
+    : null
 
   function updateLeadGuest(field, value) {
     setLeadGuest(prev => ({ ...prev, [field]: value }))
@@ -99,114 +101,98 @@ export default function Checkout() {
     setRoomGuests(prev => prev.map((g, i) => (i === idx ? { ...g, [field]: value } : g)))
   }
   function leadGuestValid() {
-    return leadGuest.firstName && leadGuest.lastName && leadGuest.birthDate && leadGuest.email && leadGuest.phone
-      && leadGuest.address && leadGuest.city && leadGuest.state && leadGuest.zip && leadGuest.country
+    return leadGuest.firstName && leadGuest.lastName && leadGuest.birthDate && leadGuest.email
+      && leadGuest.phone && leadGuest.address && leadGuest.city && leadGuest.state
+      && leadGuest.zip && leadGuest.country
   }
   function roomGuestsValid() {
     return roomGuests.every(g => g.firstName && g.lastName)
   }
 
-  async function handleBook() {
-    setBooking(true)
+  // ── PAYMENT FLOW ─────────────────────────────────────────────────────────
+  // 1. Save a pending hg_bookings record (no HyperGuest call yet)
+  // 2. Create iKhokha payment link via /api/payment/create
+  // 3. Redirect guest to iKhokha's hosted payment page
+  // 4. iKhokha webhook fires on payment → webhook calls hyperguest-book
+  // ─────────────────────────────────────────────────────────────────────────
+  async function handleProceedToPayment() {
+    setRedirecting(true)
     setBookingError(null)
-    const ref = `BLY-${Date.now()}`
-    // expectedPrice sent to HyperGuest is ALWAYS the Net rate, per their
-    // explicit guidance (2026-08-17). Never change this to sell without
-    // re-confirming with HyperGuest first.
+
+    // expectedPrice to HyperGuest is ALWAYS Net rate (per HyperGuest guidance 2026-08-17)
     const priceForHyperGuest = net || sell
+    const agencyReference    = `BLY-${Date.now()}`
+    const checkOut           = addNights(checkIn, nights)
+
     try {
-      const { data, error } = await supabase.functions.invoke('hyperguest-book', {
-        body: {
-          propertyId: property.propertyId,
-          checkIn,
-          checkOut: addNights(checkIn, nights),
-          agencyReference: ref,
-          leadGuest,
-          rooms: [{
-            roomId: selectedOffer.room.roomId,
-            ratePlanId: selectedOffer.plan.ratePlanId,
-            expectedPrice: { amount: priceForHyperGuest.price, currency: priceForHyperGuest.currency },
-            guests: roomGuests,
-            ...(specialRequests ? { specialRequests: [specialRequests] } : {}),
-          }],
-        },
+      // ── Step 1: Save pending booking ──────────────────────────────────
+      const { data: hgBooking, error: dbErr } = await supabase
+        .from('hg_bookings')
+        .insert({
+          hyperguest_property_id: property.propertyId,
+          agency_reference:       agencyReference,
+          status:                 'Pending',
+          payment_status:         'unpaid',
+          check_in:               checkIn,
+          check_out:              checkOut,
+          lead_guest:             leadGuest,
+          guest_email:            leadGuest.email,
+          guest_phone:            leadGuest.phone,
+          total_price_zar:        guestPrice?.totalAmount ?? sell?.price,
+          meta: {
+            hotelName:    info.name,
+            roomName:     selectedOffer.room.roomName,
+            ratePlanName: selectedOffer.plan.ratePlanName,
+          },
+          // Full payload stored here — webhook will pass this straight to
+          // hyperguest-book only after payment is confirmed
+          checkout_payload: {
+            propertyId:       property.propertyId,
+            checkIn,
+            checkOut,
+            agencyReference,
+            leadGuest,
+            rooms: [{
+              roomId:        selectedOffer.room.roomId,
+              ratePlanId:    selectedOffer.plan.ratePlanId,
+              roomName:      selectedOffer.room.roomName,
+              ratePlanName:  selectedOffer.plan.ratePlanName,
+              expectedPrice: {
+                amount:   priceForHyperGuest.price,
+                currency: priceForHyperGuest.currency,
+              },
+              guests: roomGuests,
+              ...(specialRequests ? { specialRequests: [specialRequests] } : {}),
+            }],
+          },
+        })
+        .select('id')
+        .single()
+
+      if (dbErr) throw new Error(dbErr.message)
+
+      // ── Step 2: Create iKhokha payment link ───────────────────────────
+      const payRes = await fetch('/api/payment/create', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ bookingId: hgBooking.id }),
       })
-      if (error) throw error
-      if (data?.error) throw new Error(data.error)
-      setAgencyReference(ref)
-      setBookingResult(data)
 
-      // Best-effort confirmation email -- deliberately does NOT block or
-      // fail the booking flow if it errors. The booking already succeeded
-      // by this point; email is a nice-to-have on top, not a dependency.
-      supabase.functions.invoke('hyperguest-send-confirmation-email', {
-        body: {
-          to: leadGuest.email,
-          guestName: `${leadGuest.firstName} ${leadGuest.lastName}`,
-          agencyReference: ref,
-          hyperguestBookingId: data.content?.bookingId,
-          hotelName: info.name,
-          checkIn,
-          checkOut: addNights(checkIn, nights),
-          roomName: selectedOffer.room.roomName,
-          ratePlanName: selectedOffer.plan.ratePlanName,
-          totalPrice: sell.price,
-          currency: sell.currency,
-        },
-      }).catch(err => console.error('Confirmation email failed (booking still succeeded):', err))
+      const payData = await payRes.json()
+
+      if (!payRes.ok || !payData.paylinkUrl) {
+        throw new Error(payData.error || 'Could not create payment link. Please try again.')
+      }
+
+      // ── Step 3: Redirect to iKhokha payment page ─────────────────────
+      // Guest pays here — no HyperGuest call happens until webhook confirms payment
+      window.location.href = payData.paylinkUrl
+
     } catch (err) {
-      console.error('Booking failed:', err)
-      setBookingError(err.message || 'Something went wrong completing this booking. Please try again, or contact support.')
+      console.error('[Checkout] Payment setup failed:', err)
+      setBookingError(err.message || 'Something went wrong. Please try again or contact support.')
+      setRedirecting(false)
     }
-    setBooking(false)
-  }
-
-  if (bookingResult) {
-    const content = bookingResult.content
-    return (
-      <main>
-        <div style={s.confirmBox}>
-          <div style={{ fontSize: 56, marginBottom: 12 }}>✓</div>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 28, marginBottom: 8, color: 'var(--text)' }}>
-            Booking confirmed!
-          </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24 }}>
-            Confirmation sent to {leadGuest.email}
-          </p>
-          <div style={{ background: 'var(--bg)', borderRadius: 14, padding: 20, textAlign: 'left', marginBottom: 20 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Booking reference</span>
-              <span style={{ fontWeight: 700, fontSize: 13 }}>{agencyReference}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Status</span>
-              <span style={{ fontWeight: 700, fontSize: 13 }}>{content?.status}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: specialRequests ? 8 : 0 }}>
-              <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Dates</span>
-              <span style={{ fontWeight: 700, fontSize: 13 }}>{checkIn} → {addNights(checkIn, nights)}</span>
-            </div>
-            {specialRequests && (
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Special request</span>
-                <span style={{ fontWeight: 700, fontSize: 13, textAlign: 'right', maxWidth: 220 }}>{specialRequests}</span>
-              </div>
-            )}
-          </div>
-          <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
-            Save your booking reference above — you'll need it to manage or cancel this booking.
-          </p>
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button onClick={() => navigate('/')} style={{ background: 'var(--text)', color: '#fff', borderRadius: 99, padding: '12px 28px', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
-              Back to home
-            </button>
-            <button onClick={() => navigate('/manage-booking')} style={{ background: 'none', color: 'var(--text)', border: '1.5px solid var(--border)', borderRadius: 99, padding: '12px 28px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
-              Manage or cancel booking
-            </button>
-          </div>
-        </div>
-      </main>
-    )
   }
 
   return (
@@ -219,14 +205,21 @@ export default function Checkout() {
         </div>
 
         <div style={s.content}>
+          {/* Booking summary */}
           <div style={s.summaryCard}>
             <div style={s.summaryRow}><span>Dates</span><span>{checkIn} → {addNights(checkIn, nights)}</span></div>
             <div style={s.summaryRow}><span>Guests</span><span>{adults} {adults === 1 ? 'adult' : 'adults'}</span></div>
             <div style={s.summaryRow}><span>Board</span><span>{selectedOffer.plan.board}</span></div>
-            <div style={s.summaryTotal}><span>Total</span><span>{guestPrice?.currency} {Number(guestPrice?.totalAmount).toLocaleString()}</span></div>
-            <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'right', marginTop: 4 }}>Taxes and fees included</div>
+            <div style={s.summaryTotal}>
+              <span>Total</span>
+              <span>{guestPrice?.currency} {Number(guestPrice?.totalAmount).toLocaleString()}</span>
+            </div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'right', marginTop: 4 }}>
+              Taxes and fees included
+            </div>
           </div>
 
+          {/* Guest details */}
           <div style={s.sectionTitle}>Your details</div>
           <div style={s.formRow}>
             <div style={{ flex: 1 }}>
@@ -285,6 +278,7 @@ export default function Checkout() {
             </div>
           </div>
 
+          {/* Room guests */}
           <div style={s.guestBlock}>
             <div style={{ ...s.sectionTitle, marginTop: 0, fontSize: 16 }}>Guest names ({roomGuests.length})</div>
             {roomGuests.map((g, i) => (
@@ -301,6 +295,7 @@ export default function Checkout() {
             ))}
           </div>
 
+          {/* Special requests */}
           <div style={s.guestBlock}>
             <label style={s.formLabel}>Special requests (optional)</label>
             <textarea
@@ -311,17 +306,29 @@ export default function Checkout() {
             />
           </div>
 
+          {/* Payment note */}
+          <div style={s.paymentNote}>
+            🔒 You'll be taken to a secure payment page to complete your booking.
+            Your reservation is only confirmed once payment is received.
+          </div>
+
           {bookingError && <div style={s.errorBox}>{bookingError}</div>}
         </div>
 
+        {/* Sticky CTA */}
         <div style={s.ctaBar}>
-          <div style={{ fontSize: 14, fontWeight: 700 }}>{guestPrice?.currency} {Number(guestPrice?.totalAmount).toLocaleString()}</div>
+          <div style={{ fontSize: 14, fontWeight: 700 }}>
+            {guestPrice?.currency} {Number(guestPrice?.totalAmount).toLocaleString()}
+          </div>
           <button
-            style={{ ...s.ctaBtn, ...(!leadGuestValid() || !roomGuestsValid() || booking ? s.ctaBtnDisabled : {}) }}
-            disabled={!leadGuestValid() || !roomGuestsValid() || booking}
-            onClick={handleBook}
+            style={{
+              ...s.ctaBtn,
+              ...(!leadGuestValid() || !roomGuestsValid() || redirecting ? s.ctaBtnDisabled : {}),
+            }}
+            disabled={!leadGuestValid() || !roomGuestsValid() || redirecting}
+            onClick={handleProceedToPayment}
           >
-            {booking ? 'Booking…' : 'Confirm booking'}
+            {redirecting ? 'Setting up payment…' : 'Proceed to payment →'}
           </button>
         </div>
       </div>
