@@ -3,44 +3,23 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
 
-const IK_APP_ID     = process.env.IKHOKHA_APP_ID      ?? ''
+const IK_APP_ID     = process.env.IKHOKHA_APP_ID     ?? ''
 const IK_APP_SECRET = process.env.IKHOKHA_APP_SECRET  ?? ''
-const IK_ENTITY_ID  = process.env.IKHOKHA_ENTITY_ID   ?? '585144'
 const IK_API_URL    = 'https://api.ikhokha.com/public-api/v1/api/payment'
-const BASE_URL      = process.env.VITE_BASE_URL ?? ''
+const BASE_URL      = process.env.VITE_BASE_URL        ?? ''
 
+// Official iKhokha escape: backslash, double-quote, single-quote, null char
 function ikEscape(str: string): string {
   return str.replace(/[\\"']/g, '\\$&').replace(/\0/g, '\\0')
 }
 
-function hmac(msg: string): string {
-  return crypto.createHmac('sha256', IK_APP_SECRET.trim()).update(msg, 'utf8').digest('hex')
-}
-
-const urlPath = new URL(IK_API_URL).pathname  // /public-api/v1/api/payment
-
-function allSignatures(bodyStr: string) {
-  return {
-    'A-escaped-path+body':  hmac(ikEscape(urlPath + bodyStr)),
-    'B-raw-path+body':      hmac(urlPath + bodyStr),
-    'C-escaped-body-only':  hmac(ikEscape(bodyStr)),
-    'D-raw-body-only':      hmac(bodyStr),
-  }
-}
-
-async function trySign(sig: string, bodyStr: string): Promise<{ ok: boolean; data: any; status: number }> {
-  const res = await fetch(IK_API_URL, {
-    method: 'POST',
-    headers: {
-      'Accept':       'application/json',
-      'Content-Type': 'application/json',
-      'IK-APPID':     IK_APP_ID.trim(),
-      'IK-SIGN':      sig,
-    },
-    body: bodyStr,
-  })
-  const data = await res.json()
-  return { ok: !!data.paylinkUrl, data, status: res.status }
+// IK-SIGN = HMAC-SHA256( ikEscape( urlPath + requestBody ), AppSecret )
+function signRequest(bodyStr: string): string {
+  const urlPath = new URL(IK_API_URL).pathname  // /public-api/v1/api/payment
+  const payload = ikEscape(urlPath + bodyStr)
+  return crypto.createHmac('sha256', IK_APP_SECRET.trim())
+    .update(payload, 'utf8')
+    .digest('hex')
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -60,7 +39,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const { data: booking, error } = await supabase
     .from('hg_bookings')
-    .select('id, total_price_zar, lead_guest, payment_status, status')
+    .select('id, total_price_zar, lead_guest, payment_status')
     .eq('id', bookingId)
     .single()
 
@@ -71,9 +50,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const externalTxId = `BLY-${bookingId}`
   const guestName    = `${booking.lead_guest?.firstName ?? ''} ${booking.lead_guest?.lastName ?? ''}`.trim()
 
+  // entityID = Application Key ID per iKhokha API docs ("Application key ID" field comment)
   const requestBody = {
-    entityID:              IK_ENTITY_ID,
-    externalEntityID:      IK_ENTITY_ID,
+    entityID:              IK_APP_ID,
+    externalEntityID:      IK_APP_ID,
     amount:                amountCents,
     currency:              'ZAR',
     requesterUrl:          BASE_URL,
@@ -89,34 +69,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     },
   }
 
-  const bodyStr = JSON.stringify(requestBody)
-  const sigs    = allSignatures(bodyStr)
+  const bodyStr   = JSON.stringify(requestBody)
+  const signature = signRequest(bodyStr)
 
-  console.log('[iKhokha] body:', bodyStr)
-  console.log('[iKhokha] signatures:', sigs)
+  console.log('[iKhokha] entityID (App ID):', IK_APP_ID.slice(0, 8) + '…')
+  console.log('[iKhokha] amount (cents):', amountCents)
 
-  // Try each signing approach until one works
-  for (const [name, sig] of Object.entries(sigs)) {
-    console.log(`[iKhokha] Trying ${name} → sig: ${sig.slice(0, 16)}`)
-    const result = await trySign(sig, bodyStr)
-    console.log(`[iKhokha] ${name} → HTTP ${result.status}:`, JSON.stringify(result.data))
+  const ikRes = await fetch(IK_API_URL, {
+    method: 'POST',
+    headers: {
+      'Accept':       'application/json',
+      'Content-Type': 'application/json',
+      'IK-APPID':     IK_APP_ID.trim(),
+      'IK-SIGN':      signature,
+    },
+    body: bodyStr,
+  })
 
-    if (result.ok) {
-      console.log(`[iKhokha] SUCCESS with approach: ${name}`)
+  const data = await ikRes.json()
+  console.log('[iKhokha] response:', JSON.stringify(data))
 
-      await supabase
-        .from('hg_bookings')
-        .update({
-          ik_paylink_id:     result.data.paylinkID,
-          ik_paylink_url:    result.data.paylinkUrl,
-          ik_external_tx_id: externalTxId,
-        })
-        .eq('id', bookingId)
-
-      return res.status(200).json({ paylinkUrl: result.data.paylinkUrl })
-    }
+  if (!data.paylinkUrl) {
+    return res.status(502).json({ error: 'Could not create payment link', detail: data })
   }
 
-  console.error('[iKhokha] All signing approaches failed')
-  return res.status(502).json({ error: 'Could not create payment link' })
+  await supabase
+    .from('hg_bookings')
+    .update({
+      ik_paylink_id:     data.paylinkID,
+      ik_paylink_url:    data.paylinkUrl,
+      ik_external_tx_id: externalTxId,
+    })
+    .eq('id', bookingId)
+
+  return res.status(200).json({ paylinkUrl: data.paylinkUrl })
 }
