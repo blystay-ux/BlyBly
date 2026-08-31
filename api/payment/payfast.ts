@@ -1,6 +1,3 @@
-// api/payment/payfast.ts
-// Generates a signed PayFast payment URL and saves a pending booking to Supabase.
-
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
