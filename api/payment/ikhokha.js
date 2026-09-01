@@ -9,16 +9,8 @@ const BASE_URL      = process.env.VITE_BASE_URL  || ''
 const IK_ENDPOINT = 'https://api.ikhokha.com/public-api/v1/api/payment'
 const IK_PATH     = '/public-api/v1/api/payment'
 
-function jsStringEscape(str) {
-  return str
-    .split('\\').join('\\\\')
-    .split('"').join('\\"')
-    .split("'").join("\\'")
-    .split(' ').join('\\0')
-}
-
 function createSignature(urlPath, body) {
-  const payload = jsStringEscape(urlPath + JSON.stringify(body))
+  const payload = urlPath + JSON.stringify(body)
   return crypto.createHmac('sha256', IK_APP_SECRET.trim()).update(payload).digest('hex')
 }
 
