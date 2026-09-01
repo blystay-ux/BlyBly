@@ -64,7 +64,15 @@ export default async function handler(req, res) {
     },
   }
 
+  const rawString = IK_PATH + JSON.stringify(requestBody)
   const signature = createSignature(IK_PATH, requestBody)
+
+  // DEBUG — remove once signing is confirmed working
+  console.log('[iKhokha DEBUG] POST', IK_ENDPOINT)
+  console.log('[iKhokha DEBUG] IK-APPID:', IK_APP_ID.slice(0,4) + '...' + IK_APP_ID.slice(-4))
+  console.log('[iKhokha DEBUG] IK-SIGN:', signature.slice(0,4) + '...' + signature.slice(-4))
+  console.log('[iKhokha DEBUG] rawString:', rawString)
+  console.log('[iKhokha DEBUG] body JSON:', JSON.stringify(requestBody))
 
   let ikData
   try {
