@@ -5,16 +5,8 @@ const IK_APP_ID     = process.env.IK_APP_ID     || ''
 const IK_APP_SECRET = process.env.IK_APP_SECRET || ''
 const CALLBACK_PATH = '/api/payment/ikhokha-webhook'
 
-function jsStringEscape(str) {
-  return str
-    .split('\\').join('\\\\')
-    .split('"').join('\\"')
-    .split("'").join("\\'")
-    .split(' ').join('\\0')
-}
-
 function computeSignature(urlPath, body) {
-  const payload = jsStringEscape(urlPath + JSON.stringify(body))
+  const payload = urlPath + JSON.stringify(body)
   return crypto.createHmac('sha256', IK_APP_SECRET.trim()).update(payload).digest('hex')
 }
 
