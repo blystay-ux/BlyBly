@@ -1,4 +1,3 @@
-// api/payment/ikhokha-webhook.js
 import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
 
@@ -6,7 +5,6 @@ const IK_APP_ID     = process.env.IK_APP_ID     || ''
 const IK_APP_SECRET = process.env.IK_APP_SECRET || ''
 const CALLBACK_PATH = '/api/payment/ikhokha-webhook'
 
-// No regex — split/join is equivalent to global replace and cannot misparse.
 function jsStringEscape(str) {
   return str
     .split('\\').join('\\\\')
