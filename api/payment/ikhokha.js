@@ -10,8 +10,9 @@ const IK_ENDPOINT = 'https://api.ikhokha.com/public-api/v1/api/payment'
 const IK_PATH     = '/public-api/v1/api/payment'
 
 function createSignature(urlPath, body) {
-  const payload = urlPath + JSON.stringify(body)
-  return crypto.createHmac('sha256', IK_APP_SECRET.trim()).update(payload).digest('hex')
+  const jsonBody  = JSON.stringify(body)
+  const rawString = urlPath + jsonBody
+  return crypto.createHmac('sha256', IK_APP_SECRET.trim()).update(rawString).digest('hex')
 }
 
 export default async function handler(req, res) {
@@ -64,15 +65,15 @@ export default async function handler(req, res) {
     },
   }
 
-  const rawString = IK_PATH + JSON.stringify(requestBody)
-  const signature = createSignature(IK_PATH, requestBody)
+  const jsonBody  = JSON.stringify(requestBody)
+  const rawString = IK_PATH + jsonBody
+  const signature = crypto.createHmac('sha256', IK_APP_SECRET.trim()).update(rawString).digest('hex')
 
-  // DEBUG — remove once signing is confirmed working
-  console.log('[iKhokha DEBUG] POST', IK_ENDPOINT)
+  // DEBUG — exact bytes, no log-viewer reformatting
   console.log('[iKhokha DEBUG] IK-APPID:', IK_APP_ID.slice(0,4) + '...' + IK_APP_ID.slice(-4))
   console.log('[iKhokha DEBUG] IK-SIGN:', signature.slice(0,4) + '...' + signature.slice(-4))
-  console.log('[iKhokha DEBUG] rawString:', rawString)
-  console.log('[iKhokha DEBUG] body JSON:', JSON.stringify(requestBody))
+  console.log('[iKhokha DEBUG] exact jsonBody:', jsonBody)
+  console.log('[iKhokha DEBUG] exact rawString:', rawString)
 
   let ikData
   try {
@@ -83,7 +84,7 @@ export default async function handler(req, res) {
         'IK-APPID': IK_APP_ID.trim(),
         'IK-SIGN':  signature,
       },
-      body: JSON.stringify(requestBody),
+      body: jsonBody,
     })
     ikData = await ikRes.json()
   } catch (fetchErr) {
