@@ -19,9 +19,14 @@ const IK_APP_SECRET = process.env.IK_APP_SECRET ?? ''
 // Must be just the PATH portion of your callbackUrl — no domain
 const CALLBACK_PATH = '/api/payment/ikhokha-webhook'
 
-// Exactly matches jsStringEscape from the official iKhokha JS sample
+// Mirrors jsStringEscape from the official iKhokha JS sample.
+// Backslashes must be escaped first to avoid double-escaping.
 function jsStringEscape(str: string): string {
-  return str.replace(/[\\"']/g, '\\$&').replace(/ /g, '\\0')
+  return str
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g,  '\\"')
+    .replace(/'/g,  "\\'")
+    .replace(/ /g, '\\0')
 }
 
 function computeSignature(urlPath: string, body: object): string {
