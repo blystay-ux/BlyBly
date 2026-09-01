@@ -1,19 +1,4 @@
 // api/payment/ikhokha.ts
-//
-// Creates an iKhokha payment link and returns the redirect URL to the frontend.
-//
-// POST /api/payment/ikhokha
-// Body: { bookingId: string }
-// Response: { redirectUrl: string }
-//
-// Required Vercel env vars:
-//   IK_APP_ID       — Application ID shown in iKhokha Merchant Dashboard
-//   IK_APP_SECRET   — Application Secret (used to sign requests)
-//   IK_ENTITY_ID    — Application Key ID (entityID field in the request body)
-//                     Usually different from IK_APP_ID — check the dashboard.
-//                     Falls back to IK_APP_ID if not set.
-//   VITE_BASE_URL   — e.g. https://blytravel.co.za
-
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
@@ -26,11 +11,10 @@ const BASE_URL      = process.env.VITE_BASE_URL  ?? ''
 const IK_ENDPOINT = 'https://api.ikhokha.com/public-api/v1/api/payment'
 const IK_PATH     = '/public-api/v1/api/payment'
 
-// Mirrors jsStringEscape from the official iKhokha JS sample.
-// Backslashes must be escaped first to avoid double-escaping.
+// No regex — split/join is equivalent to global replace and cannot misparse.
 function jsStringEscape(str: string): string {
   return str
-    .replace(/\\/g, '\\\\')
-    .replace(/"/g,  '\\"')
-    .replace(/'/g,  "\\'")
-    .replace(/
+    .split('\\').join('\\\\')
+    .split('"').join('\\"')
+    .split("'").join("\\'")
+    .split('
