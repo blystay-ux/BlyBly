@@ -9,12 +9,6 @@ const BASE_URL      = process.env.VITE_BASE_URL  || ''
 const IK_ENDPOINT = 'https://api.ikhokha.com/public-api/v1/api/payment'
 const IK_PATH     = '/public-api/v1/api/payment'
 
-function createSignature(urlPath, body) {
-  const jsonBody  = JSON.stringify(body)
-  const rawString = urlPath + jsonBody
-  return crypto.createHmac('sha256', IK_APP_SECRET.trim()).update(rawString).digest('hex')
-}
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -67,13 +61,19 @@ export default async function handler(req, res) {
 
   const jsonBody  = JSON.stringify(requestBody)
   const rawString = IK_PATH + jsonBody
-  const signature = crypto.createHmac('sha256', IK_APP_SECRET.trim()).update(rawString).digest('hex')
+  const signature = crypto
+    .createHmac('sha256', IK_APP_SECRET.trim())
+    .update(rawString, 'utf8')
+    .digest('hex')
 
-  // DEBUG — exact bytes, no log-viewer reformatting
+  // DEBUG: char codes prove exact bytes (34 = double-quote, 123 = {)
+  const first10 = Array.from(jsonBody.substring(0, 10)).map(c => c.charCodeAt(0)).join(',')
+  console.log('[iKhokha DEBUG] jsonBody length:', jsonBody.length)
+  console.log('[iKhokha DEBUG] jsonBody first 10 char codes:', first10)
+  console.log('[iKhokha DEBUG] jsonBody first 60 chars: >>>' + jsonBody.substring(0, 60) + '<<<')
+  console.log('[iKhokha DEBUG] rawString first 80 chars: >>>' + rawString.substring(0, 80) + '<<<')
   console.log('[iKhokha DEBUG] IK-APPID:', IK_APP_ID.slice(0,4) + '...' + IK_APP_ID.slice(-4))
   console.log('[iKhokha DEBUG] IK-SIGN:', signature.slice(0,4) + '...' + signature.slice(-4))
-  console.log('[iKhokha DEBUG] exact jsonBody:', jsonBody)
-  console.log('[iKhokha DEBUG] exact rawString:', rawString)
 
   let ikData
   try {
