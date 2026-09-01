@@ -28,17 +28,44 @@ const s = {
     background: 'var(--bg)', borderBottom: '1px solid var(--border)',
     padding: '16px 24px',
   },
-  back: { display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 500, color: 'var(--text-muted)', cursor: 'pointer', background: 'none', border: 'none', marginBottom: 4 },
-  hotelName: { fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, letterSpacing: '-0.02em', color: 'var(--text)' },
+  back: {
+    display: 'inline-flex', alignItems: 'center', gap: 6,
+    fontSize: 14, fontWeight: 500, color: 'var(--text-muted)',
+    cursor: 'pointer', background: 'none', border: 'none', marginBottom: 4,
+  },
+  hotelName: {
+    fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20,
+    letterSpacing: '-0.02em', color: 'var(--text)',
+  },
   hotelMeta: { fontSize: 13, color: 'var(--text-muted)', marginTop: 2 },
   content: { padding: '20px 24px 0' },
-  summaryCard: { background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px 18px', marginBottom: 24 },
+  summaryCard: {
+    background: 'var(--bg-card)', border: '1px solid var(--border)',
+    borderRadius: 16, padding: '16px 18px', marginBottom: 24,
+  },
   summaryRow: { display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0' },
-  summaryTotal: { display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 800, paddingTop: 10, marginTop: 6, borderTop: '1px dashed var(--border)', color: 'var(--text)' },
-  sectionTitle: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 18, marginTop: 8, marginBottom: 12, letterSpacing: '-0.3px', color: 'var(--text)' },
-  formLabel: { fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 4, marginTop: 12, display: 'block' },
-  formInput: { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, fontFamily: 'var(--font-body)', boxSizing: 'border-box' },
-  formTextarea: { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid var(--border)', fontSize: 14, fontFamily: 'var(--font-body)', boxSizing: 'border-box', minHeight: 70 },
+  summaryTotal: {
+    display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 800,
+    paddingTop: 10, marginTop: 6, borderTop: '1px dashed var(--border)', color: 'var(--text)',
+  },
+  sectionTitle: {
+    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 18,
+    marginTop: 8, marginBottom: 12, letterSpacing: '-0.3px', color: 'var(--text)',
+  },
+  formLabel: {
+    fontSize: 12, fontWeight: 700, color: 'var(--text-muted)',
+    marginBottom: 4, marginTop: 12, display: 'block',
+  },
+  formInput: {
+    width: '100%', padding: '10px 12px', borderRadius: 10,
+    border: '1.5px solid var(--border)', fontSize: 14,
+    fontFamily: 'var(--font-body)', boxSizing: 'border-box',
+  },
+  formTextarea: {
+    width: '100%', padding: '10px 12px', borderRadius: 10,
+    border: '1.5px solid var(--border)', fontSize: 14,
+    fontFamily: 'var(--font-body)', boxSizing: 'border-box', minHeight: 70,
+  },
   formRow: { display: 'flex', gap: 8 },
   guestBlock: { marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border)' },
   paymentNote: {
@@ -50,26 +77,35 @@ const s = {
     position: 'sticky', bottom: 0, zIndex: 10,
     background: 'var(--bg-card)', borderTop: '1px solid var(--border)',
     boxShadow: '0 -4px 20px rgba(0,0,0,0.06)',
-    padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginTop: 32,
+    padding: '14px 24px', display: 'flex', alignItems: 'center',
+    justifyContent: 'space-between', gap: 16, marginTop: 32,
   },
-  ctaBtn: { flexShrink: 0, padding: '13px 28px', borderRadius: 99, background: '#ef4056', color: '#fff', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer' },
+  ctaBtn: {
+    flexShrink: 0, padding: '13px 28px', borderRadius: 99,
+    background: '#ef4056', color: '#fff', fontFamily: 'var(--font-display)',
+    fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer',
+  },
   ctaBtnDisabled: { opacity: 0.4, cursor: 'not-allowed' },
-  errorBox: { background: '#FDEBEC', color: '#ef4056', fontSize: 13, fontWeight: 600, padding: '10px 14px', borderRadius: 10, marginTop: 12 },
+  errorBox: {
+    background: '#FDEBEC', color: '#ef4056', fontSize: 13,
+    fontWeight: 600, padding: '10px 14px', borderRadius: 10, marginTop: 12,
+  },
 }
 
 export default function Checkout() {
-  const navigate = useNavigate()
-  const location = useLocation()
+  const navigate   = useNavigate()
+  const location   = useLocation()
   const { isInsider } = useAuth()
+
   const { property, selectedOffer, prebookResult, checkIn, nights, adults } = location.state || {}
 
-  const [leadGuest, setLeadGuest]       = useState(emptyLeadGuest())
-  const [roomGuests, setRoomGuests]     = useState(
+  const [leadGuest, setLeadGuest]             = useState(emptyLeadGuest())
+  const [roomGuests, setRoomGuests]           = useState(
     property && adults ? Array.from({ length: adults }, emptyGuest) : []
   )
   const [specialRequests, setSpecialRequests] = useState('')
-  const [redirecting, setRedirecting]   = useState(false)
-  const [bookingError, setBookingError] = useState(null)
+  const [redirecting, setRedirecting]         = useState(false)
+  const [bookingError, setBookingError]       = useState(null)
 
   if (!property || !selectedOffer || !prebookResult) {
     return (
@@ -77,7 +113,13 @@ export default function Checkout() {
         <p style={{ fontSize: 16, color: 'var(--text-muted)', marginBottom: 20 }}>
           This checkout session isn't available directly — please start from the hotel page.
         </p>
-        <button onClick={() => navigate('/')} style={{ background: '#ef4056', color: '#fff', borderRadius: 99, padding: '12px 28px', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
+        <button
+          onClick={() => navigate('/')}
+          style={{
+            background: '#ef4056', color: '#fff', borderRadius: 99,
+            padding: '12px 28px', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer',
+          }}
+        >
           ← Back to home
         </button>
       </div>
@@ -86,10 +128,9 @@ export default function Checkout() {
 
   const info          = property.propertyInfo
   const confirmedRoom = prebookResult.content?.rooms?.[0]
-  const net  = confirmedRoom?.prices?.net  ?? selectedOffer.plan.prices?.net
-  const sell = confirmedRoom?.prices?.sell ?? selectedOffer.plan.prices?.sell
-
-  const guestPrice = sell
+  const net           = confirmedRoom?.prices?.net  ?? selectedOffer.plan.prices?.net
+  const sell          = confirmedRoom?.prices?.sell ?? selectedOffer.plan.prices?.sell
+  const guestPrice    = sell
     ? calculateGuestPrice(net?.price ?? sell.price, sell.price, sell.currency, isInsider)
     : null
 
@@ -102,20 +143,22 @@ export default function Checkout() {
   }
 
   function leadGuestValid() {
-    return leadGuest.firstName && leadGuest.lastName && leadGuest.birthDate && leadGuest.email
-      && leadGuest.phone && leadGuest.address && leadGuest.city && leadGuest.state
-      && leadGuest.zip && leadGuest.country
+    return (
+      leadGuest.firstName && leadGuest.lastName && leadGuest.birthDate &&
+      leadGuest.email && leadGuest.phone && leadGuest.address &&
+      leadGuest.city && leadGuest.state && leadGuest.zip && leadGuest.country
+    )
   }
 
   function roomGuestsValid() {
     return roomGuests.every(g => g.firstName && g.lastName)
   }
 
-  // ── PAYMENT FLOW ─────────────────────────────────────────────────────────
+  // ── PAYMENT FLOW ──────────────────────────────────────────────────────────
   // 1. Save a pending hg_bookings record (no HyperGuest call yet)
-  // 2. Get a signed PayFast redirect URL from /api/payment/payfast
-  // 3. Redirect guest to PayFast's hosted payment page
-  // 4. PayFast ITN webhook fires on payment → webhook calls hyperguest-book
+  // 2. Get an iKhokha payment link from /api/payment/ikhokha
+  // 3. Redirect guest to iKhokha's hosted payment page
+  // 4. iKhokha webhook fires on payment → webhook calls hyperguest-book
   // ─────────────────────────────────────────────────────────────────────────
   async function handleProceedToPayment() {
     setRedirecting(true)
@@ -126,7 +169,7 @@ export default function Checkout() {
     const checkOut           = addNights(checkIn, nights)
 
     try {
-      // ── Step 1: Save pending booking ──────────────────────────────────
+      // ── Step 1: Save pending booking ────────────────────────────────────
       const { data: hgBooking, error: dbErr } = await supabase
         .from('hg_bookings')
         .insert({
@@ -170,8 +213,8 @@ export default function Checkout() {
 
       if (dbErr) throw new Error(dbErr.message)
 
-      // ── Step 2: Get signed PayFast redirect URL ────────────────────────
-      const payRes  = await fetch('/api/payment/payfast', {
+      // ── Step 2: Get iKhokha payment link ────────────────────────────────
+      const payRes  = await fetch('/api/payment/ikhokha', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ bookingId: hgBooking.id }),
@@ -182,7 +225,7 @@ export default function Checkout() {
         throw new Error(payData.error || 'Could not create payment link. Please try again.')
       }
 
-      // ── Step 3: Redirect to PayFast payment page ──────────────────────
+      // ── Step 3: Redirect to iKhokha payment page ────────────────────────
       window.location.href = payData.redirectUrl
 
     } catch (err) {
@@ -195,17 +238,30 @@ export default function Checkout() {
   return (
     <main>
       <div style={s.page}>
+
+        {/* Top bar */}
         <div style={s.topBar}>
           <button style={s.back} onClick={() => navigate(-1)}>← Back to room selection</button>
           <div style={s.hotelName}>{info.name}</div>
           <div style={s.hotelMeta}>{selectedOffer.room.roomName} — {selectedOffer.plan.ratePlanName}</div>
         </div>
+
         <div style={s.content}>
+
           {/* Booking summary */}
           <div style={s.summaryCard}>
-            <div style={s.summaryRow}><span>Dates</span><span>{checkIn} → {addNights(checkIn, nights)}</span></div>
-            <div style={s.summaryRow}><span>Guests</span><span>{adults} {adults === 1 ? 'adult' : 'adults'}</span></div>
-            <div style={s.summaryRow}><span>Board</span><span>{selectedOffer.plan.board}</span></div>
+            <div style={s.summaryRow}>
+              <span>Dates</span>
+              <span>{checkIn} → {addNights(checkIn, nights)}</span>
+            </div>
+            <div style={s.summaryRow}>
+              <span>Guests</span>
+              <span>{adults} {adults === 1 ? 'adult' : 'adults'}</span>
+            </div>
+            <div style={s.summaryRow}>
+              <span>Board</span>
+              <span>{selectedOffer.plan.board}</span>
+            </div>
             <div style={s.summaryTotal}>
               <span>Total</span>
               <span>{guestPrice?.currency} {Number(guestPrice?.totalAmount).toLocaleString()}</span>
@@ -215,77 +271,141 @@ export default function Checkout() {
             </div>
           </div>
 
-          {/* Guest details */}
+          {/* Lead guest details */}
           <div style={s.sectionTitle}>Your details</div>
+
           <div style={s.formRow}>
             <div style={{ flex: 1 }}>
               <label style={s.formLabel}>First name</label>
-              <input style={s.formInput} value={leadGuest.firstName} onChange={e => updateLeadGuest('firstName', e.target.value)} />
+              <input
+                style={s.formInput}
+                value={leadGuest.firstName}
+                onChange={e => updateLeadGuest('firstName', e.target.value)}
+              />
             </div>
             <div style={{ flex: 1 }}>
               <label style={s.formLabel}>Last name</label>
-              <input style={s.formInput} value={leadGuest.lastName} onChange={e => updateLeadGuest('lastName', e.target.value)} />
+              <input
+                style={s.formInput}
+                value={leadGuest.lastName}
+                onChange={e => updateLeadGuest('lastName', e.target.value)}
+              />
             </div>
           </div>
+
           <div style={s.formRow}>
             <div style={{ flex: 1 }}>
               <label style={s.formLabel}>Date of birth</label>
-              <input type="date" style={s.formInput} value={leadGuest.birthDate} onChange={e => updateLeadGuest('birthDate', e.target.value)} />
+              <input
+                type="date"
+                style={s.formInput}
+                value={leadGuest.birthDate}
+                onChange={e => updateLeadGuest('birthDate', e.target.value)}
+              />
             </div>
             <div style={{ flex: 1 }}>
               <label style={s.formLabel}>Title</label>
-              <select style={s.formInput} value={leadGuest.title} onChange={e => updateLeadGuest('title', e.target.value)}>
+              <select
+                style={s.formInput}
+                value={leadGuest.title}
+                onChange={e => updateLeadGuest('title', e.target.value)}
+              >
                 <option value="MR">Mr</option>
                 <option value="MRS">Mrs</option>
                 <option value="MS">Ms</option>
               </select>
             </div>
           </div>
+
           <div style={s.formRow}>
             <div style={{ flex: 1 }}>
               <label style={s.formLabel}>Email</label>
-              <input type="email" style={s.formInput} value={leadGuest.email} onChange={e => updateLeadGuest('email', e.target.value)} />
+              <input
+                type="email"
+                style={s.formInput}
+                value={leadGuest.email}
+                onChange={e => updateLeadGuest('email', e.target.value)}
+              />
             </div>
             <div style={{ flex: 1 }}>
               <label style={s.formLabel}>Phone</label>
-              <input style={s.formInput} value={leadGuest.phone} onChange={e => updateLeadGuest('phone', e.target.value)} />
+              <input
+                style={s.formInput}
+                value={leadGuest.phone}
+                onChange={e => updateLeadGuest('phone', e.target.value)}
+              />
             </div>
           </div>
+
           <label style={s.formLabel}>Address</label>
-          <input style={s.formInput} value={leadGuest.address} onChange={e => updateLeadGuest('address', e.target.value)} />
+          <input
+            style={s.formInput}
+            value={leadGuest.address}
+            onChange={e => updateLeadGuest('address', e.target.value)}
+          />
+
           <div style={s.formRow}>
             <div style={{ flex: 1 }}>
               <label style={s.formLabel}>City</label>
-              <input style={s.formInput} value={leadGuest.city} onChange={e => updateLeadGuest('city', e.target.value)} />
+              <input
+                style={s.formInput}
+                value={leadGuest.city}
+                onChange={e => updateLeadGuest('city', e.target.value)}
+              />
             </div>
             <div style={{ flex: 1 }}>
-              <label style={s.formLabel}>State/Province</label>
-              <input style={s.formInput} value={leadGuest.state} onChange={e => updateLeadGuest('state', e.target.value)} />
+              <label style={s.formLabel}>State / Province</label>
+              <input
+                style={s.formInput}
+                value={leadGuest.state}
+                onChange={e => updateLeadGuest('state', e.target.value)}
+              />
             </div>
           </div>
+
           <div style={s.formRow}>
             <div style={{ flex: 1 }}>
-              <label style={s.formLabel}>Zip/Postal code</label>
-              <input style={s.formInput} value={leadGuest.zip} onChange={e => updateLeadGuest('zip', e.target.value)} />
+              <label style={s.formLabel}>Zip / Postal code</label>
+              <input
+                style={s.formInput}
+                value={leadGuest.zip}
+                onChange={e => updateLeadGuest('zip', e.target.value)}
+              />
             </div>
             <div style={{ flex: 1 }}>
               <label style={s.formLabel}>Country code</label>
-              <input style={s.formInput} value={leadGuest.country} onChange={e => updateLeadGuest('country', e.target.value.toUpperCase())} maxLength={2} placeholder="ZA" />
+              <input
+                style={s.formInput}
+                value={leadGuest.country}
+                onChange={e => updateLeadGuest('country', e.target.value.toUpperCase())}
+                maxLength={2}
+                placeholder="ZA"
+              />
             </div>
           </div>
 
           {/* Room guests */}
           <div style={s.guestBlock}>
-            <div style={{ ...s.sectionTitle, marginTop: 0, fontSize: 16 }}>Guest names ({roomGuests.length})</div>
+            <div style={{ ...s.sectionTitle, marginTop: 0, fontSize: 16 }}>
+              Guest names ({roomGuests.length})
+            </div>
             {roomGuests.map((g, i) => (
               <div key={i} style={s.formRow}>
                 <div style={{ flex: 1 }}>
                   <label style={s.formLabel}>Guest {i + 1} first name</label>
-                  <input style={s.formInput} value={g.firstName} onChange={e => updateRoomGuest(i, 'firstName', e.target.value)} />
+                  <input
+                    style={s.formInput}
+                    value={g.firstName}
+                    onChange={e => updateRoomGuest(i, 'firstName', e.target.value)}
+                  />
                 </div>
                 <div style={{ flex: 1 }}>
                   <label style={s.formLabel}>Guest {i + 1} last name</label>
-                  <input style={s.formInput} value={g.lastName} onChange={e => updateRoomGuest(i, 'lastName', e.target.value)} />
+                  <input
+                    style={s.formInput}
+                    value={g.lastName}
+                    onChange={e => updateRoomGuest(i, 'lastName', e.target.value)}
+                  />
                 </div>
               </div>
             ))}
@@ -327,6 +447,7 @@ export default function Checkout() {
             {redirecting ? 'Setting up payment…' : 'Proceed to payment →'}
           </button>
         </div>
+
       </div>
     </main>
   )
