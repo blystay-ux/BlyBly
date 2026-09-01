@@ -26,6 +26,11 @@ const BASE_URL      = process.env.VITE_BASE_URL  ?? ''
 const IK_ENDPOINT = 'https://api.ikhokha.com/public-api/v1/api/payment'
 const IK_PATH     = '/public-api/v1/api/payment'
 
-// Exactly matches jsStringEscape from the official iKhokha JS sample
+// Mirrors jsStringEscape from the official iKhokha JS sample.
+// Backslashes must be escaped first to avoid double-escaping.
 function jsStringEscape(str: string): string {
-  return str.replace(/[\\"']/g, '\\$&').replace(/
+  return str
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g,  '\\"')
+    .replace(/'/g,  "\\'")
+    .replace(/
