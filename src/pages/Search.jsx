@@ -91,6 +91,17 @@ function ResultCard({ property, checkIn, nights, adults, zarRates = {} }) {
                 </span>
                 <span style={{ fontSize: 13, color: 'var(--text-muted)' }}> / night</span>
                 <span style={{ fontSize: 10, color: 'var(--text-muted)', display: 'block', marginTop: 2 }}>Taxes and fees included</span>
+                {offer.totalAmountZAR != null && (() => {
+                  const estimates = ['USD', 'EUR', 'GBP'].map(cur => {
+                    const rate = zarRates[cur]
+                    if (!rate) return null
+                    const est = Math.round(offer.totalAmountZAR / rate)
+                    return `≈ ${cur} ${est.toLocaleString()}`
+                  }).filter(Boolean)
+                  return estimates.length > 0
+                    ? <span style={{ fontSize: 10, color: 'var(--text-muted)', display: 'block', marginTop: 1 }}>{estimates.join(' · ')}</span>
+                    : null
+                })()}
               </>
             ) : (
               <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>No availability for these dates</span>
@@ -168,7 +179,7 @@ export default function Search() {
             (r.ratePlans ?? []).map(rp => rp.prices?.sell?.currency).filter(Boolean)
           )
         )
-        const rates = await prefetchZARRates(currencies)
+        const rates = await prefetchZARRates([...currencies, 'USD', 'EUR', 'GBP'])
         setZarRates(rates)
       } catch (err) {
         console.error('City search failed:', err)

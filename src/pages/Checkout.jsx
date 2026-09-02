@@ -194,7 +194,7 @@ export default function Checkout() {
           lead_guest:             leadGuest,
           guest_email:            leadGuest.email,
           guest_phone:            leadGuest.phone,
-          total_price_zar:        guestPrice?.totalAmountZAR ?? guestPrice?.totalAmount ?? sell?.price,
+          total_price_zar:        guestPrice.totalAmountZAR, // always ZAR — button is disabled until this is non-null
           meta: {
             hotelName:    info.name,
             roomName:     selectedOffer.room.roomName,
@@ -462,12 +462,12 @@ export default function Checkout() {
           <button
             style={{
               ...s.ctaBtn,
-              ...(!leadGuestValid() || !roomGuestsValid() || redirecting ? s.ctaBtnDisabled : {}),
+              ...(!leadGuestValid() || !roomGuestsValid() || redirecting || !guestPrice?.totalAmountZAR ? s.ctaBtnDisabled : {}),
             }}
-            disabled={!leadGuestValid() || !roomGuestsValid() || redirecting}
+            disabled={!leadGuestValid() || !roomGuestsValid() || redirecting || !guestPrice?.totalAmountZAR}
             onClick={handleProceedToPayment}
           >
-            {redirecting ? 'Setting up payment…' : 'Proceed to payment →'}
+            {redirecting ? 'Setting up payment…' : !guestPrice?.totalAmountZAR ? 'Loading price…' : 'Proceed to payment →'}
           </button>
         </div>
 

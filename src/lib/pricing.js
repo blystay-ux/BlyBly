@@ -124,6 +124,8 @@ export async function prefetchZARRates(currencies) {
  * Convert an amount in any currency to ZAR, adding the 3% FX buffer.
  */
 export function convertToZAR(amount, zarRate) {
+  // No FX buffer when already ZAR (rate === 1)
+  if (zarRate === 1) return Math.round((amount + Number.EPSILON) * 100) / 100
   return Math.round((amount * zarRate * (1 + FX_BUFFER) + Number.EPSILON) * 100) / 100
 }
 
