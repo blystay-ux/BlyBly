@@ -52,10 +52,10 @@ export default async function handler(req, res) {
     return res.status(200).json({ received: true })
   }
 
-  // externalTransactionID = merchantTransactionId we sent = agency_reference (e.g. "BLY-1693000000000")
-  // Look up by agency_reference, not by id — the raw value is the reference, not the UUID.
-  const agencyRef = String(externalTransactionID || '').trim()
-  if (!agencyRef) {
+  // externalTransactionID = 'BLY-<uuid>' — strip prefix to get the booking id
+  const rawRef = String(externalTransactionID || '').trim()
+  const bookingId = rawRef.startsWith('BLY-') ? rawRef.slice(4) : rawRef
+  if (!bookingId) {
     console.error('[iKhokha webhook] No externalTransactionID in payload')
     return res.status(200).json({ received: true })
   }
@@ -65,15 +65,15 @@ export default async function handler(req, res) {
     process.env.SUPABASE_SERVICE_ROLE_KEY   // ← no VITE_ prefix — server-side only
   )
 
-  // ── Look up the booking by agency_reference ───────────────────────────────
+  // ── Look up the booking by id ─────────────────────────────────────────────
   const { data: booking, error: lookupErr } = await supabase
     .from('hg_bookings')
     .select('id, checkout_payload')
-    .eq('agency_reference', agencyRef)
+    .eq('id', bookingId)
     .maybeSingle()
 
   if (lookupErr || !booking) {
-    console.error('[iKhokha webhook] Booking not found for agency_reference:', agencyRef, lookupErr)
+    console.error('[iKhokha webhook] Booking not found for id:', bookingId, lookupErr)
     return res.status(200).json({ received: true })
   }
 
