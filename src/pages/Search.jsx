@@ -63,6 +63,7 @@ function ResultCard({ property, checkIn, nights, adults, zarRates = {} }) {
           src={property.thumbnailImage || PLACEHOLDER_IMG}
           alt={info.name}
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          onError={e => { e.currentTarget.src = PLACEHOLDER_IMG }}
         />
       </div>
       <div style={{ padding: '18px 20px 20px' }}>
