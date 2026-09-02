@@ -72,6 +72,7 @@ export default function Navbar() {
           <Link to="/destinations" style={styles.link}>Destinations</Link>
           <a href="/blog" style={styles.link}>Blog</a>
           <Link to="/insiders" style={styles.link}>Bly Insiders</Link>
+          <Link to="/contact" style={styles.link}>Contact</Link>
           <Link to="/manage-booking" style={styles.link}>Manage booking</Link>
           {isAdmin && <Link to="/admin" style={styles.linkAccent}>Admin</Link>}
           {user ? (
