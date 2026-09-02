@@ -174,31 +174,49 @@ function AuthStep({ onDone }) {
 }
 
 // ── Step 2: Payment ────────────────────────────────────────────────────────
-function PaymentStep({ userId, onMembershipCreated }) {
+function PaymentStep({ userId, onMembershipCreated, onPaid }) {
   const [creating, setCreating] = useState(false)
+  const [membershipId, setMembershipId] = useState(null)
 
   useEffect(() => {
     async function ensureMembership() {
       setCreating(true)
-      // Check if record already exists
+      // Check if a pending record already exists
       const { data: existing } = await supabase
         .from('industry_memberships')
         .select('id')
         .eq('user_id', userId)
+        .eq('payment_status', 'unpaid')
         .maybeSingle()
 
-      if (!existing) {
+      if (existing) {
+        setMembershipId(existing.id)
+      } else {
         const { data } = await supabase
           .from('industry_memberships')
           .insert({ user_id: userId, status: 'pending', payment_status: 'unpaid' })
           .select()
           .single()
-        if (data) onMembershipCreated(data)
+        if (data) {
+          setMembershipId(data.id)
+          onMembershipCreated(data)
+        }
       }
       setCreating(false)
     }
     if (userId) ensureMembership()
   }, [userId])
+
+  // Called when user clicks the iKhokha pay link — marks payment as submitted
+  async function handlePayClick() {
+    if (!membershipId) return
+    await supabase
+      .from('industry_memberships')
+      .update({ payment_status: 'submitted' })
+      .eq('id', membershipId)
+    // Let parent know so it re-fetches and shows the pending view
+    if (onPaid) onPaid()
+  }
 
   return (
     <div style={card}>
@@ -219,7 +237,10 @@ function PaymentStep({ userId, onMembershipCreated }) {
         {creating ? (
           <div style={{ color: '#bbb', fontSize: 14 }}>Setting up your application…</div>
         ) : (
-          <IKPayButton />
+          // Wrap IKPayButton in a div that fires handlePayClick before iKhokha opens
+          <div onClick={handlePayClick}>
+            <IKPayButton />
+          </div>
         )}
       </div>
 
@@ -307,12 +328,15 @@ export default function BlyInsiders() {
   }
 
   // ── Determine which panel to show ──
-  const status = membership?.status
-  const showAuth     = !user
-  const showLoading  = user && loading
-  const showPayment  = user && !loading && (!membership || status === 'rejected' || status === 'cancelled')
-  const showPending  = user && !loading && status === 'pending'
-  const showActive   = user && !loading && status === 'active'
+  const status      = membership?.status
+  const payStatus   = membership?.payment_status
+  const showAuth    = !user
+  const showLoading = user && loading
+  // Show payment step when: no membership yet, or rejected/cancelled, or pending but not yet submitted/paid
+  const showPayment = user && !loading && (!membership || status === 'rejected' || status === 'cancelled' || (status === 'pending' && payStatus === 'unpaid'))
+  // Show pending once they've clicked Pay (payment_status = 'submitted') but admin hasn't activated yet
+  const showPending = user && !loading && status === 'pending' && payStatus !== 'unpaid'
+  const showActive  = user && !loading && status === 'active'
 
   return (
     <main style={wrap}>
@@ -348,7 +372,7 @@ export default function BlyInsiders() {
         {/* Action panel */}
         {showAuth    && <AuthStep onDone={fetchMembership} />}
         {showLoading && <div style={{ ...card, textAlign: 'center', color: '#bbb', padding: '48px' }}>Loading…</div>}
-        {showPayment && <PaymentStep userId={user?.id} onMembershipCreated={setMembership} />}
+        {showPayment && <PaymentStep userId={user?.id} onMembershipCreated={setMembership} onPaid={fetchMembership} />}
         {showPending && <PendingView onGoHome={handleGoHome} />}
         {showActive  && <ActiveView onSignOut={handleGoHome} />}
 
