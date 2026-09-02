@@ -73,7 +73,7 @@ export default async function handler(req, res) {
   console.log('[iKhokha DEBUG] jsonBody first 60 chars: >>>' + jsonBody.substring(0, 60) + '<<<')
   console.log('[iKhokha DEBUG] rawString first 80 chars: >>>' + rawString.substring(0, 80) + '<<<')
   console.log('[iKhokha DEBUG] IK-APPID:', IK_APP_ID.slice(0,4) + '...' + IK_APP_ID.slice(-4))
-  console.log('[iKhokha DEBUG] IK-SIGN:', signature.slice(0,4) + '...' + signature.slice(-4))
+  console.log('[iKhokha DEBUG] SECRET prefix:', IK_APP_SECRET.substring(0,4))
 
   let ikData
   try {
