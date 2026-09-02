@@ -13,14 +13,14 @@ const s = {
     width: '100%', maxWidth: 420,
     boxShadow: '0 4px 40px rgba(0,0,0,0.08)',
   },
-  extranetBadge: {
+  badge: (bg, c) => ({
     display: 'inline-flex', alignItems: 'center', gap: 6,
-    background: '#fff7ed', color: '#c2410c',
+    background: bg, color: c,
     borderRadius: 99, padding: '6px 14px',
     fontSize: 12, fontWeight: 700,
     letterSpacing: '0.06em', textTransform: 'uppercase',
     marginBottom: 24,
-  },
+  }),
   toggle: {
     display: 'flex', background: 'var(--bg)', borderRadius: 99,
     padding: 4, marginBottom: 32,
@@ -79,7 +79,8 @@ const s = {
 export default function Auth() {
   const [searchParams] = useSearchParams()
   const isExtranet = searchParams.get('mode') === 'extranet'
-  const redirect = searchParams.get('redirect') || '/'
+  const isAdmin    = searchParams.get('mode') === 'admin'
+  const redirect   = searchParams.get('redirect') || '/'
 
   const [mode, setMode] = useState('login')
   const [email, setEmail] = useState('')
@@ -94,24 +95,23 @@ export default function Auth() {
   async function handleSubmit() {
     setError(''); setMessage(''); setLoading(true)
 
-    if (mode === 'login') {
+    if (mode === 'login' || isAdmin || isExtranet) {
       const { error } = await signIn(email, password)
       if (error) {
         setError(error.message)
       } else {
-        // Extranet users go to their hotel dashboard; everyone else honours ?redirect=
-        navigate(isExtranet ? '/extranet' : redirect)
+        if (isExtranet) navigate('/extranet')
+        else if (isAdmin) navigate('/')
+        else navigate(redirect)
       }
     } else {
       const { data, error } = await signUp(email, password)
       if (error) {
         setError(error.message)
       } else if (data?.session) {
-        // Email confirmation is OFF — Supabase signed them in immediately.
-        // Send them to wherever they came from (e.g. /insiders).
+        // Email confirmation OFF — logged in immediately, send to redirect
         navigate(redirect)
       } else {
-        // Email confirmation is ON — they need to verify first.
         setMessage('Check your email for a confirmation link!')
       }
     }
@@ -123,12 +123,51 @@ export default function Auth() {
     if (e.key === 'Enter') handleSubmit()
   }
 
-  // ── Extranet layout ────────────────────────────────────────────────────────
+  // ── Admin layout ────────────────────────────────────────────────────────
+  if (isAdmin) {
+    return (
+      <div style={s.page}>
+        <div style={s.card}>
+          <div style={s.badge('#0a0a0a', '#fff')}>⚙️ Admin</div>
+          <div style={s.title}>Admin sign in.</div>
+          <div style={s.sub}>BLY. team access only.</div>
+          {error && <div style={s.error}>{error}</div>}
+          <label style={s.label}>Email</label>
+          <input
+            style={s.input}
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            onKeyDown={handleKey}
+            placeholder="info@blytravel.co.za"
+            autoComplete="email"
+          />
+          <label style={s.label}>Password</label>
+          <input
+            style={s.input}
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            onKeyDown={handleKey}
+            placeholder="••••••••"
+          />
+          <button style={s.btn} onClick={handleSubmit} disabled={loading}>
+            {loading ? 'Signing in…' : 'Sign in →'}
+          </button>
+          <span style={s.backLink} onClick={() => navigate('/')}>
+            ← Back to Bly.
+          </span>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Extranet layout ─────────────────────────────────────────────────────
   if (isExtranet) {
     return (
       <div style={s.page}>
         <div style={s.card}>
-          <div style={s.extranetBadge}>🔑 Hotel Extranet</div>
+          <div style={s.badge('#fff7ed', '#c2410c')}>🔑 Hotel Extranet</div>
           <div style={s.title}>Partner sign in.</div>
           <div style={s.sub}>
             Access your hotel dashboard to manage listings, rates, and bookings.
@@ -174,7 +213,7 @@ export default function Auth() {
     )
   }
 
-  // ── Guest / standard layout ────────────────────────────────────────────────
+  // ── Standard guest layout ───────────────────────────────────────────────
   return (
     <div style={s.page}>
       <div style={s.card}>
