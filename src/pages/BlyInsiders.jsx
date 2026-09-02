@@ -18,7 +18,7 @@ const SEGMENTS = [
 const BENEFITS = [
   ['🏷️', 'Insider-only rates', 'Unlock special pricing the public never sees, across participating BLY. properties.'],
   ['🇿🇦', 'For the trade', 'For travel agents, property staff and tourism professionals working in South Africa.'],
-  ['🔓', 'Instant access', 'Once approved, Insider rates appear automatically when you browse and book.'],
+  ['🔓', 'Instant access', 'Once verified, Insider rates appear automatically when you browse and book.'],
 ]
 
 const wrap = { minHeight: '100vh', background: '#F8F7F5', fontFamily: "'Inter', sans-serif", color: '#111', padding: '0 0 80px' }
@@ -63,32 +63,36 @@ function IKPayButton() {
   )
 }
 
-function StatusView({ membership, onReapply, applying, onSignOut }) {
+function StatusView({ membership, justPaid, onReapply, applying, onSignOut }) {
   const navigate = useNavigate()
   const st = membership.status
 
-  if (st === 'pending') {
+  // User just came back from iKhokha payment — show confirmation
+  if (st === 'pending' && justPaid) {
     return (
       <div style={{ ...card, textAlign: 'center' }}>
-        <div style={pill('#FBF1DC', '#C98A00')}>Application under review</div>
-        <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: 24, margin: '20px 0 8px' }}>You're in the queue</h2>
+        <div style={pill('#E7F5ED', '#2E9E5B')}>✓ Payment received</div>
+        <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: 24, margin: '20px 0 8px' }}>
+          You're almost in
+        </h2>
         <p style={{ color: '#6B6B6B', fontSize: 15, lineHeight: 1.6, marginBottom: 20 }}>
-          Your Bly Insiders request is being reviewed by the BLY. team. You'll be notified once it's approved.
+          The BLY. team will verify your details and activate your Insider access shortly.
         </p>
         <span onClick={onSignOut} style={{ fontSize: 13, color: '#6B6B6B', textDecoration: 'underline', cursor: 'pointer' }}>Sign out</span>
       </div>
     )
   }
 
-  if (st === 'approved') {
+  // Pending — application submitted, awaiting payment
+  if (st === 'pending') {
     return (
       <div style={{ ...card, textAlign: 'center' }}>
-        <div style={pill('#E7F5ED', '#2E9E5B')}>✓ Application approved</div>
+        <div style={pill('#FBF1DC', '#C98A00')}>Application submitted</div>
         <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: 24, margin: '20px 0 8px' }}>
-          One step to go
+          Complete your membership
         </h2>
         <p style={{ color: '#6B6B6B', fontSize: 15, lineHeight: 1.6, marginBottom: 6 }}>
-          Your application has been approved. Pay the annual membership fee to activate your Insider access.
+          Pay the annual fee to complete your application. The BLY. team will verify your details and activate your access.
         </p>
         <div style={{
           fontFamily: 'Poppins, sans-serif', fontWeight: 900, fontSize: 40,
@@ -96,9 +100,7 @@ function StatusView({ membership, onReapply, applying, onSignOut }) {
         }}>
           R{FEE}<span style={{ fontSize: 16, fontWeight: 500, color: '#999' }}> / year</span>
         </div>
-        <p style={{ color: '#999', fontSize: 13, marginBottom: 24 }}>
-          Insider rates activate immediately after payment confirmation.
-        </p>
+        <div style={{ marginBottom: 24 }} />
         <IKPayButton />
         <div style={{ marginTop: 18 }}>
           <span onClick={onSignOut} style={{ fontSize: 13, color: '#6B6B6B', textDecoration: 'underline', cursor: 'pointer' }}>Sign out</span>
@@ -153,6 +155,7 @@ export default function BlyInsiders() {
   const [applying, setApplying] = useState(false)
   const [error, setError] = useState('')
   const [showForm, setShowForm] = useState(false)
+  const [justPaid, setJustPaid] = useState(false)
   const [form, setForm] = useState({
     title: 'Mr', first_name: '', surname: '', country: '',
     employer_segment: '', employer_name: '', proof_ack: false,
@@ -174,11 +177,11 @@ export default function BlyInsiders() {
 
   useEffect(() => { loadMembership() }, [user])
 
-  // Check for returning from iKhokha payment
+  // Detect return from iKhokha payment
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get('payment') === 'success') {
-      // Reload membership — BLY team activates after payment confirmation
+      setJustPaid(true)
       loadMembership()
       window.history.replaceState({}, '', window.location.pathname)
     }
@@ -247,7 +250,7 @@ export default function BlyInsiders() {
               R{FEE}<span style={{ fontSize: 16, fontWeight: 500, color: '#999' }}> / year</span>
             </div>
             <p style={{ color: '#6B6B6B', fontSize: 14, margin: '8px 0 22px' }}>
-              Sign in (or create a free BLY. account) to submit your application.
+              Sign in (or create a free BLY. account) to apply.
             </p>
             <button style={btn} onClick={() => navigate('/auth')}>Sign in →</button>
           </div>
@@ -259,7 +262,7 @@ export default function BlyInsiders() {
               R{FEE}<span style={{ fontSize: 16, fontWeight: 500, color: '#999' }}> / year</span>
             </div>
             <p style={{ color: '#6B6B6B', fontSize: 14, margin: '8px 0 22px' }}>
-              Submit your application — the BLY. team verifies and approves access. Payment is collected on approval.
+              Submit your application and pay R{FEE} — the BLY. team verifies your details and activates your access.
             </p>
             <button style={btn} onClick={() => setShowForm(true)}>Start application</button>
           </div>
@@ -329,6 +332,7 @@ export default function BlyInsiders() {
         ) : (
           <StatusView
             membership={membership}
+            justPaid={justPaid}
             onReapply={() => setShowForm(true)}
             applying={applying}
             onSignOut={signOut}
