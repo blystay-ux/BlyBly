@@ -89,7 +89,7 @@ function ResultCard({ property, checkIn, nights, adults, zarRates = {} }) {
                 <span style={{ fontWeight: 800, fontSize: 18, color: 'var(--text)' }}>
                   {formatDisplayPrice(offer)}
                 </span>
-                <span style={{ fontSize: 13, color: 'var(--text-muted)' }}> / night</span>
+                <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{nights === 1 ? ' / night' : ' Total Stay'}</span>
                 <span style={{ fontSize: 10, color: 'var(--text-muted)', display: 'block', marginTop: 2 }}>Taxes and fees included</span>
                 {offer.totalAmountZAR != null && (() => {
                   const estimates = ['USD', 'EUR', 'GBP'].map(cur => {
