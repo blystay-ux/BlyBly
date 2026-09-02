@@ -6,32 +6,75 @@ import { useAuth } from '../contexts/AuthContext'
 const FEE = 150
 const IK_PAY_URL = 'https://pay.ikhokha.com/bly-travel/buy/blytravel'
 
-const TITLES = ['Mr', 'Mrs', 'Ms', 'Miss', 'Dr', 'Prof']
-const COUNTRIES = [
-  'South Africa', 'Namibia', 'Botswana', 'Zimbabwe', 'Mozambique', 'Eswatini', 'Lesotho',
-  'United Kingdom', 'United States', 'Germany', 'Netherlands', 'France', 'Australia', 'Other',
-]
-const SEGMENTS = [
-  'Travel Agency', 'Tour Operator', 'Hotel / Lodge / Accommodation', 'Airline',
-  'DMC / Inbound Operator', 'Tourism Board / Association', 'Car Rental', 'Cruise', 'Other',
-]
 const BENEFITS = [
   ['🏷️', 'Insider-only rates', 'Unlock special pricing the public never sees, across participating BLY. properties.'],
-  ['🇿🇦', 'For the trade', 'For travel agents, property staff and tourism professionals working in South Africa.'],
-  ['🔓', 'Instant access', 'Once verified, Insider rates appear automatically when you browse and book.'],
+  ['🇿🇦', 'For the trade', 'Available to travel agents, property staff and tourism professionals in South Africa.'],
+  ['🔓', 'Instant access', 'Once verified, Insider rates appear automatically every time you browse and book.'],
 ]
 
-const wrap = { minHeight: '100vh', background: '#F8F7F5', fontFamily: "'Inter', sans-serif", color: '#111', padding: '0 0 80px' }
-const inner = { maxWidth: 720, margin: '0 auto', padding: '56px 24px' }
-const card = { background: '#fff', borderRadius: 24, padding: '32px 32px', boxShadow: '0 4px 40px rgba(0,0,0,0.06)' }
-const h1 = { fontFamily: 'Poppins, sans-serif', fontWeight: 900, fontSize: 'clamp(34px, 6vw, 52px)', letterSpacing: '-0.05em', lineHeight: 0.95, marginBottom: 12 }
-const btn = { background: '#ef4056', color: '#fff', fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: 15, border: 'none', borderRadius: 99, padding: '15px 30px', cursor: 'pointer' }
-const btnDark = { ...btn, background: '#0a0a0a' }
-const pill = (bg, c) => ({ display: 'inline-block', background: bg, color: c, borderRadius: 99, padding: '6px 16px', fontSize: 13, fontWeight: 700, letterSpacing: '0.04em' })
-const label = { display: 'block', fontSize: 12, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#6B6B6B', marginBottom: 6 }
-const field = { width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #E7E4E0', fontSize: 15, fontFamily: "'Inter', sans-serif", color: '#111', background: '#F8F7F5', boxSizing: 'border-box', outline: 'none' }
-const row2 = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }
+// ── Styles ─────────────────────────────────────────────────────────────────
+const wrap = {
+  minHeight: '100vh', background: '#F8F7F5',
+  fontFamily: "'Inter', sans-serif", color: '#111', padding: '0 0 100px',
+}
+const inner = { maxWidth: 680, margin: '0 auto', padding: '56px 24px' }
+const card = {
+  background: '#fff', borderRadius: 24, padding: '36px 32px',
+  boxShadow: '0 4px 40px rgba(0,0,0,0.07)',
+}
+const h1style = {
+  fontFamily: 'Poppins, sans-serif', fontWeight: 900,
+  fontSize: 'clamp(38px, 7vw, 58px)', letterSpacing: '-0.05em',
+  lineHeight: 0.93, marginBottom: 16,
+}
+const btn = {
+  background: '#ef4056', color: '#fff', fontFamily: 'Poppins, sans-serif',
+  fontWeight: 800, fontSize: 15, border: 'none', borderRadius: 99,
+  padding: '15px 30px', cursor: 'pointer',
+}
+const btnOutline = {
+  ...btn, background: 'none', color: '#111',
+  border: '1.5px solid #E0DDD9', fontSize: 14, padding: '13px 26px',
+}
+const inputStyle = {
+  width: '100%', padding: '13px 15px', borderRadius: 12,
+  border: '1.5px solid #E7E4E0', fontSize: 15,
+  fontFamily: "'Inter', sans-serif", color: '#111', background: '#F8F7F5',
+  boxSizing: 'border-box', outline: 'none', marginBottom: 14,
+}
+const labelStyle = {
+  display: 'block', fontSize: 11, fontWeight: 700,
+  letterSpacing: '0.07em', textTransform: 'uppercase',
+  color: '#888', marginBottom: 6,
+}
+const pill = (bg, c) => ({
+  display: 'inline-block', background: bg, color: c,
+  borderRadius: 99, padding: '5px 14px', fontSize: 12, fontWeight: 700,
+  letterSpacing: '0.04em', marginBottom: 20,
+})
+const stepTag = {
+  display: 'inline-block', fontFamily: 'Poppins, sans-serif',
+  fontWeight: 700, fontSize: 11, letterSpacing: '0.1em',
+  textTransform: 'uppercase', color: '#999', marginBottom: 10,
+}
+const infoBox = {
+  background: '#F8F7F5', borderRadius: 14, padding: '16px 20px',
+  fontSize: 14, color: '#555', lineHeight: 1.6, marginTop: 20,
+}
+const toggle = {
+  display: 'flex', background: '#F8F7F5', borderRadius: 99,
+  padding: 4, marginBottom: 28,
+}
+const tabStyle = (active) => ({
+  flex: 1, padding: '10px 0', borderRadius: 99, border: 'none',
+  background: active ? '#fff' : 'none',
+  fontFamily: "'Inter', sans-serif", fontWeight: 600, fontSize: 14,
+  color: active ? '#111' : '#888', cursor: 'pointer',
+  boxShadow: active ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
+  transition: 'all 0.18s',
+})
 
+// ── iKhokha Pay Button ──────────────────────────────────────────────────────
 function IKPayButton() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
@@ -39,131 +82,214 @@ function IKPayButton() {
         href={IK_PAY_URL}
         target="_blank"
         rel="noopener noreferrer"
-        style={{ textDecoration: 'none', width: '100%', maxWidth: 280 }}
+        style={{ textDecoration: 'none', width: '100%', maxWidth: 300 }}
       >
         <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          width: '100%',
-          height: 52,
-          background: '#1D1D1B',
-          color: '#FFFFFF',
-          borderRadius: 16,
-          fontFamily: "'Poppins', sans-serif",
-          fontWeight: 700,
-          fontSize: 16,
-          letterSpacing: '0.01em',
+          display: 'flex', justifyContent: 'center', alignItems: 'center',
+          width: '100%', height: 54, background: '#1D1D1B', color: '#fff',
+          borderRadius: 16, fontFamily: "'Poppins', sans-serif",
+          fontWeight: 700, fontSize: 17, letterSpacing: '0.01em',
         }}>
           Pay R{FEE} →
         </div>
       </a>
-      <span style={{ fontSize: 11, color: '#999', fontFamily: "'Inter', sans-serif" }}>Powered by iKhokha</span>
+      <span style={{ fontSize: 11, color: '#aaa' }}>Secured by iKhokha</span>
     </div>
   )
 }
 
-function StatusView({ membership, justPaid, onReapply, applying, onSignOut }) {
-  const navigate = useNavigate()
-  const st = membership.status
+// ── Step 1: Embedded auth form ─────────────────────────────────────────────
+function AuthStep({ onDone }) {
+  const { signIn, signUp } = useAuth()
+  const [mode, setMode] = useState('signup')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  // User just came back from iKhokha payment — show confirmation
-  if (st === 'pending' && justPaid) {
-    return (
-      <div style={{ ...card, textAlign: 'center' }}>
-        <div style={pill('#E7F5ED', '#2E9E5B')}>✓ Payment received</div>
-        <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: 24, margin: '20px 0 8px' }}>
-          You're almost in
-        </h2>
-        <p style={{ color: '#6B6B6B', fontSize: 15, lineHeight: 1.6, marginBottom: 20 }}>
-          The BLY. team will verify your details and activate your Insider access shortly.
-        </p>
-        <span onClick={onSignOut} style={{ fontSize: 13, color: '#6B6B6B', textDecoration: 'underline', cursor: 'pointer' }}>Sign out</span>
-      </div>
-    )
+  async function handleSubmit() {
+    if (!email || !password) { setError('Please enter your email and password.'); return }
+    setError(''); setLoading(true)
+    if (mode === 'login') {
+      const { error } = await signIn(email, password)
+      if (error) setError(error.message)
+      else onDone()
+    } else {
+      const { data, error } = await signUp(email, password)
+      if (error) setError(error.message)
+      else if (data?.session) onDone()
+      else setError('Please check your email to confirm your account, then return here.')
+    }
+    setLoading(false)
   }
 
-  // Pending — application submitted, awaiting payment
-  if (st === 'pending') {
-    return (
-      <div style={{ ...card, textAlign: 'center' }}>
-        <div style={pill('#FBF1DC', '#C98A00')}>Application submitted</div>
-        <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: 24, margin: '20px 0 8px' }}>
-          Complete your membership
-        </h2>
-        <p style={{ color: '#6B6B6B', fontSize: 15, lineHeight: 1.6, marginBottom: 6 }}>
-          Pay the annual fee to complete your application. The BLY. team will verify your details and activate your access.
-        </p>
-        <div style={{
-          fontFamily: 'Poppins, sans-serif', fontWeight: 900, fontSize: 40,
-          letterSpacing: '-0.04em', margin: '18px 0 4px',
-        }}>
-          R{FEE}<span style={{ fontSize: 16, fontWeight: 500, color: '#999' }}> / year</span>
-        </div>
-        <div style={{ marginBottom: 24 }} />
-        <IKPayButton />
-        <div style={{ marginTop: 18 }}>
-          <span onClick={onSignOut} style={{ fontSize: 13, color: '#6B6B6B', textDecoration: 'underline', cursor: 'pointer' }}>Sign out</span>
-        </div>
-      </div>
-    )
-  }
+  return (
+    <div style={card}>
+      <div style={stepTag}>Step 1 of 2</div>
+      <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: 22, marginBottom: 4 }}>
+        Create your account
+      </h2>
+      <p style={{ color: '#777', fontSize: 14, marginBottom: 24, lineHeight: 1.5 }}>
+        Already have a BLY. account? Switch to sign in below.
+      </p>
 
-  if (st === 'active') {
-    const expires = membership.expires_at
-      ? new Date(membership.expires_at).toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' })
-      : null
-    return (
-      <div style={{ ...card, textAlign: 'center' }}>
-        <div style={pill('#E7F5ED', '#2E9E5B')}>● Bly Insiders active</div>
-        <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: 24, margin: '20px 0 8px' }}>You're all set</h2>
-        <p style={{ color: '#6B6B6B', fontSize: 15, lineHeight: 1.6, marginBottom: 8 }}>
-          Insider rates now appear automatically when you browse and book.
-        </p>
-        {expires && <p style={{ color: '#999', fontSize: 13, marginBottom: 24 }}>Valid until {expires}</p>}
-        <button style={btnDark} onClick={() => navigate('/search')}>Browse stays →</button>
-        <div style={{ marginTop: 14 }}>
-          <span onClick={onSignOut} style={{ fontSize: 13, color: '#6B6B6B', textDecoration: 'underline', cursor: 'pointer' }}>Sign out</span>
-        </div>
+      <div style={toggle}>
+        <button style={tabStyle(mode === 'signup')} onClick={() => { setMode('signup'); setError('') }}>
+          Create account
+        </button>
+        <button style={tabStyle(mode === 'login')} onClick={() => { setMode('login'); setError('') }}>
+          Sign in
+        </button>
       </div>
-    )
-  }
 
-  const lbl = st === 'rejected'
-    ? 'Application not approved'
-    : st === 'expired'
-    ? 'Membership expired'
-    : 'Membership cancelled'
+      {error && (
+        <div style={{ background: '#fff0f0', color: '#cc0000', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 16 }}>
+          {error}
+        </div>
+      )}
+
+      <label style={labelStyle}>Email</label>
+      <input
+        style={inputStyle}
+        type="email"
+        value={email}
+        placeholder="you@example.com"
+        onChange={e => setEmail(e.target.value)}
+        onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+      />
+      <label style={labelStyle}>Password</label>
+      <input
+        style={{ ...inputStyle, marginBottom: 22 }}
+        type="password"
+        value={password}
+        placeholder="••••••••"
+        onChange={e => setPassword(e.target.value)}
+        onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+      />
+      <button style={{ ...btn, width: '100%', padding: '15px 0', fontSize: 16 }} onClick={handleSubmit} disabled={loading}>
+        {loading ? 'Please wait…' : mode === 'signup' ? 'Continue to payment →' : 'Sign in →'}
+      </button>
+    </div>
+  )
+}
+
+// ── Step 2: Payment ────────────────────────────────────────────────────────
+function PaymentStep({ userId, onMembershipCreated }) {
+  const [creating, setCreating] = useState(false)
+
+  useEffect(() => {
+    async function ensureMembership() {
+      setCreating(true)
+      // Check if record already exists
+      const { data: existing } = await supabase
+        .from('industry_memberships')
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle()
+
+      if (!existing) {
+        const { data } = await supabase
+          .from('industry_memberships')
+          .insert({ user_id: userId, status: 'pending', payment_status: 'unpaid' })
+          .select()
+          .single()
+        if (data) onMembershipCreated(data)
+      }
+      setCreating(false)
+    }
+    if (userId) ensureMembership()
+  }, [userId])
+
+  return (
+    <div style={card}>
+      <div style={stepTag}>Step 2 of 2</div>
+      <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: 22, marginBottom: 4 }}>
+        Complete your payment
+      </h2>
+      <p style={{ color: '#777', fontSize: 14, marginBottom: 28, lineHeight: 1.5 }}>
+        A once-off annual fee of R{FEE} secures your Insider membership.
+      </p>
+
+      <div style={{ textAlign: 'center', marginBottom: 8 }}>
+        <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 900, fontSize: 44, letterSpacing: '-0.04em', marginBottom: 4 }}>
+          R{FEE}
+          <span style={{ fontSize: 16, fontWeight: 500, color: '#999' }}> / year</span>
+        </div>
+        <p style={{ color: '#888', fontSize: 13, marginBottom: 24 }}>Bly Insiders annual membership</p>
+        {creating ? (
+          <div style={{ color: '#bbb', fontSize: 14 }}>Setting up your application…</div>
+        ) : (
+          <IKPayButton />
+        )}
+      </div>
+
+      <div style={infoBox}>
+        <strong style={{ display: 'block', marginBottom: 4, color: '#333' }}>What happens next?</strong>
+        After payment, the BLY. team will verify your details and activate your Insider access.
+        You will not be able to access Insider rates until your application is approved.
+        We'll be in touch once you're confirmed.
+      </div>
+    </div>
+  )
+}
+
+// ── Pending view ────────────────────────────────────────────────────────────
+function PendingView({ onGoHome }) {
   return (
     <div style={{ ...card, textAlign: 'center' }}>
-      <div style={pill('#FDE7EB', '#EF4056')}>{lbl}</div>
-      <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: 24, margin: '20px 0 8px' }}>Reapply for access</h2>
-      <p style={{ color: '#6B6B6B', fontSize: 15, lineHeight: 1.6, marginBottom: 20 }}>You can submit a new Bly Insiders request below.</p>
-      <button style={btn} onClick={onReapply} disabled={applying}>{applying ? 'Loading…' : 'Start a new application'}</button>
-      <div style={{ marginTop: 14 }}>
-        <span onClick={onSignOut} style={{ fontSize: 13, color: '#6B6B6B', textDecoration: 'underline', cursor: 'pointer' }}>Sign out</span>
+      <div style={pill('#FFF8E1', '#B45309')}>⏳ Awaiting approval</div>
+      <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: 24, margin: '4px 0 12px' }}>
+        Application received
+      </h2>
+      <p style={{ color: '#666', fontSize: 15, lineHeight: 1.7, maxWidth: 420, margin: '0 auto 28px' }}>
+        Your application and payment are being reviewed by the BLY. team.
+        You'll have access to Insider rates as soon as your membership is activated.
+      </p>
+      <button style={btn} onClick={onGoHome}>
+        Return to home →
+      </button>
+      <p style={{ color: '#aaa', fontSize: 12, marginTop: 14 }}>
+        Clicking this will sign you out until your account is activated.
+      </p>
+    </div>
+  )
+}
+
+// ── Active view ─────────────────────────────────────────────────────────────
+function ActiveView({ onSignOut }) {
+  const navigate = useNavigate()
+  return (
+    <div style={{ ...card, textAlign: 'center' }}>
+      <div style={pill('#E7F5ED', '#2E9E5B')}>✓ Active Insider</div>
+      <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: 24, margin: '4px 0 12px' }}>
+        You're in.
+      </h2>
+      <p style={{ color: '#666', fontSize: 15, lineHeight: 1.7, maxWidth: 400, margin: '0 auto 28px' }}>
+        Your Insider access is active. Exclusive rates will appear automatically when you browse stays.
+      </p>
+      <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+        <button style={btn} onClick={() => navigate('/search')}>Browse stays →</button>
+        <button style={btnOutline} onClick={onSignOut}>Sign out</button>
       </div>
     </div>
   )
 }
 
+// ── Main page ───────────────────────────────────────────────────────────────
 export default function BlyInsiders() {
-  const { user, refreshProfile, signOut } = useAuth()
+  const { user, signOut } = useAuth()
   const navigate = useNavigate()
-  const [membership, setMembership] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [applying, setApplying] = useState(false)
-  const [error, setError] = useState('')
-  const [showForm, setShowForm] = useState(false)
-  const [justPaid, setJustPaid] = useState(false)
-  const [form, setForm] = useState({
-    title: 'Mr', first_name: '', surname: '', country: '',
-    employer_segment: '', employer_name: '', proof_ack: false,
-  })
-  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }))
 
-  async function loadMembership() {
+  const [loading, setLoading] = useState(true)
+  const [membership, setMembership] = useState(null)
+
+  useEffect(() => {
     if (!user) { setLoading(false); return }
+    fetchMembership()
+  }, [user])
+
+  async function fetchMembership() {
+    setLoading(true)
     const { data } = await supabase
       .from('industry_memberships')
       .select('*')
@@ -171,71 +297,46 @@ export default function BlyInsiders() {
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle()
-    setMembership(data ?? null)
+    setMembership(data || null)
     setLoading(false)
   }
 
-  useEffect(() => { loadMembership() }, [user])
-
-  // Detect return from iKhokha payment
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('payment') === 'success') {
-      setJustPaid(true)
-      loadMembership()
-      window.history.replaceState({}, '', window.location.pathname)
-    }
-  }, [])
-
-  async function submit() {
-    setError('')
-    if (!form.first_name.trim() || !form.surname.trim()) { setError('Please enter your first name and surname.'); return }
-    if (!form.country) { setError('Please select your country of residence.'); return }
-    if (!form.employer_segment) { setError('Please select who you work for.'); return }
-    if (!form.employer_name.trim()) { setError('Please enter your employer / company name.'); return }
-    if (!form.proof_ack) { setError('You must agree to provide proof of employment.'); return }
-    setApplying(true)
-    const { error: err } = await supabase.from('industry_memberships').insert({
-      user_id: user.id,
-      status: 'pending',
-      amount: FEE,
-      payment_status: 'unpaid',
-      title: form.title,
-      first_name: form.first_name.trim(),
-      surname: form.surname.trim(),
-      country: form.country,
-      employer_segment: form.employer_segment,
-      employer_name: form.employer_name.trim(),
-      proof_ack: true,
-    })
-    if (err) { setError(err.message); setApplying(false); return }
-    await supabase.from('profiles').update({ full_name: `${form.first_name.trim()} ${form.surname.trim()}` }).eq('id', user.id)
-    if (refreshProfile) await refreshProfile()
-    setShowForm(false)
-    await loadMembership()
-    setApplying(false)
+  async function handleGoHome() {
+    await signOut()
+    navigate('/')
   }
 
-  const noActiveApp = !membership || ['rejected', 'cancelled', 'expired'].includes(membership.status)
+  // ── Determine which panel to show ──
+  const status = membership?.status
+  const showAuth     = !user
+  const showLoading  = user && loading
+  const showPayment  = user && !loading && (!membership || status === 'rejected' || status === 'cancelled')
+  const showPending  = user && !loading && status === 'pending'
+  const showActive   = user && !loading && status === 'active'
 
   return (
     <main style={wrap}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=Inter:wght@400;500;600&display=swap');`}</style>
       <div style={inner}>
-        <div style={{ marginBottom: 32 }}>
-          <p style={{ fontSize: 12, color: '#ef4056', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', marginBottom: 10 }}>
-            Bly Insiders
-          </p>
-          <h1 style={h1}>Travel rates<br />for the trade<span style={{ color: '#ef4056' }}>.</span></h1>
-          <p style={{ color: '#6B6B6B', fontSize: 17, lineHeight: 1.6, maxWidth: 520, marginTop: 14 }}>
-            Verified tourism professionals get access to Insider-only rates on BLY. — for <strong>R{FEE} a year</strong>.
+
+        {/* Hero */}
+        <div style={{ marginBottom: 48 }}>
+          <div style={{ ...pill('#111', '#fff'), marginBottom: 20, fontFamily: 'Poppins, sans-serif' }}>
+            ✦ Bly Insiders
+          </div>
+          <h1 style={h1style}>
+            Industry<br />rates. For<br />the trade.
+          </h1>
+          <p style={{ color: '#666', fontSize: 16, lineHeight: 1.7, maxWidth: 460 }}>
+            A members-only programme for travel professionals — unlock special rates
+            across every BLY. property, every stay.
           </p>
         </div>
 
-        <div style={{ display: 'grid', gap: 14, marginBottom: 24 }}>
+        {/* Benefits */}
+        <div style={{ display: 'grid', gap: 14, marginBottom: 44 }}>
           {BENEFITS.map(([icon, title, sub]) => (
-            <div key={title} style={{ ...card, padding: '20px 22px', display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-              <div style={{ fontSize: 24, flexShrink: 0 }}>{icon}</div>
+            <div key={title} style={{ display: 'flex', gap: 16, alignItems: 'flex-start', background: '#fff', borderRadius: 16, padding: '18px 20px', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
+              <span style={{ fontSize: 24, lineHeight: 1 }}>{icon}</span>
               <div>
                 <strong style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: 15, display: 'block', marginBottom: 3 }}>{title}</strong>
                 <span style={{ fontSize: 14, color: '#6B6B6B', lineHeight: 1.5 }}>{sub}</span>
@@ -244,109 +345,13 @@ export default function BlyInsiders() {
           ))}
         </div>
 
-        {!user ? (
-          <div style={{ ...card, textAlign: 'center' }}>
-            <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 900, fontSize: 40, letterSpacing: '-0.04em' }}>
-              R{FEE}<span style={{ fontSize: 16, fontWeight: 500, color: '#999' }}> / year</span>
-            </div>
-            <p style={{ color: '#6B6B6B', fontSize: 14, margin: '8px 0 22px' }}>
-              Pay now to join — then sign in to complete your application.
-            </p>
-            <IKPayButton />
-            <div style={{ marginTop: 20, paddingTop: 20, borderTop: '1px solid #F0EDE9' }}>
-              <p style={{ color: '#6B6B6B', fontSize: 13, margin: '0 0 12px' }}>Already paid? Sign in to complete your application.</p>
-              <button
-                style={{ ...btn, background: 'none', color: '#111', border: '1.5px solid #E7E4E0', fontSize: 14, padding: '12px 24px' }}
-                onClick={() => navigate('/auth?redirect=/insiders')}
-              >
-                Sign in →
-              </button>
-            </div>
-          </div>
-        ) : loading ? (
-          <div style={{ ...card, textAlign: 'center', color: '#999' }}>Loading…</div>
-        ) : noActiveApp && !showForm ? (
-          <div style={{ ...card, textAlign: 'center' }}>
-            <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 900, fontSize: 40, letterSpacing: '-0.04em' }}>
-              R{FEE}<span style={{ fontSize: 16, fontWeight: 500, color: '#999' }}> / year</span>
-            </div>
-            <p style={{ color: '#6B6B6B', fontSize: 14, margin: '8px 0 22px' }}>
-              Submit your application and pay R{FEE} — the BLY. team verifies your details and activates your access.
-            </p>
-            <button style={btn} onClick={() => setShowForm(true)}>Start application</button>
-          </div>
-        ) : noActiveApp && showForm ? (
-          <div style={card}>
-            <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: 22, marginBottom: 4 }}>Bly Insiders application</h2>
-            <p style={{ color: '#6B6B6B', fontSize: 14, marginBottom: 24 }}>All fields are required. Your sign-in email is used for your account.</p>
-            <div style={{ display: 'grid', gap: 18 }}>
-              <div style={row2}>
-                <div>
-                  <label style={label}>Title</label>
-                  <select style={field} value={form.title} onChange={set('title')}>
-                    {TITLES.map((t) => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                </div>
-                <div />
-              </div>
-              <div style={row2}>
-                <div>
-                  <label style={label}>First name</label>
-                  <input style={field} value={form.first_name} onChange={set('first_name')} placeholder="Enter first name" />
-                </div>
-                <div>
-                  <label style={label}>Surname</label>
-                  <input style={field} value={form.surname} onChange={set('surname')} placeholder="Enter surname" />
-                </div>
-              </div>
-              <div>
-                <label style={label}>Country of residence</label>
-                <select style={field} value={form.country} onChange={set('country')}>
-                  <option value="">Please select</option>
-                  {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
-              <div style={row2}>
-                <div>
-                  <label style={label}>Who do you work for?</label>
-                  <select style={field} value={form.employer_segment} onChange={set('employer_segment')}>
-                    <option value="">Please select</option>
-                    {SEGMENTS.map((sg) => <option key={sg} value={sg}>{sg}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label style={label}>Employer / company</label>
-                  <input style={field} value={form.employer_name} onChange={set('employer_name')} placeholder="e.g. BlackBrick Hotels" />
-                </div>
-              </div>
-              <label style={{ display: 'flex', gap: 12, alignItems: 'flex-start', fontSize: 14, color: '#333', lineHeight: 1.5, cursor: 'pointer' }}>
-                <input type="checkbox" checked={form.proof_ack} onChange={set('proof_ack')} style={{ marginTop: 3, width: 18, height: 18, flexShrink: 0 }} />
-                <span>I understand I will be required to provide proof of employment to the hotel or supplier when I make a booking and when I check in to the hotel or receive the tourism supplier service.</span>
-              </label>
-              {error && <div style={{ color: '#ef4056', fontSize: 13, fontWeight: 600 }}>{error}</div>}
-              <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
-                <button style={btn} onClick={submit} disabled={applying}>
-                  {applying ? 'Submitting…' : 'Submit application'}
-                </button>
-                <button
-                  style={{ ...btn, background: 'none', color: '#6B6B6B', border: '1.5px solid #E7E4E0' }}
-                  onClick={() => { setShowForm(false); setError('') }}
-                  disabled={applying}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <StatusView
-            membership={membership}
-            justPaid={justPaid}
-            onReapply={() => setShowForm(true)}
-            applying={applying}
-            onSignOut={signOut}
-          />
-        )}
+        {/* Action panel */}
+        {showAuth    && <AuthStep onDone={fetchMembership} />}
+        {showLoading && <div style={{ ...card, textAlign: 'center', color: '#bbb', padding: '48px' }}>Loading…</div>}
+        {showPayment && <PaymentStep userId={user?.id} onMembershipCreated={setMembership} />}
+        {showPending && <PendingView onGoHome={handleGoHome} />}
+        {showActive  && <ActiveView onSignOut={handleGoHome} />}
+
       </div>
     </main>
   )
