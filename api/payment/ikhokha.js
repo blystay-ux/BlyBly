@@ -64,7 +64,7 @@ export default async function handler(req, res) {
   }
 
   const jsonBody      = JSON.stringify(requestBody)
-  const payloadToSign = jsStringEscape(IK_PATH + jsonBody)
+  const payloadToSign = jsStringEscape(IK_ENDPOINT + jsonBody)
   const signature     = crypto
     .createHmac('sha256', IK_APP_SECRET.trim())
     .update(payloadToSign, 'utf8')
