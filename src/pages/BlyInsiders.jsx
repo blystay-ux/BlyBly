@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 
-const FEE = 100
+const FEE = 150
+const IK_PAY_URL = 'https://pay.ikhokha.com/bly-travel/buy/blytravel'
 
 const TITLES = ['Mr', 'Mrs', 'Ms', 'Miss', 'Dr', 'Prof']
 const COUNTRIES = [
@@ -14,7 +15,6 @@ const SEGMENTS = [
   'Travel Agency', 'Tour Operator', 'Hotel / Lodge / Accommodation', 'Airline',
   'DMC / Inbound Operator', 'Tourism Board / Association', 'Car Rental', 'Cruise', 'Other',
 ]
-
 const BENEFITS = [
   ['🏷️', 'Insider-only rates', 'Unlock special pricing the public never sees, across participating BLY. properties.'],
   ['🇿🇦', 'For the trade', 'For travel agents, property staff and tourism professionals working in South Africa.'],
@@ -31,6 +31,37 @@ const pill = (bg, c) => ({ display: 'inline-block', background: bg, color: c, bo
 const label = { display: 'block', fontSize: 12, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#6B6B6B', marginBottom: 6 }
 const field = { width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #E7E4E0', fontSize: 15, fontFamily: "'Inter', sans-serif", color: '#111', background: '#F8F7F5', boxSizing: 'border-box', outline: 'none' }
 const row2 = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }
+
+function IKPayButton() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+      <a
+        href={IK_PAY_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ textDecoration: 'none', width: '100%', maxWidth: 280 }}
+      >
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          width: '100%',
+          height: 52,
+          background: '#1D1D1B',
+          color: '#FFFFFF',
+          borderRadius: 16,
+          fontFamily: "'Poppins', sans-serif",
+          fontWeight: 700,
+          fontSize: 16,
+          letterSpacing: '0.01em',
+        }}>
+          Pay R{FEE} →
+        </div>
+      </a>
+      <span style={{ fontSize: 11, color: '#999', fontFamily: "'Inter', sans-serif" }}>Powered by iKhokha</span>
+    </div>
+  )
+}
 
 function StatusView({ membership, onReapply, applying, onSignOut }) {
   const navigate = useNavigate()
@@ -49,8 +80,37 @@ function StatusView({ membership, onReapply, applying, onSignOut }) {
     )
   }
 
+  if (st === 'approved') {
+    return (
+      <div style={{ ...card, textAlign: 'center' }}>
+        <div style={pill('#E7F5ED', '#2E9E5B')}>✓ Application approved</div>
+        <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: 24, margin: '20px 0 8px' }}>
+          One step to go
+        </h2>
+        <p style={{ color: '#6B6B6B', fontSize: 15, lineHeight: 1.6, marginBottom: 6 }}>
+          Your application has been approved. Pay the annual membership fee to activate your Insider access.
+        </p>
+        <div style={{
+          fontFamily: 'Poppins, sans-serif', fontWeight: 900, fontSize: 40,
+          letterSpacing: '-0.04em', margin: '18px 0 4px',
+        }}>
+          R{FEE}<span style={{ fontSize: 16, fontWeight: 500, color: '#999' }}> / year</span>
+        </div>
+        <p style={{ color: '#999', fontSize: 13, marginBottom: 24 }}>
+          Insider rates activate immediately after payment confirmation.
+        </p>
+        <IKPayButton />
+        <div style={{ marginTop: 18 }}>
+          <span onClick={onSignOut} style={{ fontSize: 13, color: '#6B6B6B', textDecoration: 'underline', cursor: 'pointer' }}>Sign out</span>
+        </div>
+      </div>
+    )
+  }
+
   if (st === 'active') {
-    const expires = membership.expires_at ? new Date(membership.expires_at).toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' }) : null
+    const expires = membership.expires_at
+      ? new Date(membership.expires_at).toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' })
+      : null
     return (
       <div style={{ ...card, textAlign: 'center' }}>
         <div style={pill('#E7F5ED', '#2E9E5B')}>● Bly Insiders active</div>
@@ -67,7 +127,11 @@ function StatusView({ membership, onReapply, applying, onSignOut }) {
     )
   }
 
-  const lbl = st === 'rejected' ? 'Application not approved' : st === 'expired' ? 'Membership expired' : 'Membership cancelled'
+  const lbl = st === 'rejected'
+    ? 'Application not approved'
+    : st === 'expired'
+    ? 'Membership expired'
+    : 'Membership cancelled'
   return (
     <div style={{ ...card, textAlign: 'center' }}>
       <div style={pill('#FDE7EB', '#EF4056')}>{lbl}</div>
@@ -89,7 +153,6 @@ export default function BlyInsiders() {
   const [applying, setApplying] = useState(false)
   const [error, setError] = useState('')
   const [showForm, setShowForm] = useState(false)
-
   const [form, setForm] = useState({
     title: 'Mr', first_name: '', surname: '', country: '',
     employer_segment: '', employer_name: '', proof_ack: false,
@@ -111,6 +174,16 @@ export default function BlyInsiders() {
 
   useEffect(() => { loadMembership() }, [user])
 
+  // Check for returning from iKhokha payment
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('payment') === 'success') {
+      // Reload membership — BLY team activates after payment confirmation
+      loadMembership()
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [])
+
   async function submit() {
     setError('')
     if (!form.first_name.trim() || !form.surname.trim()) { setError('Please enter your first name and surname.'); return }
@@ -118,7 +191,6 @@ export default function BlyInsiders() {
     if (!form.employer_segment) { setError('Please select who you work for.'); return }
     if (!form.employer_name.trim()) { setError('Please enter your employer / company name.'); return }
     if (!form.proof_ack) { setError('You must agree to provide proof of employment.'); return }
-
     setApplying(true)
     const { error: err } = await supabase.from('industry_memberships').insert({
       user_id: user.id,
@@ -147,7 +219,6 @@ export default function BlyInsiders() {
     <main style={wrap}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=Inter:wght@400;500;600&display=swap');`}</style>
       <div style={inner}>
-
         <div style={{ marginBottom: 32 }}>
           <p style={{ fontSize: 12, color: '#ef4056', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', marginBottom: 10 }}>
             Bly Insiders
@@ -158,9 +229,6 @@ export default function BlyInsiders() {
           </p>
         </div>
 
-        {/* Value proposition -- shown to EVERYONE, logged in or not, since a
-            bare "Sign in" prompt with zero context doesn't convert anyone
-            who hasn't already heard about Bly Insiders elsewhere. */}
         <div style={{ display: 'grid', gap: 14, marginBottom: 24 }}>
           {BENEFITS.map(([icon, title, sub]) => (
             <div key={title} style={{ ...card, padding: '20px 22px', display: 'flex', gap: 16, alignItems: 'flex-start' }}>
@@ -199,7 +267,6 @@ export default function BlyInsiders() {
           <div style={card}>
             <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: 22, marginBottom: 4 }}>Bly Insiders application</h2>
             <p style={{ color: '#6B6B6B', fontSize: 14, marginBottom: 24 }}>All fields are required. Your sign-in email is used for your account.</p>
-
             <div style={{ display: 'grid', gap: 18 }}>
               <div style={row2}>
                 <div>
@@ -240,28 +307,33 @@ export default function BlyInsiders() {
                   <input style={field} value={form.employer_name} onChange={set('employer_name')} placeholder="e.g. BlackBrick Hotels" />
                 </div>
               </div>
-
               <label style={{ display: 'flex', gap: 12, alignItems: 'flex-start', fontSize: 14, color: '#333', lineHeight: 1.5, cursor: 'pointer' }}>
                 <input type="checkbox" checked={form.proof_ack} onChange={set('proof_ack')} style={{ marginTop: 3, width: 18, height: 18, flexShrink: 0 }} />
                 <span>I understand I will be required to provide proof of employment to the hotel or supplier when I make a booking and when I check in to the hotel or receive the tourism supplier service.</span>
               </label>
-
               {error && <div style={{ color: '#ef4056', fontSize: 13, fontWeight: 600 }}>{error}</div>}
-
               <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
                 <button style={btn} onClick={submit} disabled={applying}>
                   {applying ? 'Submitting…' : 'Submit application'}
                 </button>
-                <button style={{ ...btn, background: 'none', color: '#6B6B6B', border: '1.5px solid #E7E4E0' }} onClick={() => { setShowForm(false); setError('') }} disabled={applying}>
+                <button
+                  style={{ ...btn, background: 'none', color: '#6B6B6B', border: '1.5px solid #E7E4E0' }}
+                  onClick={() => { setShowForm(false); setError('') }}
+                  disabled={applying}
+                >
                   Cancel
                 </button>
               </div>
             </div>
           </div>
         ) : (
-          <StatusView membership={membership} onReapply={() => setShowForm(true)} applying={applying} onSignOut={signOut} />
+          <StatusView
+            membership={membership}
+            onReapply={() => setShowForm(true)}
+            applying={applying}
+            onSignOut={signOut}
+          />
         )}
-
       </div>
     </main>
   )
