@@ -389,10 +389,10 @@ export default function HotelDetail() {
                         const rate = zarRates[cur]
                         if (!rate) return null
                         const est = Math.round(guestPrice.totalAmountZAR / rate)
-                        return `≈ ${cur} ${est.toLocaleString()}`
+                        return `${cur} ${est.toLocaleString()}`
                       }).filter(Boolean)
                       return estimates.length > 0
-                        ? <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'right', marginBottom: 6 }}>{estimates.join(' · ')}</div>
+                        ? <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'right', marginBottom: 6 }}>{'Est. ' + estimates.join(' · ')}</div>
                         : null
                     })()}
                     <div style={s.offerBadges}>

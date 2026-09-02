@@ -298,10 +298,10 @@ export default function Checkout() {
                 const rate = zarRates[cur]
                 if (!rate) return null
                 const est = Math.round(guestPrice.totalAmountZAR / rate)
-                return `≈ ${cur} ${est.toLocaleString()}`
+                return `${cur} ${est.toLocaleString()}`
               }).filter(Boolean)
               return estimates.length > 0
-                ? <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'right', marginTop: 2 }}>{estimates.join(' · ')}</div>
+                ? <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'right', marginTop: 2 }}>{'Est. ' + estimates.join(' · ')}</div>
                 : null
             })()}
           </div>
@@ -477,10 +477,10 @@ export default function Checkout() {
                 const rate = zarRates[cur]
                 if (!rate) return null
                 const est = Math.round(guestPrice.totalAmountZAR / rate)
-                return `≈ ${cur} ${est.toLocaleString()}`
+                return `${cur} ${est.toLocaleString()}`
               }).filter(Boolean)
               return estimates.length > 0
-                ? <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1 }}>{estimates.join(' · ')}</div>
+                ? <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1 }}>{'Est. ' + estimates.join(' · ')}</div>
                 : null
             })()}
           </div>
