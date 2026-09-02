@@ -68,3 +68,83 @@ export function calculateGuestPrice(netAmount, sellAmount, currency, isInsider =
     totalAmount: round2(total),
   }
 }
+
+// ─── ZAR Conversion ──────────────────────────────────────────────────────────
+
+/** 3% buffer added on top of the live exchange rate to absorb FX fluctuations */
+export const FX_BUFFER = 0.03
+
+/** In-memory FX cache: { [currency]: { rate: number, expiresAt: number } } */
+const _fxCache = {}
+const FX_TTL = 60 * 60 * 1000  // 1 hour
+
+/**
+ * Fetch the 1-unit → ZAR exchange rate for a given currency.
+ * Calls /api/fx-rate proxy (server-side, no key exposed).
+ * Returns null if rate cannot be fetched — callers fall back to original currency.
+ */
+export async function getZARRate(currency) {
+  if (!currency || currency.toUpperCase() === 'ZAR') return 1
+
+  const code = currency.toUpperCase()
+  const now  = Date.now()
+
+  const cached = _fxCache[code]
+  if (cached && cached.expiresAt > now) return cached.rate
+
+  try {
+    const res  = await fetch(`/api/fx-rate?from=${code}`)
+    if (!res.ok) return null
+    const data = await res.json()
+    const rate = data?.rate
+
+    if (typeof rate === 'number' && rate > 0) {
+      _fxCache[code] = { rate, expiresAt: now + FX_TTL }
+      return rate
+    }
+    return null
+  } catch (err) {
+    console.warn(`[pricing] Could not fetch ZAR rate for ${code}:`, err)
+    return null
+  }
+}
+
+/**
+ * Prefetch ZAR rates for multiple currencies in one pass.
+ * Call this once when search results arrive so per-card renders are instant.
+ * Returns a map: { USD: 18.72, EUR: 20.1, ZAR: 1, ... }
+ */
+export async function prefetchZARRates(currencies) {
+  const unique = [...new Set((currencies || []).map(c => c?.toUpperCase()).filter(Boolean))]
+  const entries = await Promise.all(unique.map(async c => [c, await getZARRate(c)]))
+  return Object.fromEntries(entries.filter(([, r]) => r != null))
+}
+
+/**
+ * Convert an amount in any currency to ZAR, adding the 3% FX buffer.
+ */
+export function convertToZAR(amount, zarRate) {
+  return Math.round((amount * zarRate * (1 + FX_BUFFER) + Number.EPSILON) * 100) / 100
+}
+
+/**
+ * All-in-one: calculateGuestPrice + ZAR conversion.
+ * Pass zarRate from prefetchZARRates result; pass null if unavailable.
+ */
+export function calculateGuestPriceZAR(netAmount, sellAmount, currency, isInsider = false, zarRate = null) {
+  const base = calculateGuestPrice(netAmount, sellAmount, currency, isInsider)
+  const totalAmountZAR = zarRate != null ? convertToZAR(base.totalAmount, zarRate) : null
+  return { ...base, totalAmountZAR, zarRate }
+}
+
+/**
+ * Format a ZAR price for display: "ZAR 3,065.20"
+ * Falls back to the original currency if ZAR conversion is unavailable.
+ */
+export function formatDisplayPrice(priceResult) {
+  const { totalAmountZAR, totalAmount, currency } = priceResult
+  if (totalAmountZAR != null) {
+    return `ZAR ${totalAmountZAR.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  }
+  return `${currency} ${totalAmount.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
