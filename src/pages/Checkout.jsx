@@ -99,6 +99,12 @@ export default function Checkout() {
 
   const { property, selectedOffer, prebookResult, checkIn, nights, adults } = location.state || {}
 
+  // Derive prices early (before hooks) so useEffect dependency is in scope
+  const confirmedRoom = prebookResult?.content?.rooms?.[0]
+  const net           = confirmedRoom?.prices?.net  ?? selectedOffer?.plan?.prices?.net
+  const sell          = confirmedRoom?.prices?.sell ?? selectedOffer?.plan?.prices?.sell
+
+
   const [leadGuest, setLeadGuest]             = useState(emptyLeadGuest())
   const [roomGuests, setRoomGuests]           = useState(
     property && adults ? Array.from({ length: adults }, emptyGuest) : []
@@ -108,12 +114,13 @@ export default function Checkout() {
   const [bookingError, setBookingError]       = useState(null)
   const [zarRate, setZarRate]                 = useState(null)
 
-  // Fetch live ZAR rate for the booking currency
+  // Fetch live ZAR rate for the booking currency (sell is in scope above)
   useEffect(() => {
     const currency = sell?.currency
     if (!currency) return
     getZARRate(currency).then(setZarRate)
   }, [sell?.currency])
+
 
   if (!property || !selectedOffer || !prebookResult) {
     return (
@@ -135,9 +142,6 @@ export default function Checkout() {
   }
 
   const info          = property.propertyInfo
-  const confirmedRoom = prebookResult.content?.rooms?.[0]
-  const net           = confirmedRoom?.prices?.net  ?? selectedOffer.plan.prices?.net
-  const sell          = confirmedRoom?.prices?.sell ?? selectedOffer.plan.prices?.sell
   const guestPrice    = sell
     ? calculateGuestPriceZAR(net?.price ?? sell.price, sell.price, sell.currency, isInsider, zarRate)
     : null
