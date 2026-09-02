@@ -6,6 +6,18 @@ import { useAuth } from '../contexts/AuthContext'
 const FEE = 150
 const IK_PAY_URL = 'https://pay.ikhokha.com/bly-travel/buy/blytravel'
 
+const TITLES    = ['Mr', 'Mrs', 'Ms', 'Miss', 'Dr', 'Prof']
+const COUNTRIES = [
+  'South Africa', 'Namibia', 'Botswana', 'Zimbabwe', 'Mozambique',
+  'Eswatini', 'Lesotho', 'United Kingdom', 'United States',
+  'Germany', 'Netherlands', 'France', 'Australia', 'Other',
+]
+const SEGMENTS = [
+  'Travel Agency', 'Tour Operator', 'Hotel / Lodge / Accommodation',
+  'Airline', 'DMC / Inbound Operator', 'Tourism Board / Association',
+  'Car Rental', 'Cruise', 'Other',
+]
+
 const BENEFITS = [
   ['🏷️', 'Insider-only rates', 'Unlock special pricing the public never sees, across participating BLY. properties.'],
   ['🇿🇦', 'For the trade', 'Available to travel agents, property staff and tourism professionals in South Africa.'],
@@ -173,82 +185,188 @@ function AuthStep({ onDone }) {
   )
 }
 
-// ── Step 2: Payment ────────────────────────────────────────────────────────
-function PaymentStep({ userId, onMembershipCreated, onPaid }) {
-  const [creating, setCreating] = useState(false)
+// ── Step 2: Details + Payment ──────────────────────────────────────────────
+function PaymentStep({ userId, onMembershipCreated }) {
   const [membershipId, setMembershipId] = useState(null)
+  const [saving, setSaving]             = useState(false)
+  const [formError, setFormError]       = useState('')
+  const [form, setForm] = useState({
+    title: 'Mr', first_name: '', surname: '',
+    country: '', employer_segment: '', employer_name: '', proof_ack: false,
+  })
+
+  const set = (key) => (e) =>
+    setForm(f => ({ ...f, [key]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }))
 
   useEffect(() => {
     async function ensureMembership() {
-      setCreating(true)
-      // Check if a pending record already exists
       const { data: existing } = await supabase
         .from('industry_memberships')
-        .select('id')
+        .select('*')
         .eq('user_id', userId)
         .eq('payment_status', 'unpaid')
         .maybeSingle()
 
       if (existing) {
         setMembershipId(existing.id)
+        // Pre-fill form if details were already saved
+        setForm(f => ({
+          ...f,
+          title:            existing.title            || 'Mr',
+          first_name:       existing.first_name       || '',
+          surname:          existing.surname           || '',
+          country:          existing.country           || '',
+          employer_segment: existing.employer_segment || '',
+          employer_name:    existing.employer_name    || '',
+          proof_ack:        existing.proof_ack        || false,
+        }))
       } else {
         const { data } = await supabase
           .from('industry_memberships')
           .insert({ user_id: userId, status: 'pending', payment_status: 'unpaid' })
           .select()
           .single()
-        if (data) {
-          setMembershipId(data.id)
-          onMembershipCreated(data)
-        }
+        if (data) { setMembershipId(data.id); onMembershipCreated(data) }
       }
-      setCreating(false)
     }
     if (userId) ensureMembership()
   }, [userId])
 
-  // Called when user clicks the iKhokha pay link — marks payment as submitted
   async function handlePayClick() {
+    // Validate required fields
+    if (!form.first_name.trim() || !form.surname.trim()) {
+      setFormError('Please enter your first name and surname.'); return
+    }
+    if (!form.country) {
+      setFormError('Please select your country of residence.'); return
+    }
+    if (!form.employer_segment || !form.employer_name.trim()) {
+      setFormError('Please enter your employer details.'); return
+    }
+    if (!form.proof_ack) {
+      setFormError('Please acknowledge the proof of employment requirement.'); return
+    }
     if (!membershipId) return
+
+    setFormError(''); setSaving(true)
+
+    // Save details + mark payment submitted
     await supabase
       .from('industry_memberships')
-      .update({ payment_status: 'submitted' })
+      .update({
+        title:            form.title,
+        first_name:       form.first_name.trim(),
+        surname:          form.surname.trim(),
+        country:          form.country,
+        employer_segment: form.employer_segment,
+        employer_name:    form.employer_name.trim(),
+        proof_ack:        form.proof_ack,
+        payment_status:   'submitted',
+      })
       .eq('id', membershipId)
-    // Let parent know so it re-fetches and shows the pending view
-    if (onPaid) onPaid()
+
+    setSaving(false)
+
+    // Sign them out — no access until admin approves
+    await supabase.auth.signOut()
+    window.location.href = '/?applied=1'
   }
+
+  const row2 = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }
 
   return (
     <div style={card}>
       <div style={stepTag}>Step 2 of 2</div>
       <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: 22, marginBottom: 4 }}>
-        Complete your payment
+        Your details
       </h2>
-      <p style={{ color: '#777', fontSize: 14, marginBottom: 28, lineHeight: 1.5 }}>
-        A once-off annual fee of R{FEE} secures your Insider membership.
+      <p style={{ color: '#777', fontSize: 14, marginBottom: 24, lineHeight: 1.5 }}>
+        Tell us a little about yourself. These details are used to verify your trade status.
       </p>
 
-      <div style={{ textAlign: 'center', marginBottom: 8 }}>
-        <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 900, fontSize: 44, letterSpacing: '-0.04em', marginBottom: 4 }}>
-          R{FEE}
-          <span style={{ fontSize: 16, fontWeight: 500, color: '#999' }}> / year</span>
+      <div style={{ display: 'grid', gap: 16, marginBottom: 28 }}>
+        {/* Title */}
+        <div>
+          <label style={labelStyle}>Title</label>
+          <select style={inputStyle} value={form.title} onChange={set('title')}>
+            {TITLES.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
         </div>
-        <p style={{ color: '#888', fontSize: 13, marginBottom: 24 }}>Bly Insiders annual membership</p>
-        {creating ? (
-          <div style={{ color: '#bbb', fontSize: 14 }}>Setting up your application…</div>
-        ) : (
-          // Wrap IKPayButton in a div that fires handlePayClick before iKhokha opens
-          <div onClick={handlePayClick}>
-            <IKPayButton />
+
+        {/* Name */}
+        <div style={row2}>
+          <div>
+            <label style={labelStyle}>First name</label>
+            <input style={inputStyle} value={form.first_name} onChange={set('first_name')} placeholder="First name" />
           </div>
-        )}
+          <div>
+            <label style={labelStyle}>Surname</label>
+            <input style={inputStyle} value={form.surname} onChange={set('surname')} placeholder="Surname" />
+          </div>
+        </div>
+
+        {/* Country */}
+        <div>
+          <label style={labelStyle}>Country of residence</label>
+          <select style={inputStyle} value={form.country} onChange={set('country')}>
+            <option value="">Please select</option>
+            {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+
+        {/* Employer */}
+        <div style={row2}>
+          <div>
+            <label style={labelStyle}>I work in</label>
+            <select style={inputStyle} value={form.employer_segment} onChange={set('employer_segment')}>
+              <option value="">Please select</option>
+              {SEGMENTS.map(sg => <option key={sg} value={sg}>{sg}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>Employer / company</label>
+            <input style={inputStyle} value={form.employer_name} onChange={set('employer_name')} placeholder="Company name" />
+          </div>
+        </div>
+
+        {/* Proof ack */}
+        <label style={{ display: 'flex', gap: 12, alignItems: 'flex-start', fontSize: 13, color: '#444', lineHeight: 1.5, cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={form.proof_ack}
+            onChange={set('proof_ack')}
+            style={{ marginTop: 2, width: 17, height: 17, flexShrink: 0 }}
+          />
+          <span>
+            I understand I may be required to provide proof of employment when I make a booking
+            or check in to a property.
+          </span>
+        </label>
+      </div>
+
+      {formError && (
+        <div style={{ background: '#fff0f0', color: '#cc0000', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 20 }}>
+          {formError}
+        </div>
+      )}
+
+      {/* Price + pay button */}
+      <div style={{ borderTop: '1px solid #F0EDE9', paddingTop: 24, textAlign: 'center' }}>
+        <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 900, fontSize: 38, letterSpacing: '-0.04em', marginBottom: 4 }}>
+          R{FEE}
+          <span style={{ fontSize: 14, fontWeight: 500, color: '#999' }}> / year</span>
+        </div>
+        <p style={{ color: '#888', fontSize: 13, marginBottom: 20 }}>Bly Insiders annual membership</p>
+        <div onClick={saving ? undefined : handlePayClick} style={{ opacity: saving ? 0.5 : 1 }}>
+          <IKPayButton />
+        </div>
+        {saving && <p style={{ color: '#aaa', fontSize: 12, marginTop: 8 }}>Saving your details…</p>}
       </div>
 
       <div style={infoBox}>
         <strong style={{ display: 'block', marginBottom: 4, color: '#333' }}>What happens next?</strong>
         After payment, the BLY. team will verify your details and activate your Insider access.
         You will not be able to access Insider rates until your application is approved.
-        We'll be in touch once you're confirmed.
       </div>
     </div>
   )
@@ -372,7 +490,7 @@ export default function BlyInsiders() {
         {/* Action panel */}
         {showAuth    && <AuthStep onDone={fetchMembership} />}
         {showLoading && <div style={{ ...card, textAlign: 'center', color: '#bbb', padding: '48px' }}>Loading…</div>}
-        {showPayment && <PaymentStep userId={user?.id} onMembershipCreated={setMembership} onPaid={fetchMembership} />}
+        {showPayment && <PaymentStep userId={user?.id} onMembershipCreated={setMembership} />}
         {showPending && <PendingView onGoHome={handleGoHome} />}
         {showActive  && <ActiveView onSignOut={handleGoHome} />}
 
