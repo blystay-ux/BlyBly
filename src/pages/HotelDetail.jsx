@@ -191,7 +191,7 @@ export default function HotelDetail() {
     const currencies = flattenOffers(property)
       .map(o => o.plan.prices?.sell?.currency)
       .filter(Boolean)
-    prefetchZARRates(currencies).then(setZarRates)
+    prefetchZARRates([...new Set([...currencies, 'USD', 'EUR', 'GBP'])]).then(setZarRates)
   }, [property])
 
   const offers = property ? flattenOffers(property) : []
@@ -381,9 +381,20 @@ export default function HotelDetail() {
                       </div>
                       <div style={s.offerPrice}>{guestPrice ? formatDisplayPrice(guestPrice) : null}</div>
                     </div>
-                    <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'right', marginTop: -6, marginBottom: 6 }}>
+                    <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'right', marginTop: -6, marginBottom: guestPrice?.totalAmountZAR ? 2 : 6 }}>
                       Taxes and fees included{guestPrice?.isInsiderRate && ' · Bly Insiders rate'}
                     </div>
+                    {guestPrice?.totalAmountZAR != null && (() => {
+                      const estimates = ['USD', 'EUR', 'GBP'].map(cur => {
+                        const rate = zarRates[cur]
+                        if (!rate) return null
+                        const est = Math.round(guestPrice.totalAmountZAR / rate)
+                        return `≈ ${cur} ${est.toLocaleString()}`
+                      }).filter(Boolean)
+                      return estimates.length > 0
+                        ? <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'right', marginBottom: 6 }}>{estimates.join(' · ')}</div>
+                        : null
+                    })()}
                     <div style={s.offerBadges}>
                       {offer.plan.ratePlanInfo?.isPackageRate && <span style={s.packageBadge}>Package rate</span>}
                       {offer.plan.ratePlanInfo?.isPromotion && <span style={s.packageBadge}>Promo</span>}
