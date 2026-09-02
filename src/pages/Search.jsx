@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import SearchBar from '../components/SearchBar'
-import { calculateGuestPrice } from '../lib/pricing'
+import { calculateGuestPriceZAR, prefetchZARRates, formatDisplayPrice } from '../lib/pricing'
 import { useAuth } from '../contexts/AuthContext'
 
 const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80'
@@ -36,11 +36,12 @@ function cheapestOffer(property) {
   return cheapest
 }
 
-function ResultCard({ property, checkIn, nights, adults }) {
+function ResultCard({ property, checkIn, nights, adults, zarRates = {} }) {
   const navigate = useNavigate()
   const { isInsider } = useAuth()
   const cheapestRaw = cheapestOffer(property)
-  const offer = cheapestRaw ? calculateGuestPrice(cheapestRaw.netPrice, cheapestRaw.sellPrice, cheapestRaw.currency, isInsider) : null
+  const zarRate = cheapestRaw ? (zarRates[cheapestRaw.currency?.toUpperCase()] ?? null) : null
+  const offer = cheapestRaw ? calculateGuestPriceZAR(cheapestRaw.netPrice, cheapestRaw.sellPrice, cheapestRaw.currency, isInsider, zarRate) : null
   const info = property.propertyInfo
 
   const handleView = () => {
@@ -86,7 +87,7 @@ function ResultCard({ property, checkIn, nights, adults }) {
               <>
                 <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block' }}>from</span>
                 <span style={{ fontWeight: 800, fontSize: 18, color: 'var(--text)' }}>
-                  {offer.currency} {Number(offer.totalAmount).toLocaleString()}
+                  {formatDisplayPrice(offer)}
                 </span>
                 <span style={{ fontSize: 13, color: 'var(--text-muted)' }}> / night</span>
                 <span style={{ fontSize: 10, color: 'var(--text-muted)', display: 'block', marginTop: 2 }}>Taxes and fees included</span>
@@ -146,6 +147,7 @@ export default function Search() {
   const adults = Number(searchParams.get('adults') || 2)
 
   const [results, setResults] = useState([])
+  const [zarRates, setZarRates] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -160,6 +162,14 @@ export default function Search() {
         if (fnError) throw fnError
         const withAvailability = (data?.results ?? []).filter(p => p.rooms?.length > 0)
         setResults(withAvailability)
+        // Prefetch ZAR rates for all currencies returned by HyperGuest
+        const currencies = withAvailability.flatMap(p =>
+          (p.rooms ?? []).flatMap(r =>
+            (r.ratePlans ?? []).map(rp => rp.prices?.sell?.currency).filter(Boolean)
+          )
+        )
+        const rates = await prefetchZARRates(currencies)
+        setZarRates(rates)
       } catch (err) {
         console.error('City search failed:', err)
         setError(err.message || 'Search failed. Please try again.')
@@ -228,7 +238,7 @@ export default function Search() {
         ) : (
           <div className="bly-search-grid">
             {results.map(property => (
-              <ResultCard key={property.propertyId} property={property} checkIn={checkIn} nights={nights} adults={adults} />
+              <ResultCard key={property.propertyId} property={property} checkIn={checkIn} nights={nights} adults={adults} zarRates={zarRates} />
             ))}
           </div>
         )}
