@@ -123,7 +123,7 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
   const [city, setCity] = useState(initialCity || (CERT_RESTRICTED ? CERT_RESTRICTED_CITIES[0] : PRIORITY_CITIES[0]))
   const [checkIn, setCheckIn] = useState(isValidDateStr(initialCheckIn) ? initialCheckIn : defaultCheckIn())
   const [checkOut, setCheckOut] = useState(
-    isValidDateStr(initialCheckOut) ? initialCheckOut : addNights(isValidDateStr(initialCheckIn) ? initialCheckIn : defaultCheckIn(), 2)
+    isValidDateStr(initialCheckOut) ? initialCheckOut : addNights(isValidDateStr(initialCheckIn) ? initialCheckIn : defaultCheckIn(), 1)
   )
   // Default is 1 adult, not 2.
   const [adults, setAdults] = useState(initialAdults || 1)

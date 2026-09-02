@@ -38,7 +38,7 @@ function FeaturedCard({ property }) {
     const params = new URLSearchParams({
       city: property.city,
       checkIn: defaultCheckIn(),
-      nights: '2',
+      nights: '1',
       adults: '1',
     })
     navigate(`/search?${params}`)

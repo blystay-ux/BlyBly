@@ -154,7 +154,7 @@ export default function Search() {
 
   const city = searchParams.get('city') || 'Cape Town'
   const checkIn = searchParams.get('checkIn')
-  const nights = Number(searchParams.get('nights') || 2)
+  const nights = Number(searchParams.get('nights') || 1)
   const adults = Number(searchParams.get('adults') || 2)
 
   const [results, setResults] = useState([])
