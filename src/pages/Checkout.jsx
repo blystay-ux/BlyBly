@@ -213,12 +213,20 @@ export default function Checkout() {
 
       if (dbErr) throw new Error(dbErr.message)
 
-      // ── Step 2: Get iKhokha payment link ────────────────────────────────
-      const payRes  = await fetch('/api/payment/ikhokha', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ bookingId: hgBooking.id }),
-      })
+      // ── Step 2: Get iKhokha payment link (Supabase Edge Function) ──────────
+      const { data: { session } } = await supabase.auth.getSession()
+      const payRes = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ikhokha-payment`,
+        {
+          method:  'POST',
+          headers: {
+            'Content-Type':  'application/json',
+            'apikey':        import.meta.env.VITE_SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({ bookingId: hgBooking.id }),
+        },
+      )
       const payData = await payRes.json()
 
       if (!payRes.ok || !payData.redirectUrl) {
