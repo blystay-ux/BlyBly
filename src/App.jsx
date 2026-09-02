@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
+import Contact from './pages/Contact'
 import { AuthProvider } from './contexts/AuthContext'
 import Navbar from './components/Navbar'
 import Home from './pages/Home'
@@ -38,6 +39,7 @@ export default function App() {
         <Route path="/extranet"            element={<Extranet />} />
         <Route path="/insiders"            element={<BlyInsiders />} />
         <Route path="/terms"               element={<Terms />} />
+        <Route path="/contact"             element={<Contact />} />
         <Route path="/partners"            element={<ComingSoon />} />
         <Route path="/destinations"        element={<DestinationsPage />} />
         <Route path="/accommodation/:slug" element={<DestinationPage />} />
