@@ -91,7 +91,7 @@ export default function Navbar() {
               </button>
             </>
           ) : (
-            <Link to="/auth" style={styles.link}>Sign in</Link>
+            <Link to="/auth?mode=admin" style={styles.link}>Admin</Link>
           )}
         </div>
       </div>
