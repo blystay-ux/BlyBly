@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { calculateGuestPrice } from '../lib/pricing'
+import { calculateGuestPriceZAR, getZARRate, formatDisplayPrice } from '../lib/pricing'
 import { useAuth } from '../contexts/AuthContext'
 
 function addNights(dateStr, nights) {
@@ -106,6 +106,14 @@ export default function Checkout() {
   const [specialRequests, setSpecialRequests] = useState('')
   const [redirecting, setRedirecting]         = useState(false)
   const [bookingError, setBookingError]       = useState(null)
+  const [zarRate, setZarRate]                 = useState(null)
+
+  // Fetch live ZAR rate for the booking currency
+  useEffect(() => {
+    const currency = sell?.currency
+    if (!currency) return
+    getZARRate(currency).then(setZarRate)
+  }, [sell?.currency])
 
   if (!property || !selectedOffer || !prebookResult) {
     return (
@@ -131,7 +139,7 @@ export default function Checkout() {
   const net           = confirmedRoom?.prices?.net  ?? selectedOffer.plan.prices?.net
   const sell          = confirmedRoom?.prices?.sell ?? selectedOffer.plan.prices?.sell
   const guestPrice    = sell
-    ? calculateGuestPrice(net?.price ?? sell.price, sell.price, sell.currency, isInsider)
+    ? calculateGuestPriceZAR(net?.price ?? sell.price, sell.price, sell.currency, isInsider, zarRate)
     : null
 
   function updateLeadGuest(field, value) {
@@ -182,7 +190,7 @@ export default function Checkout() {
           lead_guest:             leadGuest,
           guest_email:            leadGuest.email,
           guest_phone:            leadGuest.phone,
-          total_price_zar:        guestPrice?.totalAmount ?? sell?.price,
+          total_price_zar:        guestPrice?.totalAmountZAR ?? guestPrice?.totalAmount ?? sell?.price,
           meta: {
             hotelName:    info.name,
             roomName:     selectedOffer.room.roomName,
@@ -215,15 +223,18 @@ export default function Checkout() {
 
       // ── Step 2: Get iKhokha payment link (Supabase Edge Function) ──────────
       const { data: { session } } = await supabase.auth.getSession()
+      const payHeaders = {
+        'Content-Type': 'application/json',
+        'apikey':       import.meta.env.VITE_SUPABASE_ANON_KEY,
+      }
+      if (session?.access_token) {
+        payHeaders['Authorization'] = `Bearer ${session.access_token}`
+      }
       const payRes = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ikhokha-payment`,
         {
           method:  'POST',
-          headers: {
-            'Content-Type':  'application/json',
-            'apikey':        import.meta.env.VITE_SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${session?.access_token}`,
-          },
+          headers: payHeaders,
           body: JSON.stringify({ bookingId: hgBooking.id }),
         },
       )
@@ -272,7 +283,7 @@ export default function Checkout() {
             </div>
             <div style={s.summaryTotal}>
               <span>Total</span>
-              <span>{guestPrice?.currency} {Number(guestPrice?.totalAmount).toLocaleString()}</span>
+              <span>{guestPrice ? formatDisplayPrice(guestPrice) : null}</span>
             </div>
             <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'right', marginTop: 4 }}>
               Taxes and fees included
@@ -442,7 +453,7 @@ export default function Checkout() {
         {/* Sticky CTA */}
         <div style={s.ctaBar}>
           <div style={{ fontSize: 14, fontWeight: 700 }}>
-            {guestPrice?.currency} {Number(guestPrice?.totalAmount).toLocaleString()}
+            {guestPrice ? formatDisplayPrice(guestPrice) : null}
           </div>
           <button
             style={{

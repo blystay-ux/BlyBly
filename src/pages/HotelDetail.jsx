@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { calculateGuestPrice } from '../lib/pricing'
+import { calculateGuestPrice, calculateGuestPriceZAR, prefetchZARRates, formatDisplayPrice } from '../lib/pricing'
 import { useAuth } from '../contexts/AuthContext'
 const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80'
 function addNights(dateStr, nights) {
@@ -172,6 +172,7 @@ export default function HotelDetail() {
   const [selectedOffer, setSelectedOffer] = useState(null)
   const [prebooking, setPrebooking] = useState(false)
   const [prebookError, setPrebookError] = useState(null)
+  const [zarRates, setZarRates] = useState({})
   const [legacyLoading, setLegacyLoading] = useState(!isHyperGuest)
   const [legacyProperty, setLegacyProperty] = useState(null)
   useEffect(() => {
@@ -184,6 +185,15 @@ export default function HotelDetail() {
     }
     loadLegacy()
   }, [slug, isHyperGuest])
+  // Prefetch ZAR rates whenever property changes
+  useEffect(() => {
+    if (!property) return
+    const currencies = flattenOffers(property)
+      .map(o => o.plan.prices?.sell?.currency)
+      .filter(Boolean)
+    prefetchZARRates(currencies).then(setZarRates)
+  }, [property])
+
   const offers = property ? flattenOffers(property) : []
   const photos = (staticDetail?.images || []).filter(i => i.type === 'photo')
   const facilities = (staticDetail?.facilities || []).filter(f => f.name)
@@ -360,7 +370,8 @@ export default function HotelDetail() {
                 const net = offer.plan.prices?.net
                 const sell = offer.plan.prices?.sell
                 const policies = offer.plan.cancellationPolicies || []
-                const guestPrice = sell ? calculateGuestPrice(net?.price ?? sell.price, sell.price, sell.currency, isInsider) : null
+                const zarRate = sell ? (zarRates[sell.currency?.toUpperCase()] ?? null) : null
+                const guestPrice = sell ? calculateGuestPriceZAR(net?.price ?? sell.price, sell.price, sell.currency, isInsider, zarRate) : null
                 return (
                   <div key={i} style={s.offerCard(isSelected)} onClick={() => { setSelectedOffer(offer); setPrebookError(null) }}>
                     <div style={s.offerTop}>
@@ -368,7 +379,7 @@ export default function HotelDetail() {
                         <div style={s.offerName}>{offer.room.roomName} — {offer.plan.ratePlanName}</div>
                         <div style={s.offerBoard}>{offer.plan.board} board · up to {offer.room.settings?.maxOccupancy} guests</div>
                       </div>
-                      <div style={s.offerPrice}>{guestPrice?.currency} {Number(guestPrice?.totalAmount).toLocaleString()}</div>
+                      <div style={s.offerPrice}>{guestPrice ? formatDisplayPrice(guestPrice) : null}</div>
                     </div>
                     <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'right', marginTop: -6, marginBottom: 6 }}>
                       Taxes and fees included{guestPrice?.isInsiderRate && ' · Bly Insiders rate'}
