@@ -311,11 +311,11 @@ export default function Contact() {
                 <div style={S.contactMetaValue}>Info@blytravel.co.za</div>
               </div>
             </a>
-            <a href="tel:+27812803782" style={{ ...S.contactItem, marginBottom: 0 }}>
-              <div style={S.contactIcon}>📞</div>
+            <a href="https://wa.me/27793825684" style={{ ...S.contactItem, marginBottom: 0 }}>
+              <div style={S.contactIcon}>💬</div>
               <div style={S.contactMeta}>
-                <div style={S.contactMetaLabel}>Phone</div>
-                <div style={S.contactMetaValue}>+27 81 280 3782</div>
+                <div style={S.contactMetaLabel}>WhatsApp</div>
+                <div style={S.contactMetaValue}>+27 79 382 5684</div>
               </div>
             </a>
           </div>

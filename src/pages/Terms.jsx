@@ -135,7 +135,7 @@ const SECTIONS = [
   {
     title: '17. Contact Us',
     content: [
-      { p: 'For any questions about these Terms, please contact BLY at Info@blytravel.co.za or +27 81 280 3782.' },
+      { p: 'For any questions about these Terms, please contact BLY at Info@blytravel.co.za or +27 79 382 5684.' },
     ],
   },
 ]
