@@ -79,6 +79,7 @@ const s = {
 export default function Auth() {
   const [searchParams] = useSearchParams()
   const isExtranet = searchParams.get('mode') === 'extranet'
+  const redirect = searchParams.get('redirect') || '/'
 
   const [mode, setMode] = useState('login')
   const [email, setEmail] = useState('')
@@ -98,19 +99,26 @@ export default function Auth() {
       if (error) {
         setError(error.message)
       } else {
-        // Extranet users go to their hotel dashboard; guests go home
-        navigate(isExtranet ? '/extranet' : '/')
+        // Extranet users go to their hotel dashboard; everyone else honours ?redirect=
+        navigate(isExtranet ? '/extranet' : redirect)
       }
     } else {
-      const { error } = await signUp(email, password)
-      if (error) setError(error.message)
-      else setMessage('Check your email for a confirmation link!')
+      const { data, error } = await signUp(email, password)
+      if (error) {
+        setError(error.message)
+      } else if (data?.session) {
+        // Email confirmation is OFF — Supabase signed them in immediately.
+        // Send them to wherever they came from (e.g. /insiders).
+        navigate(redirect)
+      } else {
+        // Email confirmation is ON — they need to verify first.
+        setMessage('Check your email for a confirmation link!')
+      }
     }
 
     setLoading(false)
   }
 
-  // Allow Enter key to submit
   function handleKey(e) {
     if (e.key === 'Enter') handleSubmit()
   }
@@ -120,20 +128,13 @@ export default function Auth() {
     return (
       <div style={s.page}>
         <div style={s.card}>
-
-          {/* Extranet badge */}
-          <div style={s.extranetBadge}>
-            🔑 Hotel Extranet
-          </div>
-
+          <div style={s.extranetBadge}>🔑 Hotel Extranet</div>
           <div style={s.title}>Partner sign in.</div>
           <div style={s.sub}>
             Access your hotel dashboard to manage listings, rates, and bookings.
           </div>
-
           {error   && <div style={s.error}>{error}</div>}
           {message && <div style={s.success}>{message}</div>}
-
           <label style={s.label}>Email</label>
           <input
             style={s.input}
@@ -143,7 +144,6 @@ export default function Auth() {
             onKeyDown={handleKey}
             placeholder="hotel@example.com"
           />
-
           <label style={s.label}>Password</label>
           <input
             style={s.input}
@@ -153,13 +153,10 @@ export default function Auth() {
             onKeyDown={handleKey}
             placeholder="••••••••"
           />
-
           <button style={s.btn} onClick={handleSubmit} disabled={loading}>
             {loading ? 'Signing in…' : 'Access Extranet →'}
           </button>
-
           <hr style={s.divider} />
-
           <p style={{ ...s.sub, marginBottom: 0, textAlign: 'center' }}>
             Not listed yet?{' '}
             <span
@@ -169,14 +166,9 @@ export default function Auth() {
               List your property
             </span>
           </p>
-
-          <span
-            style={s.backLink}
-            onClick={() => navigate('/')}
-          >
+          <span style={s.backLink} onClick={() => navigate('/')}>
             ← Back to Bly.
           </span>
-
         </div>
       </div>
     )
@@ -186,8 +178,6 @@ export default function Auth() {
   return (
     <div style={s.page}>
       <div style={s.card}>
-
-        {/* Sign in / Create account toggle */}
         <div style={s.toggle}>
           <button style={s.tab(mode === 'login')} onClick={() => setMode('login')}>
             Sign in
@@ -196,7 +186,6 @@ export default function Auth() {
             Create account
           </button>
         </div>
-
         <div style={s.title}>
           {mode === 'login' ? 'Welcome back.' : 'Join Bly.'}
         </div>
@@ -205,10 +194,8 @@ export default function Auth() {
             ? 'Sign in to manage your bookings.'
             : 'Create an account to start booking.'}
         </div>
-
         {error   && <div style={s.error}>{error}</div>}
         {message && <div style={s.success}>{message}</div>}
-
         <label style={s.label}>Email</label>
         <input
           style={s.input}
@@ -218,7 +205,6 @@ export default function Auth() {
           onKeyDown={handleKey}
           placeholder="you@example.com"
         />
-
         <label style={s.label}>Password</label>
         <input
           style={s.input}
@@ -228,13 +214,11 @@ export default function Auth() {
           onKeyDown={handleKey}
           placeholder="••••••••"
         />
-
         <button style={s.btn} onClick={handleSubmit} disabled={loading}>
           {loading
             ? 'Please wait…'
             : mode === 'login' ? 'Sign in →' : 'Create account →'}
         </button>
-
       </div>
     </div>
   )
