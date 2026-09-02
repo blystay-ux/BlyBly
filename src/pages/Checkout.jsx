@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { calculateGuestPriceZAR, getZARRate, formatDisplayPrice } from '../lib/pricing'
+import { calculateGuestPriceZAR, prefetchZARRates, formatDisplayPrice } from '../lib/pricing'
 import { useAuth } from '../contexts/AuthContext'
 
 function addNights(dateStr, nights) {
@@ -112,13 +112,13 @@ export default function Checkout() {
   const [specialRequests, setSpecialRequests] = useState('')
   const [redirecting, setRedirecting]         = useState(false)
   const [bookingError, setBookingError]       = useState(null)
-  const [zarRate, setZarRate]                 = useState(null)
+  const [zarRates, setZarRates]               = useState({})
 
-  // Fetch live ZAR rate for the booking currency (sell is in scope above)
+  // Prefetch ZAR rates for the booking currency + the 3 estimate currencies
   useEffect(() => {
     const currency = sell?.currency
     if (!currency) return
-    getZARRate(currency).then(setZarRate)
+    prefetchZARRates([currency, 'USD', 'EUR', 'GBP']).then(setZarRates)
   }, [sell?.currency])
 
 
@@ -142,6 +142,7 @@ export default function Checkout() {
   }
 
   const info          = property.propertyInfo
+  const zarRate       = sell?.currency ? (zarRates[sell.currency?.toUpperCase()] ?? null) : null
   const guestPrice    = sell
     ? calculateGuestPriceZAR(net?.price ?? sell.price, sell.price, sell.currency, isInsider, zarRate)
     : null
@@ -292,6 +293,17 @@ export default function Checkout() {
             <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'right', marginTop: 4 }}>
               Taxes and fees included
             </div>
+            {guestPrice?.totalAmountZAR != null && (() => {
+              const estimates = ['USD', 'EUR', 'GBP'].map(cur => {
+                const rate = zarRates[cur]
+                if (!rate) return null
+                const est = Math.round(guestPrice.totalAmountZAR / rate)
+                return `≈ ${cur} ${est.toLocaleString()}`
+              }).filter(Boolean)
+              return estimates.length > 0
+                ? <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'right', marginTop: 2 }}>{estimates.join(' · ')}</div>
+                : null
+            })()}
           </div>
 
           {/* Lead guest details */}
@@ -456,8 +468,21 @@ export default function Checkout() {
 
         {/* Sticky CTA */}
         <div style={s.ctaBar}>
-          <div style={{ fontSize: 14, fontWeight: 700 }}>
-            {guestPrice ? formatDisplayPrice(guestPrice) : null}
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700 }}>
+              {guestPrice ? formatDisplayPrice(guestPrice) : null}
+            </div>
+            {guestPrice?.totalAmountZAR != null && (() => {
+              const estimates = ['USD', 'EUR', 'GBP'].map(cur => {
+                const rate = zarRates[cur]
+                if (!rate) return null
+                const est = Math.round(guestPrice.totalAmountZAR / rate)
+                return `≈ ${cur} ${est.toLocaleString()}`
+              }).filter(Boolean)
+              return estimates.length > 0
+                ? <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1 }}>{estimates.join(' · ')}</div>
+                : null
+            })()}
           </div>
           <button
             style={{
