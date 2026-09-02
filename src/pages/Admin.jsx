@@ -45,6 +45,33 @@ function StatCard({ icon, label, value, sub }) {
 // which managed individually-listed properties from before the pivot to
 // HyperGuest as the supply source (BLY no longer approves/lists properties
 // one at a time; HyperGuest supplies all of them).
+function ContactsTab({ contacts }) {
+  return (
+    <table style={s.table}>
+      <thead>
+        <tr>
+          {['Date','Name','Email','Message'].map(h => (
+            <th key={h} style={s.th}>{h}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {contacts.length === 0 && (
+          <tr><td colSpan={4} style={{ ...s.td, color: '#aaa', textAlign: 'center', padding: 32 }}>No messages yet</td></tr>
+        )}
+        {contacts.map(c => (
+          <tr key={c.id}>
+            <td style={s.td}>{new Date(c.created_at).toLocaleDateString('en-ZA')}</td>
+            <td style={s.td}>{c.name}</td>
+            <td style={s.td}><a href={`mailto:${c.email}`} style={{ color: 'var(--accent)' }}>{c.email}</a></td>
+            <td style={s.td} style={{ whiteSpace: 'pre-wrap', maxWidth: 400 }}>{c.message}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )
+}
+
 function PropertiesTab({ properties }) {
   if (!properties.length) return <div style={s.empty}>No properties booked yet.</div>
   return (
@@ -244,6 +271,7 @@ export default function Admin() {
   const [memberNames, setMemberNames] = useState({})
   const [loading,  setLoading]  = useState(true)
   const [cancellingId, setCancellingId] = useState(null)
+  const [contacts, setContacts] = useState([])
 
   // Redirect if not admin
   useEffect(() => {
@@ -255,10 +283,11 @@ export default function Admin() {
   async function fetchAll() {
     setLoading(true)
 
-    const [bookingsRes, staticCountRes, waitlistRes, membersRes] = await Promise.all([
+    const [bookingsRes, staticCountRes, waitlistRes, membersRes, contactsRes] = await Promise.all([
       supabase.from('hg_bookings').select('*').order('created_at', { ascending: false }),
       supabase.from('hg_property_static').select('hotel_id', { count: 'exact', head: true }),
       supabase.from('waitlist').select('*').order('created_at', { ascending: false }),
+      supabase.from('contact_messages').select('*').order('created_at', { ascending: false }),
       supabase.from('industry_memberships').select('*').order('created_at', { ascending: false }),
     ])
 
@@ -366,7 +395,7 @@ export default function Admin() {
   })
   const propertiesList = Object.values(propertiesMap).sort((a, b) => b.bookingCount - a.bookingCount)
 
-  const TABS = ['overview', 'properties', 'bookings', 'waitlist', 'memberships']
+  const TABS = ['overview', 'properties', 'bookings', 'waitlist', 'memberships', 'contacts']
 
   return (
     <div style={s.page}>
@@ -399,6 +428,7 @@ export default function Admin() {
               {t === 'bookings'    && '📅 '}
               {t === 'waitlist'    && '📋 '}
               {t === 'memberships' && '🎟️ '}
+              {t === 'contacts' && '✉️ '}
               {t.charAt(0).toUpperCase() + t.slice(1)}
               {t === 'memberships' && pendingMembers > 0 && (
                 <span style={{ marginLeft: 6, background: '#ef4056', color: '#fff', borderRadius: 99, padding: '1px 7px', fontSize: 11 }}>
@@ -457,6 +487,14 @@ export default function Admin() {
                   waitlist={waitlist}
                   onDelete={deleteWaitlist}
                 />
+              </>
+            )}
+
+            {/* Contact messages */}
+            {tab === 'contacts' && (
+              <>
+                <p style={s.note}>Messages submitted via the Contact page.</p>
+                <ContactsTab contacts={contacts} />
               </>
             )}
 
