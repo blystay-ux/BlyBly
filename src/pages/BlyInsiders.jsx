@@ -250,9 +250,18 @@ export default function BlyInsiders() {
               R{FEE}<span style={{ fontSize: 16, fontWeight: 500, color: '#999' }}> / year</span>
             </div>
             <p style={{ color: '#6B6B6B', fontSize: 14, margin: '8px 0 22px' }}>
-              Sign in (or create a free BLY. account) to apply.
+              Pay now to join — then sign in to complete your application.
             </p>
-            <button style={btn} onClick={() => navigate('/auth')}>Sign in →</button>
+            <IKPayButton />
+            <div style={{ marginTop: 20, paddingTop: 20, borderTop: '1px solid #F0EDE9' }}>
+              <p style={{ color: '#6B6B6B', fontSize: 13, margin: '0 0 12px' }}>Already paid? Sign in to complete your application.</p>
+              <button
+                style={{ ...btn, background: 'none', color: '#111', border: '1.5px solid #E7E4E0', fontSize: 14, padding: '12px 24px' }}
+                onClick={() => navigate('/auth?redirect=/insiders')}
+              >
+                Sign in →
+              </button>
+            </div>
           </div>
         ) : loading ? (
           <div style={{ ...card, textAlign: 'center', color: '#999' }}>Loading…</div>
