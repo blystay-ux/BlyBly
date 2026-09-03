@@ -157,6 +157,32 @@ function BookingsTab({ bookings, onCancel, cancellingId }) {
   )
 }
 
+function CompetitionTab({ entries }) {
+  if (!entries.length) return <div style={s.empty}>No competition entries yet.</div>
+  return (
+    <div style={{ overflowX: 'auto' }}>
+      <table style={s.table}>
+        <thead>
+          <tr>{['Name', 'Email', 'Phone', 'Trade Pro', 'Entered'].map(h => (
+            <th key={h} style={s.th}>{h}</th>
+          ))}</tr>
+        </thead>
+        <tbody>
+          {entries.map(e => (
+            <tr key={e.id} style={s.tr}>
+              <td style={s.td}>{e.first_name} {e.last_name}</td>
+              <td style={s.td}><a href={`mailto:${e.email}`} style={{ color: 'var(--accent)', fontSize: 13 }}>{e.email}</a></td>
+              <td style={s.td}>{e.phone || <span style={{ color: '#ccc' }}>—</span>}</td>
+              <td style={s.td}>{e.travel_professional ? <span style={{ color: '#4ade80', fontSize: 12 }}>Yes</span> : <span style={{ color: '#ccc', fontSize: 12 }}>No</span>}</td>
+              <td style={s.td}>{new Date(e.created_at).toLocaleDateString('en-ZA')}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 function WaitlistTab({ waitlist, onDelete }) {
   if (!waitlist.length) return <div style={s.empty}>Waitlist is empty.</div>
   return (
@@ -277,6 +303,8 @@ export default function Admin() {
   const [loading,  setLoading]  = useState(true)
   const [cancellingId, setCancellingId] = useState(null)
   const [contacts, setContacts] = useState([])
+  const [competition, setCompetition] = useState([])
+  const [competition, setCompetition] = useState([])
 
   // Redirect if not admin
   useEffect(() => {
@@ -288,12 +316,14 @@ export default function Admin() {
   async function fetchAll() {
     setLoading(true)
 
-    const [bookingsRes, staticCountRes, waitlistRes, contactsRes, membersRes] = await Promise.all([
+    const [bookingsRes, staticCountRes, waitlistRes, contactsRes, membersRes, compRes] = await Promise.all([
       supabase.from('hg_bookings').select('*').order('created_at', { ascending: false }),
       supabase.from('hg_property_static').select('hotel_id', { count: 'exact', head: true }),
       supabase.from('waitlist').select('*').order('created_at', { ascending: false }),
       supabase.from('contact_messages').select('*').order('created_at', { ascending: false }),
       supabase.from('industry_memberships').select('*').order('created_at', { ascending: false }),
+      supabase.from('competition_entries').select('*').order('created_at', { ascending: false }),
+      supabase.from('competition_entries').select('*').order('created_at', { ascending: false }),
     ])
 
     let enrichedBookings = bookingsRes.data || []
@@ -314,6 +344,7 @@ export default function Admin() {
 
     if (waitlistRes.data) setWaitlist(waitlistRes.data)
     if (contactsRes.data) setContacts(contactsRes.data)
+    if (compRes.data) setCompetition(compRes.data)
 
     if (membersRes.data) {
       setMemberships(membersRes.data)
@@ -401,7 +432,7 @@ export default function Admin() {
   })
   const propertiesList = Object.values(propertiesMap).sort((a, b) => b.bookingCount - a.bookingCount)
 
-  const TABS = ['overview', 'properties', 'bookings', 'waitlist', 'memberships', 'contacts']
+  const TABS = ['overview', 'properties', 'bookings', 'waitlist', 'memberships', 'contacts', 'competition']
 
   return (
     <div style={s.page}>
@@ -465,6 +496,7 @@ export default function Admin() {
                 <StatCard icon="🏨" label="Properties booked" value={distinctPropertyIds.size} sub={`${propertyCount} cached with photos`} />
                 <StatCard icon="✕" label="Cancelled bookings" value={cancelledBookings.length} />
                 <StatCard icon="📋" label="Waitlist" value={waitlist.length} sub="people waiting" />
+                <StatCard icon="🎁" label="Competition" value={competition.length} sub="entries received" />
                 <StatCard icon="🎟️" label="Industry members" value={activeMembers} sub={`${pendingMembers} pending approval`} />
               </div>
             )}
