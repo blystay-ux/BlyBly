@@ -220,9 +220,10 @@ function PaymentStep({ userId, onMembershipCreated }) {
           proof_ack:        existing.proof_ack        || false,
         }))
       } else {
+        const { data: { user: authUser } } = await supabase.auth.getUser()
         const { data } = await supabase
           .from('industry_memberships')
-          .insert({ user_id: userId, status: 'pending', payment_status: 'unpaid' })
+          .insert({ user_id: userId, status: 'pending', payment_status: 'unpaid', applicant_email: authUser?.email ?? null })
           .select()
           .single()
         if (data) { setMembershipId(data.id); onMembershipCreated(data) }

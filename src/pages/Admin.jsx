@@ -200,7 +200,7 @@ function MembersTab({ memberships, names, onApprove, onReject, onRevoke }) {
       <table style={s.table}>
         <thead>
           <tr>
-            {['Member', 'Employer', 'Applied', 'Status', 'Payment', 'Expires', 'Actions'].map(h => (
+            {['Member', 'Email', 'Employer', 'Applied', 'Status', 'Payment', 'Expires', 'Actions'].map(h => (
               <th key={h} style={s.th}>{h}</th>
             ))}
           </tr>
@@ -213,6 +213,11 @@ function MembersTab({ memberships, names, onApprove, onReject, onRevoke }) {
                   {[m.title, m.first_name, m.surname].filter(Boolean).join(' ') || names[m.user_id] || 'Member'}
                 </div>
                 <div style={{ fontSize: 12, color: '#aaa' }}>{m.user_id.slice(0, 8)}</div>
+              </td>
+              <td style={s.td}>
+                {m.applicant_email
+                  ? <a href={`mailto:${m.applicant_email}`} style={{ color: 'var(--accent)', fontSize: 13 }}>{m.applicant_email}</a>
+                  : <span style={{ color: '#ccc', fontSize: 13 }}>—</span>}
               </td>
               <td style={s.td}>
                 <div>{m.employer_name || '—'}</div>
