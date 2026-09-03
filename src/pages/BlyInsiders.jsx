@@ -137,7 +137,7 @@ function AuthStep({ onDone }) {
 
   return (
     <div style={card}>
-      <div style={stepTag}>Step 1 of 2</div>
+      
       <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: 22, marginBottom: 4 }}>
         Create your account
       </h2>
@@ -276,7 +276,7 @@ function PaymentStep({ userId, onMembershipCreated }) {
 
   return (
     <div style={card}>
-      <div style={stepTag}>Step 2 of 2</div>
+      
       <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: 22, marginBottom: 4 }}>
         Your details
       </h2>
