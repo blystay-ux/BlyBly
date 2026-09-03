@@ -87,24 +87,23 @@ const tabStyle = (active) => ({
 })
 
 // ── iKhokha Pay Button ──────────────────────────────────────────────────────
-function IKPayButton() {
+// No <a> tag — handlePayClick saves to Supabase first, then opens iKhokha.
+function IKPayButton({ onClick, disabled }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-      <a
-        href={IK_PAY_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{ textDecoration: 'none', width: '100%', maxWidth: 300 }}
-      >
-        <div style={{
+      <button
+        onClick={onClick}
+        disabled={disabled}
+        style={{
           display: 'flex', justifyContent: 'center', alignItems: 'center',
-          width: '100%', height: 54, background: '#1D1D1B', color: '#fff',
-          borderRadius: 16, fontFamily: "'Poppins', sans-serif",
+          width: '100%', maxWidth: 300, height: 54, background: disabled ? '#555' : '#1D1D1B',
+          color: '#fff', borderRadius: 16, fontFamily: "'Poppins', sans-serif",
           fontWeight: 700, fontSize: 17, letterSpacing: '0.01em',
-        }}>
-          Pay R{FEE} →
-        </div>
-      </a>
+          border: 'none', cursor: disabled ? 'not-allowed' : 'pointer',
+        }}
+      >
+        {disabled ? 'Saving…' : `Pay R${FEE} →`}
+      </button>
       <span style={{ fontSize: 11, color: '#aaa' }}>Secured by iKhokha</span>
     </div>
   )
@@ -267,6 +266,9 @@ function PaymentStep({ userId, onMembershipCreated }) {
 
     setSaving(false)
 
+    // Open iKhokha payment in a new tab — details are already saved in Supabase
+    window.open(IK_PAY_URL, '_blank', 'noopener,noreferrer')
+
     // Sign them out — no access until admin approves
     await supabase.auth.signOut()
     window.location.href = '/?applied=1'
@@ -357,9 +359,7 @@ function PaymentStep({ userId, onMembershipCreated }) {
           <span style={{ fontSize: 14, fontWeight: 500, color: '#999' }}> / year</span>
         </div>
         <p style={{ color: '#888', fontSize: 13, marginBottom: 20 }}>Bly Insiders annual membership</p>
-        <div onClick={saving ? undefined : handlePayClick} style={{ opacity: saving ? 0.5 : 1 }}>
-          <IKPayButton />
-        </div>
+        <IKPayButton onClick={handlePayClick} disabled={saving} />
         {saving && <p style={{ color: '#aaa', fontSize: 12, marginTop: 8 }}>Saving your details…</p>}
       </div>
 
