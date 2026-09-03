@@ -304,7 +304,6 @@ export default function Admin() {
   const [cancellingId, setCancellingId] = useState(null)
   const [contacts, setContacts] = useState([])
   const [competition, setCompetition] = useState([])
-  const [competition, setCompetition] = useState([])
 
   // Redirect if not admin
   useEffect(() => {
@@ -322,7 +321,6 @@ export default function Admin() {
       supabase.from('waitlist').select('*').order('created_at', { ascending: false }),
       supabase.from('contact_messages').select('*').order('created_at', { ascending: false }),
       supabase.from('industry_memberships').select('*').order('created_at', { ascending: false }),
-      supabase.from('competition_entries').select('*').order('created_at', { ascending: false }),
       supabase.from('competition_entries').select('*').order('created_at', { ascending: false }),
     ])
 
@@ -525,6 +523,14 @@ export default function Admin() {
                   waitlist={waitlist}
                   onDelete={deleteWaitlist}
                 />
+              </>
+            )}
+
+            {/* Competition entries */}
+            {tab === 'competition' && (
+              <>
+                <p style={s.note}>September Giveaway entries — draw on 30 Sep 2026.</p>
+                <CompetitionTab entries={competition} />
               </>
             )}
 
