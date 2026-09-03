@@ -84,6 +84,77 @@ function FeaturedCard({ property }) {
     </div>
   )
 }
+
+// ── EMAIL CAPTURE STRIP ──────────────────────────────────────
+function EmailStrip() {
+  const [email, setEmail] = useState('')
+  const [status, setStatus] = useState('idle')
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!email.trim()) return
+    setStatus('loading')
+    try {
+      const { error } = await supabase
+        .from('waitlist')
+        .upsert({ email: email.trim().toLowerCase() }, { onConflict: 'email' })
+      if (error) throw error
+
+      const klaviyoKey  = import.meta.env.VITE_KLAVIYO_PUBLIC_KEY
+      const klaviyoList = import.meta.env.VITE_KLAVIYO_LIST_ID
+      if (klaviyoKey && klaviyoList) {
+        await fetch(`https://a.klaviyo.com/client/subscriptions/?company_id=${klaviyoKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', revision: '2024-02-15' },
+          body: JSON.stringify({
+            data: { type: 'subscription', attributes: { list_id: klaviyoList, email_address: { address: email.trim().toLowerCase() } } },
+          }),
+        }).catch(() => {})
+      }
+
+      setStatus('success')
+      setEmail('')
+    } catch {
+      setStatus('error')
+    }
+  }
+
+  return (
+    <section style={{ background: '#0a0a0a', borderTop: '1px solid rgba(255,255,255,0.08)', padding: '52px 40px' }}>
+      <div style={{ maxWidth: 580, margin: '0 auto', textAlign: 'center' }}>
+        <p style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 'clamp(22px, 3.5vw, 32px)', letterSpacing: '-0.05em', color: '#fff', marginBottom: 10 }}>
+          Be the first to know<span style={{ color: 'var(--accent)' }}>.</span>
+        </p>
+        <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.55)', lineHeight: 1.6, marginBottom: 28 }}>
+          New destinations, new deals — dropped by Bly. No spam, just the good stuff.
+        </p>
+        {status === 'success' ? (
+          <div style={{ background: 'rgba(239,64,86,0.12)', border: '1px solid rgba(239,64,86,0.3)', borderRadius: 14, padding: '16px 24px', color: '#EF4056', fontWeight: 700, fontSize: 15 }}>
+            {"You're in. We'll be in touch. ✨"}
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <input
+              type="email" required placeholder="your@email.com" value={email}
+              onChange={e => setEmail(e.target.value)}
+              style={{ flex: '1 1 220px', maxWidth: 320, background: 'rgba(255,255,255,0.07)', border: '1.5px solid rgba(255,255,255,0.15)', borderRadius: 10, padding: '13px 16px', color: '#fff', fontSize: 15, outline: 'none', fontFamily: 'var(--font-body)' }}
+            />
+            <button
+              type="submit" disabled={status === 'loading'}
+              style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 10, padding: '13px 24px', fontWeight: 700, fontSize: 15, cursor: status === 'loading' ? 'not-allowed' : 'pointer', opacity: status === 'loading' ? 0.7 : 1, whiteSpace: 'nowrap', fontFamily: 'var(--font-body)' }}
+            >
+              {status === 'loading' ? 'Subscribing…' : 'Notify me'}
+            </button>
+          </form>
+        )}
+        {status === 'error' && (
+          <p style={{ color: '#EF4056', fontSize: 13, marginTop: 10 }}>Something went wrong — try again in a moment.</p>
+        )}
+      </div>
+    </section>
+  )
+}
+
 export default function Home() {
   const navigate = useNavigate()
   const [showInsidersBanner, setShowInsidersBanner] = useState(true)
@@ -303,6 +374,9 @@ export default function Home() {
           ))}
         </div>
       </section>
+      {/* ── EMAIL CAPTURE ── */}
+      <EmailStrip />
+
       {/* ── FOOTER ── */}
       <footer style={{ background: 'var(--bg-dark)', padding: '28px 40px', display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>

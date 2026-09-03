@@ -283,7 +283,7 @@ export default function Admin() {
   async function fetchAll() {
     setLoading(true)
 
-    const [bookingsRes, staticCountRes, waitlistRes, membersRes, contactsRes] = await Promise.all([
+    const [bookingsRes, staticCountRes, waitlistRes, contactsRes, membersRes] = await Promise.all([
       supabase.from('hg_bookings').select('*').order('created_at', { ascending: false }),
       supabase.from('hg_property_static').select('hotel_id', { count: 'exact', head: true }),
       supabase.from('waitlist').select('*').order('created_at', { ascending: false }),
@@ -308,6 +308,7 @@ export default function Admin() {
     setPropertyCount(staticCountRes.count || 0)
 
     if (waitlistRes.data) setWaitlist(waitlistRes.data)
+    if (contactsRes.data) setContacts(contactsRes.data)
 
     if (membersRes.data) {
       setMemberships(membersRes.data)
