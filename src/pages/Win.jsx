@@ -17,7 +17,7 @@ function useCountdown() {
 
 export default function Win() {
   const [form, setForm] = useState({
-    first_name: '', last_name: '', email: '', phone: '', travel_professional: false,
+    first_name: '', last_name: '', email: '', phone: '', travel_professional: false, marketing_consent: false,
   })
   const [status, setStatus] = useState('idle')
   const cd = useCountdown()
@@ -34,6 +34,7 @@ export default function Win() {
       email:               form.email.trim().toLowerCase(),
       phone:               form.phone.trim() || null,
       travel_professional: form.travel_professional,
+      marketing_consent:   form.marketing_consent,
     })
     if (!error) { setStatus('success'); return }
     if (error.code === '23505') { setStatus('duplicate'); return }
@@ -160,16 +161,22 @@ export default function Win() {
                   <label style={{ display: 'block', fontSize: 12, color: muted, marginBottom: 7 }}>Phone number (optional)</label>
                   <input style={inputStyle} type="tel" value={form.phone} onChange={set('phone')} placeholder="+27 82 000 0000" />
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 28 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
                   <input type="checkbox" id="pro" checked={form.travel_professional} onChange={set('travel_professional')} style={{ accentColor: pink, width: 16, height: 16, cursor: 'pointer' }} />
                   <label htmlFor="pro" style={{ fontSize: 13, color: 'rgba(248,247,245,0.7)', cursor: 'pointer' }}>I'm a travel professional (agent / tour operator / industry)</label>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 28, background: 'rgba(248,247,245,0.04)', border: '1px solid rgba(248,247,245,0.08)', borderRadius: 10, padding: '14px' }}>
+                  <input type="checkbox" id="marketing" checked={form.marketing_consent} onChange={set('marketing_consent')} style={{ accentColor: pink, width: 16, height: 16, cursor: 'pointer', flexShrink: 0, marginTop: 1 }} />
+                  <label htmlFor="marketing" style={{ fontSize: 13, color: 'rgba(248,247,245,0.7)', cursor: 'pointer', lineHeight: 1.6 }}>
+                    I'd like to receive travel deals, inspiration, and updates from BLY Travel by email. You can unsubscribe at any time. <span style={{ color: 'rgba(248,247,245,0.35)' }}>(Optional — does not affect your entry)</span>
+                  </label>
                 </div>
                 <button type="submit" disabled={status === 'loading'} style={{ width: '100%', background: pink, color: '#fff', border: 'none', borderRadius: 50, padding: '15px 0', fontSize: 15, fontWeight: 600, cursor: 'pointer', opacity: status === 'loading' ? 0.6 : 1 }}>
                   {status === 'loading' ? 'Entering…' : 'Enter the draw →'}
                 </button>
               </form>
               <p style={{ fontSize: 11, color: 'rgba(248,247,245,0.35)', marginTop: 16, textAlign: 'center', lineHeight: 1.75 }}>
-                By entering you agree to receive occasional emails from BLY.<br />We never share your details. One entry per person. SA residents 18+ only.
+                We never share your details. One entry per person. SA residents 18+ only.<br />Your personal information is processed in accordance with POPIA.
               </p>
             </>
           )}
