@@ -83,7 +83,7 @@ const s = {
     background: '#fff', borderRadius: 99,
     padding: '6px 6px 6px 0', display: 'flex', alignItems: 'center',
     boxShadow: '0 2px 24px rgba(0,0,0,0.07)',
-    width: '100%', maxWidth: 720,
+    width: '100%', maxWidth: 880,
   },
   field: {
     display: 'flex', alignItems: 'center', gap: 8,

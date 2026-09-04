@@ -269,12 +269,12 @@ export default function HotelDetail() {
           checkIn,
           checkOut: addNights(checkIn, nights),
           nationality: 'ZA',
-          pax: [{ adults: adults * rooms, children: [] }],
-          rooms: Array.from({ length: rooms }, () => ({
+          pax: [{ adults, children: [] }],
+          rooms: [{
             roomId: selectedOffer.room.roomId,
             ratePlanId: selectedOffer.plan.ratePlanId,
             expectedPrice: { amount: priceForHyperGuest.price, currency: priceForHyperGuest.currency },
-          })),
+          }],
         },
       })
       if (error) throw error
