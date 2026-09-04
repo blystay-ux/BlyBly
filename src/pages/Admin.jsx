@@ -163,7 +163,7 @@ function CompetitionTab({ entries }) {
     <div style={{ overflowX: 'auto' }}>
       <table style={s.table}>
         <thead>
-          <tr>{['Name', 'Email', 'Phone', 'Trade Pro', 'Entered'].map(h => (
+          <tr>{['Name', 'Email', 'Phone', 'Trade Pro', 'Marketing OK', 'Entered'].map(h => (
             <th key={h} style={s.th}>{h}</th>
           ))}</tr>
         </thead>
@@ -174,6 +174,7 @@ function CompetitionTab({ entries }) {
               <td style={s.td}><a href={`mailto:${e.email}`} style={{ color: 'var(--accent)', fontSize: 13 }}>{e.email}</a></td>
               <td style={s.td}>{e.phone || <span style={{ color: '#ccc' }}>—</span>}</td>
               <td style={s.td}>{e.travel_professional ? <span style={{ color: '#4ade80', fontSize: 12 }}>Yes</span> : <span style={{ color: '#ccc', fontSize: 12 }}>No</span>}</td>
+              <td style={s.td}>{e.marketing_consent ? <span style={{ color: '#4ade80', fontSize: 12 }}>Yes</span> : <span style={{ color: '#ccc', fontSize: 12 }}>No</span>}</td>
               <td style={s.td}>{new Date(e.created_at).toLocaleDateString('en-ZA')}</td>
             </tr>
           ))}
