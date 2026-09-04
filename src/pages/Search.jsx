@@ -36,7 +36,7 @@ function cheapestOffer(property) {
   return cheapest
 }
 
-function ResultCard({ property, checkIn, nights, adults, zarRates = {} }) {
+function ResultCard({ property, checkIn, nights, adults, rooms, zarRates = {} }) {
   const navigate = useNavigate()
   const { isInsider } = useAuth()
   const cheapestRaw = cheapestOffer(property)
@@ -46,7 +46,7 @@ function ResultCard({ property, checkIn, nights, adults, zarRates = {} }) {
 
   const handleView = () => {
     navigate(`/hotel/hg-${property.propertyId}`, {
-      state: { property, checkIn, nights, adults },
+      state: { property, checkIn, nights, adults, rooms },
     })
   }
 
@@ -157,6 +157,7 @@ export default function Search() {
   const checkIn = searchParams.get('checkIn')
   const nights = Number(searchParams.get('nights') || 1)
   const adults = Number(searchParams.get('adults') || 2)
+  const rooms  = Number(searchParams.get('rooms')  || 1)
 
   const [results, setResults] = useState([])
   const [zarRates, setZarRates] = useState({})
@@ -215,7 +216,7 @@ export default function Search() {
         background: 'var(--bg-card)', borderBottom: '1px solid var(--border)',
         display: 'flex', justifyContent: 'center',
       }}>
-        <SearchBar initialCity={city} initialCheckIn={checkIn} initialCheckOut={addNights(checkIn, nights)} initialAdults={adults} />
+        <SearchBar initialCity={city} initialCheckIn={checkIn} initialCheckOut={addNights(checkIn, nights)} initialAdults={adults} initialRooms={rooms} />
       </div>
 
       <div className="bly-search-results" style={{ maxWidth: 1280, margin: '0 auto' }}>
@@ -250,7 +251,7 @@ export default function Search() {
         ) : (
           <div className="bly-search-grid">
             {results.map(property => (
-              <ResultCard key={property.propertyId} property={property} checkIn={checkIn} nights={nights} adults={adults} zarRates={zarRates} />
+              <ResultCard key={property.propertyId} property={property} checkIn={checkIn} nights={nights} adults={adults} rooms={rooms} zarRates={zarRates} />
             ))}
           </div>
         )}

@@ -116,7 +116,7 @@ const s = {
   notice: { width: '100%', color: '#8a8580', fontSize: 11, padding: '4px 20px 0' },
 }
 
-export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut, initialAdults }) {
+export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut, initialAdults, initialRooms }) {
   const navigate = useNavigate()
 
   const [cityGroups, setCityGroups] = useState(CERT_RESTRICTED ? [] : buildFallbackGroups())
@@ -127,6 +127,7 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
   )
   // Default is 1 adult, not 2.
   const [adults, setAdults] = useState(initialAdults || 1)
+  const [rooms, setRooms] = useState(initialRooms || 1)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -196,6 +197,7 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
       checkIn,
       nights: String(nightsBetween(checkIn, checkOut)),
       adults: String(adults),
+      rooms: String(rooms),
     })
     navigate(`/search?${params}`)
   }
@@ -268,11 +270,19 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
             label="Check-out date"
           />
         </div>
-        <div className="bly-searchbar-field-last" style={s.fieldLast}>
+        <div className="bly-searchbar-field" style={s.field}>
           <span style={s.icon}>🧑‍🤝‍🧑</span>
           <select style={s.select} value={adults} onChange={e => setAdults(Number(e.target.value))}>
             {[1, 2, 3, 4, 5, 6].map(n => (
               <option key={n} value={n}>{n} {n === 1 ? 'adult' : 'adults'}</option>
+            ))}
+          </select>
+        </div>
+        <div className="bly-searchbar-field-last" style={s.fieldLast}>
+          <span style={s.icon}>🛏️</span>
+          <select style={s.select} value={rooms} onChange={e => setRooms(Number(e.target.value))}>
+            {[1,2,3,4,5,6,7,8,9,10].map(n => (
+              <option key={n} value={n}>{n} {n === 1 ? 'room' : 'rooms'}</option>
             ))}
           </select>
         </div>

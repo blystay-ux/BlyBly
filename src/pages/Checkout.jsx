@@ -97,7 +97,7 @@ export default function Checkout() {
   const location   = useLocation()
   const { isInsider } = useAuth()
 
-  const { property, selectedOffer, prebookResult, checkIn, nights, adults } = location.state || {}
+  const { property, selectedOffer, prebookResult, checkIn, nights, adults, rooms = 1 } = location.state || {}
 
   // Derive prices early (before hooks) so useEffect dependency is in scope
   const confirmedRoom = prebookResult?.content?.rooms?.[0]
@@ -146,6 +146,16 @@ export default function Checkout() {
   const guestPrice    = sell
     ? calculateGuestPriceZAR(net?.price ?? sell.price, sell.price, sell.currency, isInsider, zarRate)
     : null
+  // For multi-room bookings multiply every price figure by room count
+  const multiRoomPrice = guestPrice && rooms > 1
+    ? {
+        ...guestPrice,
+        totalAmount:    Math.round((guestPrice.totalAmount * rooms + Number.EPSILON) * 100) / 100,
+        totalAmountZAR: guestPrice.totalAmountZAR != null
+          ? Math.round((guestPrice.totalAmountZAR * rooms + Number.EPSILON) * 100) / 100
+          : null,
+      }
+    : guestPrice
 
   function updateLeadGuest(field, value) {
     setLeadGuest(prev => ({ ...prev, [field]: value }))
@@ -195,7 +205,7 @@ export default function Checkout() {
           lead_guest:             leadGuest,
           guest_email:            leadGuest.email,
           guest_phone:            leadGuest.phone,
-          total_price_zar:        guestPrice.totalAmountZAR, // always ZAR — button is disabled until this is non-null
+          total_price_zar:        multiRoomPrice.totalAmountZAR, // always ZAR — button is disabled until this is non-null
           meta: {
             hotelName:    info.name,
             roomName:     selectedOffer.room.roomName,
@@ -282,22 +292,28 @@ export default function Checkout() {
               <span>Guests</span>
               <span>{adults} {adults === 1 ? 'adult' : 'adults'}</span>
             </div>
+            {rooms > 1 && (
+              <div style={s.summaryRow}>
+                <span>Rooms</span>
+                <span>{rooms} rooms</span>
+              </div>
+            )}
             <div style={s.summaryRow}>
               <span>Board</span>
               <span>{selectedOffer.plan.board}</span>
             </div>
             <div style={s.summaryTotal}>
               <span>Total</span>
-              <span>{guestPrice ? formatDisplayPrice(guestPrice) : null}</span>
+              <span>{multiRoomPrice ? formatDisplayPrice(multiRoomPrice) : null}</span>
             </div>
             <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'right', marginTop: 4 }}>
               Taxes and fees included
             </div>
-            {guestPrice?.totalAmountZAR != null && (() => {
+            {multiRoomPrice?.totalAmountZAR != null && (() => {
               const estimates = ['USD', 'EUR', 'GBP'].map(cur => {
                 const rate = zarRates[cur]
                 if (!rate) return null
-                const est = Math.round(guestPrice.totalAmountZAR / rate)
+                const est = Math.round(multiRoomPrice.totalAmountZAR / rate)
                 return `${cur} ${est.toLocaleString()}`
               }).filter(Boolean)
               return estimates.length > 0
@@ -470,13 +486,13 @@ export default function Checkout() {
         <div style={s.ctaBar}>
           <div>
             <div style={{ fontSize: 14, fontWeight: 700 }}>
-              {guestPrice ? formatDisplayPrice(guestPrice) : null}
+              {multiRoomPrice ? formatDisplayPrice(multiRoomPrice) : null}
             </div>
-            {guestPrice?.totalAmountZAR != null && (() => {
+            {multiRoomPrice?.totalAmountZAR != null && (() => {
               const estimates = ['USD', 'EUR', 'GBP'].map(cur => {
                 const rate = zarRates[cur]
                 if (!rate) return null
-                const est = Math.round(guestPrice.totalAmountZAR / rate)
+                const est = Math.round(multiRoomPrice.totalAmountZAR / rate)
                 return `${cur} ${est.toLocaleString()}`
               }).filter(Boolean)
               return estimates.length > 0
@@ -487,12 +503,12 @@ export default function Checkout() {
           <button
             style={{
               ...s.ctaBtn,
-              ...(!leadGuestValid() || !roomGuestsValid() || redirecting || !guestPrice?.totalAmountZAR ? s.ctaBtnDisabled : {}),
+              ...(!leadGuestValid() || !roomGuestsValid() || redirecting || !multiRoomPrice?.totalAmountZAR ? s.ctaBtnDisabled : {}),
             }}
-            disabled={!leadGuestValid() || !roomGuestsValid() || redirecting || !guestPrice?.totalAmountZAR}
+            disabled={!leadGuestValid() || !roomGuestsValid() || redirecting || !multiRoomPrice?.totalAmountZAR}
             onClick={handleProceedToPayment}
           >
-            {redirecting ? 'Setting up payment…' : !guestPrice?.totalAmountZAR ? 'Loading price…' : 'Proceed to payment →'}
+            {redirecting ? 'Setting up payment…' : !multiRoomPrice?.totalAmountZAR ? 'Loading price…' : 'Proceed to payment →'}
           </button>
         </div>
 

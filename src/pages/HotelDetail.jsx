@@ -117,6 +117,7 @@ export default function HotelDetail() {
   const stateCheckIn = location.state?.checkIn
   const stateNights = location.state?.nights
   const stateAdults = location.state?.adults
+  const stateRooms  = location.state?.rooms
   const CERT_PROPERTY_ID = 19912
   const isCertDirectLink = slug === `hg-${CERT_PROPERTY_ID}` && !stateProperty
   function defaultCertDates() {
@@ -128,6 +129,7 @@ export default function HotelDetail() {
   const [checkIn] = useState(stateCheckIn || (isCertDirectLink ? defaultCertDates() : null))
   const [nights] = useState(stateNights || (isCertDirectLink ? 2 : null))
   const [adults] = useState(stateAdults || 2)
+  const [rooms]  = useState(stateRooms  || 1)
   const [certLinkLoading, setCertLinkLoading] = useState(isCertDirectLink)
   const [certLinkError, setCertLinkError] = useState(null)
   const [staticDetail, setStaticDetail] = useState(null)
@@ -267,18 +269,18 @@ export default function HotelDetail() {
           checkIn,
           checkOut: addNights(checkIn, nights),
           nationality: 'ZA',
-          pax: [{ adults, children: [] }],
-          rooms: [{
+          pax: [{ adults: adults * rooms, children: [] }],
+          rooms: Array.from({ length: rooms }, () => ({
             roomId: selectedOffer.room.roomId,
             ratePlanId: selectedOffer.plan.ratePlanId,
             expectedPrice: { amount: priceForHyperGuest.price, currency: priceForHyperGuest.currency },
-          }],
+          })),
         },
       })
       if (error) throw error
       if (data?.error) throw new Error(data.error)
       navigate('/checkout', {
-        state: { property, selectedOffer, prebookResult: data, checkIn, nights, adults },
+        state: { property, selectedOffer, prebookResult: data, checkIn, nights, adults, rooms },
       })
     } catch (err) {
       console.error('Pre-book failed:', err)
