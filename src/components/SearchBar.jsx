@@ -83,7 +83,7 @@ const s = {
     background: '#fff', borderRadius: 99,
     padding: '6px 6px 6px 0', display: 'flex', alignItems: 'center',
     boxShadow: '0 2px 24px rgba(0,0,0,0.07)',
-    width: '100%', maxWidth: 880,
+    width: '100%', maxWidth: 720,
   },
   field: {
     display: 'flex', alignItems: 'center', gap: 8,
@@ -127,7 +127,6 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
   )
   // Default is 1 adult, not 2.
   const [adults, setAdults] = useState(initialAdults || 1)
-  const [rooms, setRooms] = useState(initialRooms || 1)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -197,7 +196,6 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
       checkIn,
       nights: String(nightsBetween(checkIn, checkOut)),
       adults: String(adults),
-      rooms: String(rooms),
     })
     navigate(`/search?${params}`)
   }
@@ -270,7 +268,7 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
             label="Check-out date"
           />
         </div>
-        <div className="bly-searchbar-field" style={s.field}>
+        <div className="bly-searchbar-field-last" style={s.fieldLast}>
           <span style={s.icon}>🧑‍🤝‍🧑</span>
           <select style={s.select} value={adults} onChange={e => setAdults(Number(e.target.value))}>
             {[1, 2, 3, 4, 5, 6].map(n => (
@@ -278,14 +276,7 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
             ))}
           </select>
         </div>
-        <div className="bly-searchbar-field-last" style={s.fieldLast}>
-          <span style={s.icon}>🛏️</span>
-          <select style={s.select} value={rooms} onChange={e => setRooms(Number(e.target.value))}>
-            {[1,2,3,4,5,6,7,8,9,10].map(n => (
-              <option key={n} value={n}>{n} {n === 1 ? 'room' : 'rooms'}</option>
-            ))}
-          </select>
-        </div>
+
         <button className="bly-searchbar-btn" style={s.searchBtn} onClick={go}>🔍 Search</button>
       </div>
       {error && <div style={s.error}>{error}</div>}
