@@ -38,10 +38,10 @@ function cheapestOffer(property) {
 
 function ResultCard({ property, checkIn, nights, adults, rooms, zarRates = {} }) {
   const navigate = useNavigate()
-  const { isInsider } = useAuth()
+  const { isInsider, corporateAccount } = useAuth()
   const cheapestRaw = cheapestOffer(property)
   const zarRate = cheapestRaw ? (zarRates[cheapestRaw.currency?.toUpperCase()] ?? null) : null
-  const offer = cheapestRaw ? calculateGuestPriceZAR(cheapestRaw.netPrice, cheapestRaw.sellPrice, cheapestRaw.currency, isInsider, zarRate) : null
+  const offer = cheapestRaw ? calculateGuestPriceZAR(cheapestRaw.netPrice, cheapestRaw.sellPrice, cheapestRaw.currency, isInsider, zarRate, corporateAccount?.commission_pct ?? 0) : null
   const info = property.propertyInfo
 
   const handleView = () => {
@@ -231,6 +231,23 @@ export default function Search() {
                 {results.length} {results.length === 1 ? 'property' : 'properties'} · {checkIn} · {nights} {nights === 1 ? 'night' : 'nights'}
               </span>
             </h1>
+          </div>
+        )}
+
+        {searchCorporateAccount && (
+          <div style={{
+            background: 'linear-gradient(90deg, #1a1a2e 0%, #16213e 100%)',
+            color: '#fff', borderRadius: 14, padding: '12px 20px',
+            marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10,
+            fontSize: 13, fontWeight: 600,
+          }}>
+            <span style={{ fontSize: 18 }}>🏢</span>
+            <span>{searchCorporateAccount.company_name} — Corporate Portal</span>
+            {searchCorporateAccount.commission_pct > 0 && (
+              <span style={{ marginLeft: 'auto', background: '#ef4056', borderRadius: 99, padding: '3px 12px', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em' }}>
+                {searchCorporateAccount.commission_pct}% RATE APPLIED
+              </span>
+            )}
           </div>
         )}
 

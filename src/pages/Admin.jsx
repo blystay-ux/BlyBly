@@ -288,6 +288,143 @@ function MembersTab({ memberships, names, onApprove, onReject, onRevoke }) {
   )
 }
 
+
+// ── Corporate accounts tab ──────────────────────────────────
+function CorporatesTab({ corporates, onSave, onToggleActive, creating, setCreating, form, setForm, saving }) {
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <p style={s.note}>Corporate portal accounts. Each account gets a private login and a negotiated rate discount.</p>
+        <button style={{ ...s.btn('accent'), padding: '9px 20px', fontSize: 13 }} onClick={() => setCreating(true)}>
+          + New account
+        </button>
+      </div>
+
+      {creating && (
+        <div style={{ background: '#fff', borderRadius: 16, padding: 28, marginBottom: 24, boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}>
+          <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 18 }}>New corporate account</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            {[
+              { label: 'Company name *', key: 'company_name', type: 'text', placeholder: 'Acme Corp' },
+              { label: 'Contact name', key: 'contact_name', type: 'text', placeholder: 'Jane Smith' },
+              { label: 'Email *', key: 'email', type: 'email', placeholder: 'jane@acmecorp.com' },
+              { label: 'Password *', key: 'password', type: 'password', placeholder: 'Min 8 characters' },
+              { label: 'Commission / Discount %', key: 'commission_pct', type: 'number', placeholder: '10' },
+            ].map(f => (
+              <div key={f.key}>
+                <label style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#888', display: 'block', marginBottom: 6 }}>{f.label}</label>
+                <input
+                  type={f.type}
+                  value={form[f.key] ?? ''}
+                  placeholder={f.placeholder}
+                  onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                  style={{ width: '100%', padding: '9px 14px', borderRadius: 10, border: '1px solid #e2e0db', fontSize: 14, fontFamily: 'var(--font-body)', boxSizing: 'border-box' }}
+                />
+              </div>
+            ))}
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#888', display: 'block', marginBottom: 6 }}>Notes</label>
+              <input
+                type="text"
+                value={form.notes ?? ''}
+                placeholder="Agreement details, etc."
+                onChange={e => setForm(prev => ({ ...prev, notes: e.target.value }))}
+                style={{ width: '100%', padding: '9px 14px', borderRadius: 10, border: '1px solid #e2e0db', fontSize: 14, fontFamily: 'var(--font-body)', boxSizing: 'border-box' }}
+              />
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+            <button style={{ ...s.btn('accent'), padding: '9px 24px' }} onClick={onSave} disabled={saving}>
+              {saving ? 'Creating…' : 'Create account'}
+            </button>
+            <button style={{ ...s.btn('default'), padding: '9px 20px' }} onClick={() => setCreating(false)}>Cancel</button>
+          </div>
+        </div>
+      )}
+
+      <div style={{ overflowX: 'auto' }}>
+        <table style={s.table}>
+          <thead>
+            <tr>
+              {['Company', 'Contact', 'Email', 'Discount %', 'Portal URL', 'Status', 'Actions'].map(h => (
+                <th key={h} style={s.th}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {corporates.length === 0 && (
+              <tr><td colSpan={7} style={{ ...s.td, color: '#aaa', textAlign: 'center', padding: 40 }}>No corporate accounts yet</td></tr>
+            )}
+            {corporates.map(c => (
+              <tr key={c.id}>
+                <td style={{ ...s.td, fontWeight: 700 }}>{c.company_name}</td>
+                <td style={s.td}>{c.contact_name || '—'}</td>
+                <td style={s.td}>{c.email ? <a href={`mailto:${c.email}`} style={{ color: 'var(--accent)', fontSize: 13 }}>{c.email}</a> : '—'}</td>
+                <td style={s.td}>
+                  <CommissionEdit corporate={c} onSaved={updated => onToggleActive(updated, null)} />
+                </td>
+                <td style={{ ...s.td, fontSize: 12 }}>
+                  <a href="/corporate/login" target="_blank" style={{ color: 'var(--accent)' }}>bly.travel/corporate/login</a>
+                </td>
+                <td style={s.td}>
+                  <span style={s.pill(c.is_active ? 'green' : 'default')}>{c.is_active ? 'Active' : 'Inactive'}</span>
+                </td>
+                <td style={s.td}>
+                  <button
+                    style={s.btn(c.is_active ? 'red' : 'green')}
+                    onClick={() => onToggleActive(c, !c.is_active)}
+                  >
+                    {c.is_active ? 'Deactivate' : 'Activate'}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+function CommissionEdit({ corporate, onSaved }) {
+  const [editing, setEditing] = React.useState(false)
+  const [pct, setPct] = React.useState(String(corporate.commission_pct ?? 0))
+  const [saving, setSaving] = React.useState(false)
+  const { supabase: sb } = (() => {
+    try { return { supabase: window._blySupabase || require('../lib/supabase').supabase } } catch { return { supabase: null } }
+  })()
+
+  async function save() {
+    setSaving(true)
+    const { data, error } = await import('../lib/supabase').then(m =>
+      m.supabase.from('corporate_accounts').update({ commission_pct: Number(pct), updated_at: new Date().toISOString() }).eq('id', corporate.id).select().single()
+    )
+    setSaving(false)
+    if (!error && data) { onSaved(data); setEditing(false) }
+  }
+
+  if (!editing) return (
+    <span
+      onClick={() => setEditing(true)}
+      style={{ cursor: 'pointer', fontWeight: 700, color: Number(corporate.commission_pct) > 0 ? '#ef4056' : '#333',
+        borderBottom: '1px dashed #ccc', padding: '2px 4px' }}
+      title="Click to edit"
+    >
+      {corporate.commission_pct ?? 0}%
+    </span>
+  )
+  return (
+    <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+      <input type="number" min={0} max={100} step={0.5} value={pct}
+        onChange={e => setPct(e.target.value)}
+        style={{ width: 64, padding: '4px 8px', borderRadius: 8, border: '1px solid #e2e0db', fontSize: 13 }}
+      />
+      <button style={s.btn('green')} onClick={save} disabled={saving}>{saving ? '…' : '✓'}</button>
+      <button style={s.btn('default')} onClick={() => setEditing(false)}>✕</button>
+    </span>
+  )
+}
+
 // ── Main Admin Page ───────────────────────────────────────────
 export default function Admin() {
   const { user, role, signOut } = useAuth()
@@ -305,6 +442,10 @@ export default function Admin() {
   const [cancellingId, setCancellingId] = useState(null)
   const [contacts, setContacts] = useState([])
   const [competition, setCompetition] = useState([])
+  const [corporates, setCorporates] = useState([])
+  const [corporateForm, setCorporateForm] = useState({})
+  const [creatingCorporate, setCreatingCorporate] = useState(false)
+  const [savingCorporate, setSavingCorporate] = useState(false)
 
   // Redirect if not admin
   useEffect(() => {
@@ -323,6 +464,7 @@ export default function Admin() {
       supabase.from('contact_messages').select('*').order('created_at', { ascending: false }),
       supabase.from('industry_memberships').select('*').order('created_at', { ascending: false }),
       supabase.from('competition_entries').select('*').order('created_at', { ascending: false }),
+      supabase.from('corporate_accounts').select('*').order('created_at', { ascending: false }),
     ])
 
     let enrichedBookings = bookingsRes.data || []
@@ -344,6 +486,7 @@ export default function Admin() {
     if (waitlistRes.data) setWaitlist(waitlistRes.data)
     if (contactsRes.data) setContacts(contactsRes.data)
     if (compRes.data) setCompetition(compRes.data)
+    if (corporatesRes.data) setCorporates(corporatesRes.data)
 
     if (membersRes.data) {
       setMemberships(membersRes.data)
@@ -374,7 +517,33 @@ export default function Admin() {
     setCancellingId(null)
   }
 
-  async function deleteWaitlist(id) {
+  async function createCorporate() {
+    const { company_name, contact_name, email, password, commission_pct, notes } = corporateForm
+    if (!company_name || !email || !password) { alert('Company name, email and password are required'); return }
+    setSavingCorporate(true)
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData?.session?.access_token
+    const { data, error } = await supabase.functions.invoke('corporate-account-create', {
+      body: { company_name, contact_name, email, password, commission_pct: Number(commission_pct || 0), notes },
+    })
+    setSavingCorporate(false)
+    if (error || data?.error) { alert(error?.message || data?.error || 'Failed to create account'); return }
+    setCorporates(prev => [data.account, ...prev])
+    setCorporateForm({})
+    setCreatingCorporate(false)
+  }
+
+  async function toggleCorporateActive(corporate, newActive) {
+    if (newActive === null) {
+      // commission update — replace in list
+      setCorporates(prev => prev.map(c => c.id === corporate.id ? corporate : c))
+      return
+    }
+    const { data } = await supabase.from('corporate_accounts').update({ is_active: newActive }).eq('id', corporate.id).select().single()
+    if (data) setCorporates(prev => prev.map(c => c.id === corporate.id ? data : c))
+  }
+
+    async function deleteWaitlist(id) {
     const { error } = await supabase.from('waitlist').delete().eq('id', id)
     if (!error) setWaitlist(prev => prev.filter(w => w.id !== id))
   }
@@ -431,7 +600,7 @@ export default function Admin() {
   })
   const propertiesList = Object.values(propertiesMap).sort((a, b) => b.bookingCount - a.bookingCount)
 
-  const TABS = ['overview', 'properties', 'bookings', 'waitlist', 'memberships', 'contacts', 'competition']
+  const TABS = ['overview', 'properties', 'bookings', 'waitlist', 'memberships', 'contacts', 'competition', 'corporates']
 
   return (
     <div style={s.page}>
@@ -541,6 +710,20 @@ export default function Admin() {
                 <p style={s.note}>Messages submitted via the Contact page.</p>
                 <ContactsTab contacts={contacts} />
               </>
+            )}
+
+            {/* Corporate accounts */}
+            {tab === 'corporates' && (
+              <CorporatesTab
+                corporates={corporates}
+                onSave={createCorporate}
+                onToggleActive={toggleCorporateActive}
+                creating={creatingCorporate}
+                setCreating={setCreatingCorporate}
+                form={corporateForm}
+                setForm={setCorporateForm}
+                saving={savingCorporate}
+              />
             )}
 
             {/* Industry memberships */}

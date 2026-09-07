@@ -21,6 +21,7 @@ import DestinationPage from './pages/DestinationPage'
 import BookingSuccess from './pages/BookingSuccess'
 import BookingPaymentFailed from './pages/BookingPaymentFailed'
 import Win from './pages/Win'
+import CorporateLogin from './pages/CorporateLogin'
 
 export default function App() {
   return (
@@ -49,6 +50,7 @@ export default function App() {
         <Route path="/booking/success"       element={<BookingSuccess />} />
         <Route path="/booking/payment-failed" element={<BookingPaymentFailed />} />
         <Route path="/win"                    element={<Win />} />
+        <Route path="/corporate/login"       element={<CorporateLogin />} />
       </Routes>
     </AuthProvider>
   )

@@ -7,23 +7,20 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
   const [isInsider, setIsInsider] = useState(false)
+  const [corporateAccount, setCorporateAccount] = useState(null)
   const [loading, setLoading] = useState(true)
 
   async function loadProfile(u) {
-    if (!u) { setProfile(null); return }
+    if (!u) { setProfile(null); return null }
     const { data } = await supabase
       .from('profiles')
       .select('id, role, full_name, status')
       .eq('id', u.id)
       .single()
     setProfile(data ?? null)
+    return data ?? null
   }
 
-  // Computed once here (not re-queried per page) so every page can check
-  // useAuth().isInsider directly for Bly Insiders pricing/features. Checks
-  // BOTH status === 'active' AND that expires_at hasn't already passed --
-  // there's no automatic cron job that flips expired memberships back to
-  // 'expired', so this guards against a stale 'active' row past its date.
   async function loadInsiderStatus(u) {
     if (!u) { setIsInsider(false); return }
     const { data } = await supabase
@@ -38,11 +35,36 @@ export function AuthProvider({ children }) {
     setIsInsider(stillValid)
   }
 
+  async function loadCorporateAccount(u, profile) {
+    if (!u || profile?.role !== 'corporate') { setCorporateAccount(null); return }
+    const { data } = await supabase
+      .from('corporate_accounts')
+      .select('id, company_name, contact_name, commission_pct, is_active')
+      .eq('user_id', u.id)
+      .eq('is_active', true)
+      .maybeSingle()
+    setCorporateAccount(data ?? null)
+  }
+
+  async function loadAll(u) {
+    if (!u) {
+      setProfile(null)
+      setIsInsider(false)
+      setCorporateAccount(null)
+      return
+    }
+    const [profileData] = await Promise.all([
+      loadProfile(u),
+      loadInsiderStatus(u),
+    ])
+    await loadCorporateAccount(u, profileData)
+  }
+
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       const u = session?.user ?? null
       setUser(u)
-      await Promise.all([loadProfile(u), loadInsiderStatus(u)])
+      await loadAll(u)
       setLoading(false)
     })
 
@@ -50,7 +72,7 @@ export function AuthProvider({ children }) {
       async (_event, session) => {
         const u = session?.user ?? null
         setUser(u)
-        await Promise.all([loadProfile(u), loadInsiderStatus(u)])
+        await loadAll(u)
       }
     )
 
@@ -72,6 +94,7 @@ export function AuthProvider({ children }) {
         profile,
         role: profile?.role ?? null,
         isInsider,
+        corporateAccount,
         loading,
         signUp,
         signIn,

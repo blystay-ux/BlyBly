@@ -17,6 +17,13 @@
 // relationship -- a flat, simpler, cheaper rate as their membership perk.
 // Insider status is checked once globally in AuthContext.jsx
 // (useAuth().isInsider) and passed into this function by the caller.
+//
+// CORPORATE pricing (added 2026-09-07): a logged-in corporate account
+// sees a discount off the public sell rate. The discount % is stored in
+// corporate_accounts.commission_pct and loaded in AuthContext.jsx as
+// useAuth().corporateAccount.commission_pct. Applied AFTER the public
+// rate is calculated: corporate_total = public_total * (1 - pct/100).
+// Mutually exclusive with Insider rate (corporates are not consumers).
 
 export const COMMISSION_RATE = 0.10         // public rate: 10% when Net === Sell
 export const INSIDER_COMMISSION_RATE = 0.03 // Bly Insiders rate: flat 3% on Net, always
@@ -31,16 +38,18 @@ function round2(n) {
  * @param {number} sellAmount - HyperGuest's Sell rate
  * @param {string} currency
  * @param {boolean} isInsider - true if the current user is a logged-in, active Bly Insiders member
+ * @param {number} corporateCommissionPct - 0–100; discount % off public sell rate for corporate accounts
  * @returns {{
  *   currency: string,
  *   netAmount: number,
  *   sellAmount: number,
- *   markupApplied: boolean, // true if BLY added its own commission (either the 10% net===sell case, or the Insider 3%)
- *   isInsiderRate: boolean, // true if the Insider formula was used
- *   totalAmount: number     // what the guest sees/pays
+ *   markupApplied: boolean,
+ *   isInsiderRate: boolean,
+ *   isCorporateRate: boolean,
+ *   totalAmount: number
  * }}
  */
-export function calculateGuestPrice(netAmount, sellAmount, currency, isInsider = false) {
+export function calculateGuestPrice(netAmount, sellAmount, currency, isInsider = false, corporateCommissionPct = 0) {
   const net = Number(netAmount) || 0
   const sell = Number(sellAmount) || 0
 
@@ -52,12 +61,18 @@ export function calculateGuestPrice(netAmount, sellAmount, currency, isInsider =
       sellAmount: round2(sell),
       markupApplied: true,
       isInsiderRate: true,
+      isCorporateRate: false,
       totalAmount: round2(total),
     }
   }
 
   const ratesAreEqual = Math.abs(net - sell) < SAME_RATE_TOLERANCE
-  const total = ratesAreEqual ? sell * (1 + COMMISSION_RATE) : sell
+  let total = ratesAreEqual ? sell * (1 + COMMISSION_RATE) : sell
+  const isCorporateRate = corporateCommissionPct > 0
+
+  if (isCorporateRate) {
+    total = total * (1 - corporateCommissionPct / 100)
+  }
 
   return {
     currency,
@@ -65,6 +80,8 @@ export function calculateGuestPrice(netAmount, sellAmount, currency, isInsider =
     sellAmount: round2(sell),
     markupApplied: ratesAreEqual,
     isInsiderRate: false,
+    isCorporateRate,
+    corporateCommissionPct: isCorporateRate ? corporateCommissionPct : 0,
     totalAmount: round2(total),
   }
 }
@@ -111,7 +128,6 @@ export async function getZARRate(currency) {
 
 /**
  * Prefetch ZAR rates for multiple currencies in one pass.
- * Call this once when search results arrive so per-card renders are instant.
  * Returns a map: { USD: 18.72, EUR: 20.1, ZAR: 1, ... }
  */
 export async function prefetchZARRates(currencies) {
@@ -124,7 +140,6 @@ export async function prefetchZARRates(currencies) {
  * Convert an amount in any currency to ZAR, adding the 3% FX buffer.
  */
 export function convertToZAR(amount, zarRate) {
-  // No FX buffer when already ZAR (rate === 1)
   if (zarRate === 1) return Math.round((amount + Number.EPSILON) * 100) / 100
   return Math.round((amount * zarRate * (1 + FX_BUFFER) + Number.EPSILON) * 100) / 100
 }
@@ -132,9 +147,10 @@ export function convertToZAR(amount, zarRate) {
 /**
  * All-in-one: calculateGuestPrice + ZAR conversion.
  * Pass zarRate from prefetchZARRates result; pass null if unavailable.
+ * Pass corporateCommissionPct from useAuth().corporateAccount?.commission_pct ?? 0
  */
-export function calculateGuestPriceZAR(netAmount, sellAmount, currency, isInsider = false, zarRate = null) {
-  const base = calculateGuestPrice(netAmount, sellAmount, currency, isInsider)
+export function calculateGuestPriceZAR(netAmount, sellAmount, currency, isInsider = false, zarRate = null, corporateCommissionPct = 0) {
+  const base = calculateGuestPrice(netAmount, sellAmount, currency, isInsider, corporateCommissionPct)
   const totalAmountZAR = zarRate != null ? convertToZAR(base.totalAmount, zarRate) : null
   return { ...base, totalAmountZAR, zarRate }
 }

@@ -111,7 +111,7 @@ export default function HotelDetail() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
-  const { isInsider } = useAuth()
+  const { isInsider, corporateAccount } = useAuth()
   const isHyperGuest = slug?.startsWith('hg-')
   const stateProperty = location.state?.property
   const stateCheckIn = location.state?.checkIn
@@ -373,7 +373,7 @@ export default function HotelDetail() {
                 const sell = offer.plan.prices?.sell
                 const policies = offer.plan.cancellationPolicies || []
                 const zarRate = sell ? (zarRates[sell.currency?.toUpperCase()] ?? null) : null
-                const guestPrice = sell ? calculateGuestPriceZAR(net?.price ?? sell.price, sell.price, sell.currency, isInsider, zarRate) : null
+                const guestPrice = sell ? calculateGuestPriceZAR(net?.price ?? sell.price, sell.price, sell.currency, isInsider, zarRate, corporateAccount?.commission_pct ?? 0) : null
                 return (
                   <div key={i} style={s.offerCard(isSelected)} onClick={() => { setSelectedOffer(offer); setPrebookError(null) }}>
                     <div style={s.offerTop}>
@@ -384,7 +384,7 @@ export default function HotelDetail() {
                       <div style={s.offerPrice}>{guestPrice ? formatDisplayPrice(guestPrice) : null}</div>
                     </div>
                     <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'right', marginTop: -6, marginBottom: guestPrice?.totalAmountZAR ? 2 : 6 }}>
-                      Taxes and fees included{guestPrice?.isInsiderRate && ' · Bly Insiders rate'}
+                      Taxes and fees included{guestPrice?.isInsiderRate && ' · Bly Insiders rate'}{guestPrice?.isCorporateRate && ` · ${guestPrice.corporateCommissionPct}% corporate rate`}
                     </div>
                     {guestPrice?.totalAmountZAR != null && (() => {
                       const estimates = ['USD', 'EUR', 'GBP'].map(cur => {
