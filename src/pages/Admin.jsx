@@ -726,6 +726,7 @@ export default function Admin() {
                 <StatCard icon="📋" label="Waitlist" value={waitlist.length} sub="people waiting" />
                 <StatCard icon="🎁" label="Competition" value={competition.length} sub="entries received" />
                 <StatCard icon="🎟️" label="Industry members" value={activeMembers} sub={`${pendingMembers} pending approval`} />
+                <StatCard icon="🏢" label="Corporate accounts" value={corporates.length} sub={`${corporateRequests.filter(r => r.status === 'pending').length} requests pending`} />
               </div>
             )}
 
