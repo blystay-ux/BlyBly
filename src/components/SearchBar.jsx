@@ -126,7 +126,7 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
     isValidDateStr(initialCheckOut) ? initialCheckOut : addNights(isValidDateStr(initialCheckIn) ? initialCheckIn : defaultCheckIn(), 1)
   )
   // Default is 1 adult, not 2.
-  const [adults, setAdults] = useState(initialAdults || 1)
+  const [adults, setAdults] = useState(initialAdults || 2)
   const [error, setError] = useState('')
 
   useEffect(() => {
