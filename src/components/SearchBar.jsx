@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import DatePicker from './DatePicker'
@@ -121,6 +121,9 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
 
   const [cityGroups, setCityGroups] = useState(CERT_RESTRICTED ? [] : buildFallbackGroups())
   const [city, setCity] = useState(initialCity || (CERT_RESTRICTED ? CERT_RESTRICTED_CITIES[0] : PRIORITY_CITIES[0]))
+  const [cityQuery, setCityQuery] = useState('')
+  const [cityOpen, setCityOpen] = useState(false)
+  const cityRef = useRef(null)
   const [checkIn, setCheckIn] = useState(isValidDateStr(initialCheckIn) ? initialCheckIn : defaultCheckIn())
   const [checkOut, setCheckOut] = useState(
     isValidDateStr(initialCheckOut) ? initialCheckOut : addNights(isValidDateStr(initialCheckIn) ? initialCheckIn : defaultCheckIn(), 1)
@@ -177,6 +180,44 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
     }
   }, [checkIn])
 
+  // Close city dropdown on outside click
+  useEffect(() => {
+    function handleOutside(e) {
+      if (cityRef.current && !cityRef.current.contains(e.target)) {
+        setCityOpen(false)
+        setCityQuery('')
+      }
+    }
+    if (cityOpen) document.addEventListener('mousedown', handleOutside)
+    return () => document.removeEventListener('mousedown', handleOutside)
+  }, [cityOpen])
+
+  // Filtered groups for the combobox
+  const q = cityQuery.trim().toLowerCase()
+  const filteredGroups = q
+    ? (() => {
+        const result = []
+        // Check popular first
+        const popMatches = PRIORITY_CITIES.filter(c => c.toLowerCase().includes(q))
+        if (popMatches.length) result.push({ label: 'Popular', cities: popMatches })
+        // Then country groups
+        for (const g of cityGroups) {
+          const cityMatches = g.cities.filter(c => c.toLowerCase().includes(q))
+          const countryMatches = g.label.toLowerCase().includes(q)
+          if (cityMatches.length || countryMatches) {
+            result.push({ label: g.label, cities: countryMatches && !cityMatches.length ? g.cities : cityMatches })
+          }
+        }
+        return result
+      })()
+    : [{ label: 'Popular', cities: PRIORITY_CITIES }, ...cityGroups]
+
+  function selectCity(c) {
+    setCity(c)
+    setCityQuery('')
+    setCityOpen(false)
+  }
+
   const go = () => {
     setError('')
     if (!isValidDateStr(checkIn) || !isValidDateStr(checkOut)) {
@@ -231,24 +272,62 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
         }
       `}</style>
       <div className="bly-searchbar-wrapper" style={s.wrapper}>
-        <div className="bly-searchbar-field" style={s.field}>
+        <div className="bly-searchbar-field" style={{ ...s.field, position: 'relative' }} ref={cityRef}>
           <span style={s.icon}>📍</span>
-          <select style={s.select} value={city} onChange={e => setCity(e.target.value)}>
-            {CERT_RESTRICTED ? (
-              CERT_RESTRICTED_CITIES.map(c => <option key={c}>{c}</option>)
-            ) : (
-              <>
-                <optgroup label="Popular">
-                  {PRIORITY_CITIES.map(c => <option key={c}>{c}</option>)}
-                </optgroup>
-                {cityGroups.map(group => (
-                  <optgroup key={group.label} label={group.label}>
-                    {group.cities.map(c => <option key={c}>{c}</option>)}
-                  </optgroup>
-                ))}
-              </>
-            )}
-          </select>
+          {CERT_RESTRICTED ? (
+            <span style={{ fontSize: 13, color: '#111' }}>{city}</span>
+          ) : (
+            <input
+              style={{ ...s.input, cursor: 'pointer', minWidth: 100 }}
+              value={cityOpen ? cityQuery : city}
+              placeholder={city}
+              onFocus={() => { setCityOpen(true); setCityQuery('') }}
+              onChange={e => { setCityQuery(e.target.value); setCityOpen(true) }}
+              onKeyDown={e => {
+                if (e.key === 'Escape') { setCityOpen(false); setCityQuery('') }
+                if (e.key === 'Enter') {
+                  const flat = filteredGroups.flatMap(g => g.cities)
+                  if (flat.length) selectCity(flat[0])
+                }
+              }}
+              autoComplete="off"
+            />
+          )}
+          {cityOpen && !CERT_RESTRICTED && (
+            <div style={{
+              position: 'absolute', top: 'calc(100% + 8px)', left: -16, minWidth: 260, maxWidth: 320,
+              background: '#fff', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.13)',
+              zIndex: 200, maxHeight: 340, overflowY: 'auto', padding: '8px 0',
+            }}>
+              {filteredGroups.length === 0 && (
+                <div style={{ padding: '12px 16px', fontSize: 13, color: '#aaa' }}>No destinations found</div>
+              )}
+              {filteredGroups.map(group => (
+                <div key={group.label}>
+                  <div style={{ padding: '6px 16px 2px', fontSize: 11, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#999' }}>
+                    {group.label}
+                  </div>
+                  {group.cities.map(c => (
+                    <div
+                      key={c}
+                      onMouseDown={() => selectCity(c)}
+                      style={{
+                        padding: '9px 16px', fontSize: 14, cursor: 'pointer',
+                        background: c === city ? '#f4f2ef' : 'transparent',
+                        fontWeight: c === city ? 600 : 400,
+                        color: '#111',
+                        transition: 'background 0.1s',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#f8f7f5'}
+                      onMouseLeave={e => e.currentTarget.style.background = c === city ? '#f4f2ef' : 'transparent'}
+                    >
+                      {c}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <div className="bly-searchbar-field" style={s.field}>
           <span style={s.icon}>📅</span>
