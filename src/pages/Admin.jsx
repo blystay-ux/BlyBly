@@ -290,7 +290,9 @@ function MembersTab({ memberships, names, onApprove, onReject, onRevoke }) {
 
 
 // ── Corporate accounts tab ──────────────────────────────────
-function CorporatesTab({ corporates, onSave, onToggleActive, creating, setCreating, form, setForm, saving }) {
+function CorporatesTab({ corporates, onSave, onToggleActive, creating, setCreating, form, setForm, saving, corporateRequests = [], onApproveRequest, onRejectRequest }) {
+  const pending = corporateRequests.filter(r => r.status === 'pending')
+  const allReqs = corporateRequests
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
@@ -339,6 +341,61 @@ function CorporatesTab({ corporates, onSave, onToggleActive, creating, setCreati
             </button>
             <button style={{ ...s.btn('default'), padding: '9px 20px' }} onClick={() => setCreating(false)}>Cancel</button>
           </div>
+        </div>
+      )}
+
+      {/* ── Requests panel ── */}
+      {allReqs.length > 0 && (
+        <div style={{ marginBottom: 32 }}>
+          <div style={{ fontWeight: 800, fontSize: 15, letterSpacing: '-0.3px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
+            Account Requests
+            {pending.length > 0 && (
+              <span style={{ background: '#ef4056', color: '#fff', borderRadius: 99, fontSize: 11, fontWeight: 700, padding: '2px 8px' }}>{pending.length} pending</span>
+            )}
+          </div>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={s.table}>
+              <thead>
+                <tr>
+                  {['Company', 'Contact', 'Email', 'Phone', 'Message', 'Date', 'Status', 'Actions'].map(h => (
+                    <th key={h} style={s.th}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {allReqs.map(req => (
+                  <tr key={req.id} style={{ opacity: req.status !== 'pending' ? 0.55 : 1 }}>
+                    <td style={{ ...s.td, fontWeight: 700 }}>{req.company_name}</td>
+                    <td style={s.td}>{req.contact_name}</td>
+                    <td style={s.td}><a href={`mailto:${req.email}`} style={{ color: 'var(--accent)', fontSize: 13 }}>{req.email}</a></td>
+                    <td style={s.td}>{req.phone || '—'}</td>
+                    <td style={{ ...s.td, maxWidth: 200, fontSize: 12, color: '#666' }}>{req.message || '—'}</td>
+                    <td style={{ ...s.td, fontSize: 12, whiteSpace: 'nowrap' }}>{new Date(req.created_at).toLocaleDateString('en-ZA', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                    <td style={s.td}>
+                      <span style={s.pill(req.status === 'pending' ? 'yellow' : req.status === 'approved' ? 'green' : 'default')}>
+                        {req.status.charAt(0).toUpperCase() + req.status.slice(1)}
+                      </span>
+                    </td>
+                    <td style={{ ...s.td, whiteSpace: 'nowrap' }}>
+                      {req.status === 'pending' && (
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button style={{ ...s.btn('green'), padding: '5px 12px', fontSize: 12 }} onClick={() => onApproveRequest(req)}>
+                            Approve
+                          </button>
+                          <button style={{ ...s.btn('red'), padding: '5px 10px', fontSize: 12 }} onClick={() => onRejectRequest(req)}>
+                            Reject
+                          </button>
+                        </div>
+                      )}
+                      {req.status !== 'pending' && <span style={{ fontSize: 12, color: '#aaa' }}>—</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div style={{ borderTop: '1.5px solid var(--border)', margin: '24px 0 0' }} />
+          <div style={{ fontWeight: 800, fontSize: 15, letterSpacing: '-0.3px', margin: '20px 0 14px' }}>Active Accounts</div>
         </div>
       )}
 
@@ -443,6 +500,7 @@ export default function Admin() {
   const [contacts, setContacts] = useState([])
   const [competition, setCompetition] = useState([])
   const [corporates, setCorporates] = useState([])
+  const [corporateRequests, setCorporateRequests] = useState([])
   const [corporateForm, setCorporateForm] = useState({})
   const [creatingCorporate, setCreatingCorporate] = useState(false)
   const [savingCorporate, setSavingCorporate] = useState(false)
@@ -457,7 +515,7 @@ export default function Admin() {
   async function fetchAll() {
     setLoading(true)
 
-    const [bookingsRes, staticCountRes, waitlistRes, contactsRes, membersRes, compRes, corporatesRes] = await Promise.all([
+    const [bookingsRes, staticCountRes, waitlistRes, contactsRes, membersRes, compRes, corporatesRes, corporateRequestsRes] = await Promise.all([
       supabase.from('hg_bookings').select('*').order('created_at', { ascending: false }),
       supabase.from('hg_property_static').select('hotel_id', { count: 'exact', head: true }),
       supabase.from('waitlist').select('*').order('created_at', { ascending: false }),
@@ -465,6 +523,7 @@ export default function Admin() {
       supabase.from('industry_memberships').select('*').order('created_at', { ascending: false }),
       supabase.from('competition_entries').select('*').order('created_at', { ascending: false }),
       supabase.from('corporate_accounts').select('*').order('created_at', { ascending: false }),
+      supabase.from('corporate_requests').select('*').order('created_at', { ascending: false }),
     ])
 
     let enrichedBookings = bookingsRes.data || []
@@ -487,6 +546,7 @@ export default function Admin() {
     if (contactsRes.data) setContacts(contactsRes.data)
     if (compRes.data) setCompetition(compRes.data)
     if (corporatesRes.data) setCorporates(corporatesRes.data)
+    if (corporateRequestsRes.data) setCorporateRequests(corporateRequestsRes.data)
 
     if (membersRes.data) {
       setMemberships(membersRes.data)
@@ -723,6 +783,16 @@ export default function Admin() {
                 form={corporateForm}
                 setForm={setCorporateForm}
                 saving={savingCorporate}
+                corporateRequests={corporateRequests}
+                onApproveRequest={(req) => {
+                  setCorporateRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'approved' } : r))
+                  setCorporateForm({ company_name: req.company_name, contact_name: req.contact_name, email: req.email })
+                  setCreatingCorporate(true)
+                }}
+                onRejectRequest={async (req) => {
+                  await supabase.from('corporate_requests').update({ status: 'rejected' }).eq('id', req.id)
+                  setCorporateRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'rejected' } : r))
+                }}
               />
             )}
 

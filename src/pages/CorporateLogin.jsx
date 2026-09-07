@@ -199,10 +199,9 @@ export default function CorporateLogin() {
         <div style={s.footer}>
           <p style={s.helpText}>
             Don't have a corporate account?{' '}
-            <a href="mailto:corporate@bly.travel" style={{ color: '#1a1a2e', fontWeight: 600 }}>
-              Contact us
-            </a>{' '}
-            to set one up.
+            <Link to="/corporate/request" style={{ color: '#1a1a2e', fontWeight: 600 }}>
+              Request one here
+            </Link>
           </p>
           <Link to="/auth" style={s.footerLink}>
             Sign in as a traveller instead →
