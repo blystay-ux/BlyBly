@@ -135,7 +135,7 @@ export default function CorporateLogin() {
         }
 
         // Correct role — send to search
-        navigate('/search')
+        navigate('/')
       }
 
       await checkRole()
