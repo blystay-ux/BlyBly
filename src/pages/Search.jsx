@@ -159,6 +159,7 @@ export default function Search() {
   const adults = Number(searchParams.get('adults') || 2)
   const rooms  = Number(searchParams.get('rooms')  || 1)
 
+  const { corporateAccount: searchCorporateAccount } = useAuth()
   const [results, setResults] = useState([])
   const [zarRates, setZarRates] = useState({})
   const [loading, setLoading] = useState(true)
