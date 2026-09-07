@@ -387,18 +387,18 @@ function CorporatesTab({ corporates, onSave, onToggleActive, creating, setCreati
 }
 
 function CommissionEdit({ corporate, onSaved }) {
-  const [editing, setEditing] = React.useState(false)
-  const [pct, setPct] = React.useState(String(corporate.commission_pct ?? 0))
-  const [saving, setSaving] = React.useState(false)
-  const { supabase: sb } = (() => {
-    try { return { supabase: window._blySupabase || require('../lib/supabase').supabase } } catch { return { supabase: null } }
-  })()
+  const [editing, setEditing] = useState(false)
+  const [pct, setPct] = useState(String(corporate.commission_pct ?? 0))
+  const [saving, setSaving] = useState(false)
 
   async function save() {
     setSaving(true)
-    const { data, error } = await import('../lib/supabase').then(m =>
-      m.supabase.from('corporate_accounts').update({ commission_pct: Number(pct), updated_at: new Date().toISOString() }).eq('id', corporate.id).select().single()
-    )
+    const { data, error } = await supabase
+      .from('corporate_accounts')
+      .update({ commission_pct: Number(pct), updated_at: new Date().toISOString() })
+      .eq('id', corporate.id)
+      .select()
+      .single()
     setSaving(false)
     if (!error && data) { onSaved(data); setEditing(false) }
   }
