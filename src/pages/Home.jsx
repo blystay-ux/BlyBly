@@ -272,7 +272,7 @@ export default function Home() {
         </div>
       )}
       {/* ── HERO ── */}
-      <section style={{ position: 'relative', minHeight: '78vh', display: 'flex', alignItems: 'flex-end', overflow: 'hidden' }}>
+      <section style={{ position: 'relative', minHeight: '78vh', display: 'flex', alignItems: 'flex-end' }}>
         <img src={HERO_IMG} alt="Accommodation in South Africa" fetchPriority="high" loading="eager" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(10,10,10,0.55) 0%, rgba(10,10,10,0.35) 45%, rgba(10,10,10,0.65) 100%)' }} />
         {/* Big wordmark, layered on the photo itself -- separate from the
