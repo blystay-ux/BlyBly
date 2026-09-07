@@ -129,7 +129,7 @@ export default function CorporateLogin() {
           // Sign them back out — wrong portal
           const { supabase: sb } = await import('../lib/supabase')
           await sb.auth.signOut()
-          setError('This portal is for corporate accounts only. To sign in as a traveller, use the main login.')
+          setError('This portal is for corporate accounts only.')
           setLoading(false)
           return
         }
@@ -203,9 +203,7 @@ export default function CorporateLogin() {
               Request one here
             </Link>
           </p>
-          <Link to="/auth" style={s.footerLink}>
-            Sign in as a traveller instead →
-          </Link>
+
         </div>
       </div>
     </div>
