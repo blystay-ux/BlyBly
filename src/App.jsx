@@ -25,6 +25,7 @@ import CorporateLogin from './pages/CorporateLogin'
 import CorporateRequest from './pages/CorporateRequest'
 import WriteReview from './pages/WriteReview'
 import PromoCode from './pages/PromoCode'
+import EventsCalendar from './pages/EventsCalendar'
 
 export default function App() {
   return (
@@ -61,6 +62,9 @@ export default function App() {
 
         {/* Promo code redemption */}
         <Route path="/promo" element={<PromoCode />} />
+
+        {/* Events calendar */}
+        <Route path="/events/south-africa" element={<EventsCalendar />} />
       </Routes>
     </AuthProvider>
   )
