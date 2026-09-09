@@ -24,6 +24,7 @@ import Win from './pages/Win'
 import CorporateLogin from './pages/CorporateLogin'
 import CorporateRequest from './pages/CorporateRequest'
 import WriteReview from './pages/WriteReview'
+import PromoCode from './pages/PromoCode'
 
 export default function App() {
   return (
@@ -57,6 +58,9 @@ export default function App() {
 
         {/* Review flow */}
         <Route path="/review/hg/:hgBookingId" element={<WriteReview />} />
+
+        {/* Promo code redemption */}
+        <Route path="/promo" element={<PromoCode />} />
       </Routes>
     </AuthProvider>
   )

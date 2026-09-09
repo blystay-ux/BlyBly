@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
+  <!-- Core pages -->
   <url>
     <loc>https://blytravel.co.za/</loc>
     <changefreq>daily</changefreq>
@@ -17,6 +18,43 @@
     <loc>https://blytravel.co.za/insiders</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+  </url>
+
+  <!-- Blog index -->
+  <url>
+    <loc>https://blytravel.co.za/blog</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-09-04</lastmod>
+  </url>
+
+  <!-- Blog articles -->
+  <url>
+    <loc>https://blytravel.co.za/blog/hotels-cape-town-guide</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-08-01</lastmod>
+  </url>
+
+  <url>
+    <loc>https://blytravel.co.za/blog/hotels-johannesburg-guide</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-09-04</lastmod>
+  </url>
+
+  <url>
+    <loc>https://blytravel.co.za/blog/garden-route-hotels-guide</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-09-04</lastmod>
+  </url>
+
+  <url>
+    <loc>https://blytravel.co.za/blog/stellenbosch-vs-franschhoek</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-09-04</lastmod>
   </url>
 
 </urlset>

@@ -105,6 +105,11 @@ export default function Checkout() {
   const sell          = confirmedRoom?.prices?.sell ?? selectedOffer?.plan?.prices?.sell
 
 
+  // Read promo code stored by /promo page
+  const [promo] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem('bly_promo')) } catch { return null }
+  })
+
   const [leadGuest, setLeadGuest]             = useState(emptyLeadGuest())
   const [roomGuests, setRoomGuests]           = useState(
     property && adults ? Array.from({ length: adults }, emptyGuest) : []
@@ -157,6 +162,17 @@ export default function Checkout() {
       }
     : guestPrice
 
+  // Apply promo discount to the ZAR amount shown to/charged from the guest
+  // (HyperGuest rate is unchanged — BLY absorbs the discount from margin)
+  const discountedPrice = promo && multiRoomPrice?.totalAmountZAR != null
+    ? {
+        ...multiRoomPrice,
+        totalAmountZAR:       Math.round(multiRoomPrice.totalAmountZAR * (1 - promo.discount_pct / 100)),
+        originalAmountZAR:    multiRoomPrice.totalAmountZAR,
+        discountPct:          promo.discount_pct,
+      }
+    : multiRoomPrice
+
   function updateLeadGuest(field, value) {
     setLeadGuest(prev => ({ ...prev, [field]: value }))
   }
@@ -205,11 +221,12 @@ export default function Checkout() {
           lead_guest:             leadGuest,
           guest_email:            leadGuest.email,
           guest_phone:            leadGuest.phone,
-          total_price_zar:        multiRoomPrice.totalAmountZAR, // always ZAR — button is disabled until this is non-null
+          total_price_zar:        discountedPrice.totalAmountZAR, // always ZAR — button is disabled until this is non-null
           meta: {
             hotelName:    info.name,
             roomName:     selectedOffer.room.roomName,
             ratePlanName: selectedOffer.plan.ratePlanName,
+            ...(promo ? { promo_code: promo.code, promo_discount_pct: promo.discount_pct } : {}),
           },
           checkout_payload: {
             propertyId:       property.propertyId,
@@ -235,6 +252,12 @@ export default function Checkout() {
         .single()
 
       if (dbErr) throw new Error(dbErr.message)
+
+      // ── Increment promo code usage count ────────────────────────────────────
+      if (promo?.code) {
+        await supabase.rpc('use_promo_code', { p_code: promo.code })
+        sessionStorage.removeItem('bly_promo')
+      }
 
       // ── Step 2: Get iKhokha payment link (Supabase Edge Function) ──────────
       const { data: { session } } = await supabase.auth.getSession()
@@ -302,18 +325,30 @@ export default function Checkout() {
               <span>Board</span>
               <span>{selectedOffer.plan.board}</span>
             </div>
+            {promo && discountedPrice?.originalAmountZAR != null && (
+              <>
+                <div style={{ ...s.summaryRow, color: 'var(--text-muted)', textDecoration: 'line-through' }}>
+                  <span>Subtotal</span>
+                  <span>R {Number(discountedPrice.originalAmountZAR).toLocaleString('en-ZA')}</span>
+                </div>
+                <div style={{ ...s.summaryRow, color: '#16a34a', fontWeight: 700 }}>
+                  <span>Promo: {promo.code}</span>
+                  <span>-{promo.discount_pct}%</span>
+                </div>
+              </>
+            )}
             <div style={s.summaryTotal}>
               <span>Total</span>
-              <span>{multiRoomPrice ? formatDisplayPrice(multiRoomPrice) : null}</span>
+              <span>{discountedPrice ? formatDisplayPrice(discountedPrice) : null}</span>
             </div>
             <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'right', marginTop: 4 }}>
               Taxes and fees included
             </div>
-            {multiRoomPrice?.totalAmountZAR != null && (() => {
+            {discountedPrice?.totalAmountZAR != null && (() => {
               const estimates = ['USD', 'EUR', 'GBP'].map(cur => {
                 const rate = zarRates[cur]
                 if (!rate) return null
-                const est = Math.round(multiRoomPrice.totalAmountZAR / rate)
+                const est = Math.round(discountedPrice.totalAmountZAR / rate)
                 return `${cur} ${est.toLocaleString()}`
               }).filter(Boolean)
               return estimates.length > 0
@@ -486,13 +521,18 @@ export default function Checkout() {
         <div style={s.ctaBar}>
           <div>
             <div style={{ fontSize: 14, fontWeight: 700 }}>
-              {multiRoomPrice ? formatDisplayPrice(multiRoomPrice) : null}
+              {discountedPrice ? formatDisplayPrice(discountedPrice) : null}
             </div>
-            {multiRoomPrice?.totalAmountZAR != null && (() => {
+            {promo && discountedPrice?.originalAmountZAR && (
+              <div style={{ fontSize: 11, color: '#16a34a', fontWeight: 600, marginTop: 1 }}>
+                {promo.discount_pct}% off applied
+              </div>
+            )}
+            {discountedPrice?.totalAmountZAR != null && (() => {
               const estimates = ['USD', 'EUR', 'GBP'].map(cur => {
                 const rate = zarRates[cur]
                 if (!rate) return null
-                const est = Math.round(multiRoomPrice.totalAmountZAR / rate)
+                const est = Math.round(discountedPrice.totalAmountZAR / rate)
                 return `${cur} ${est.toLocaleString()}`
               }).filter(Boolean)
               return estimates.length > 0
@@ -503,12 +543,12 @@ export default function Checkout() {
           <button
             style={{
               ...s.ctaBtn,
-              ...(!leadGuestValid() || !roomGuestsValid() || redirecting || !multiRoomPrice?.totalAmountZAR ? s.ctaBtnDisabled : {}),
+              ...(!leadGuestValid() || !roomGuestsValid() || redirecting || !discountedPrice?.totalAmountZAR ? s.ctaBtnDisabled : {}),
             }}
-            disabled={!leadGuestValid() || !roomGuestsValid() || redirecting || !multiRoomPrice?.totalAmountZAR}
+            disabled={!leadGuestValid() || !roomGuestsValid() || redirecting || !discountedPrice?.totalAmountZAR}
             onClick={handleProceedToPayment}
           >
-            {redirecting ? 'Setting up payment…' : !multiRoomPrice?.totalAmountZAR ? 'Loading price…' : 'Proceed to payment →'}
+            {redirecting ? 'Setting up payment…' : !discountedPrice?.totalAmountZAR ? 'Loading price…' : 'Proceed to payment →'}
           </button>
         </div>
 

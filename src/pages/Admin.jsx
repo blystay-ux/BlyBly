@@ -544,6 +544,91 @@ function CommissionEdit({ corporate, onSaved }) {
   )
 }
 
+// ── Promo codes tab ──────────────────────────────────────────
+function PromosTab({ promos, onCreate, onToggle, creating, setCreating, form, setForm, saving }) {
+  const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-ZA', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <p style={s.note}>Percentage-off promo codes. Active codes can be redeemed at <strong>/promo</strong> and the discount applies at checkout.</p>
+        <button style={{ ...s.btn('accent'), padding: '9px 20px', fontSize: 13 }} onClick={() => setCreating(true)}>
+          + New code
+        </button>
+      </div>
+
+      {creating && (
+        <div style={{ background: '#fff', borderRadius: 16, padding: 28, marginBottom: 24, boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}>
+          <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 18 }}>New promo code</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 14 }}>
+            {[
+              { label: 'Code *', key: 'code', type: 'text', placeholder: 'SUMMER10' },
+              { label: 'Discount % *', key: 'discount_pct', type: 'number', placeholder: '10' },
+              { label: 'Max uses (blank = unlimited)', key: 'max_uses', type: 'number', placeholder: '' },
+              { label: 'Expires (blank = never)', key: 'expires_at', type: 'date', placeholder: '' },
+            ].map(f => (
+              <div key={f.key}>
+                <label style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#888', display: 'block', marginBottom: 6 }}>{f.label}</label>
+                <input
+                  type={f.type}
+                  value={form[f.key] ?? ''}
+                  placeholder={f.placeholder}
+                  onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                  style={{ width: '100%', padding: '9px 14px', borderRadius: 10, border: '1px solid #e2e0db', fontSize: 14, fontFamily: 'var(--font-body)', boxSizing: 'border-box', textTransform: f.key === 'code' ? 'uppercase' : 'none' }}
+                />
+              </div>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+            <button style={{ ...s.btn('accent'), padding: '9px 24px' }} onClick={onCreate} disabled={saving}>
+              {saving ? 'Creating…' : 'Create code'}
+            </button>
+            <button style={{ ...s.btn('default'), padding: '9px 20px' }} onClick={() => setCreating(false)}>Cancel</button>
+          </div>
+        </div>
+      )}
+
+      <div style={{ overflowX: 'auto' }}>
+        <table style={s.table}>
+          <thead>
+            <tr>
+              {['Code', 'Discount', 'Used', 'Max uses', 'Expires', 'Status', 'Actions'].map(h => (
+                <th key={h} style={s.th}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {promos.length === 0 && (
+              <tr><td colSpan={7} style={{ ...s.td, color: '#aaa', textAlign: 'center', padding: 32 }}>No promo codes yet.</td></tr>
+            )}
+            {promos.map(p => (
+              <tr key={p.id}>
+                <td style={{ ...s.td, fontWeight: 800, letterSpacing: '0.06em', fontSize: 15 }}>{p.code}</td>
+                <td style={{ ...s.td, color: '#ef4056', fontWeight: 700 }}>{p.discount_pct}%</td>
+                <td style={s.td}>{p.uses_count}</td>
+                <td style={s.td}>{p.max_uses ?? '∞'}</td>
+                <td style={s.td}>{fmtDate(p.expires_at)}</td>
+                <td style={s.td}>
+                  <span style={s.pill(p.active ? 'green' : 'default')}>
+                    {p.active ? 'Active' : 'Inactive'}
+                  </span>
+                </td>
+                <td style={s.td}>
+                  <button
+                    style={{ ...s.btn(p.active ? 'red' : 'green'), fontSize: 12 }}
+                    onClick={() => onToggle(p)}
+                  >
+                    {p.active ? 'Deactivate' : 'Activate'}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
 // ── Main Admin Page ───────────────────────────────────────────
 export default function Admin() {
   const { user, role, signOut } = useAuth()
@@ -567,6 +652,10 @@ export default function Admin() {
   const [creatingCorporate, setCreatingCorporate] = useState(false)
   const [savingCorporate, setSavingCorporate] = useState(false)
   const [reviews, setReviews] = useState([])
+  const [promos,  setPromos]  = useState([])
+  const [promoForm,      setPromoForm]      = useState({})
+  const [creatingPromo,  setCreatingPromo]  = useState(false)
+  const [savingPromo,    setSavingPromo]    = useState(false)
 
   // Redirect if not admin
   useEffect(() => {
@@ -578,7 +667,7 @@ export default function Admin() {
   async function fetchAll() {
     setLoading(true)
 
-    const [bookingsRes, staticCountRes, waitlistRes, contactsRes, membersRes, compRes, corporatesRes, corporateRequestsRes, reviewsRes] = await Promise.all([
+    const [bookingsRes, staticCountRes, waitlistRes, contactsRes, membersRes, compRes, corporatesRes, corporateRequestsRes, reviewsRes, promosRes] = await Promise.all([
       supabase.from('hg_bookings').select('*').order('created_at', { ascending: false }),
       supabase.from('hg_property_static').select('hotel_id', { count: 'exact', head: true }),
       supabase.from('waitlist').select('*').order('created_at', { ascending: false }),
@@ -588,6 +677,7 @@ export default function Admin() {
       supabase.from('corporate_accounts').select('*').order('created_at', { ascending: false }),
       supabase.from('corporate_requests').select('*').order('created_at', { ascending: false }),
       supabase.from('reviews').select('*').order('created_at', { ascending: false }),
+      supabase.from('promo_codes').select('*').order('created_at', { ascending: false }),
     ])
 
     let enrichedBookings = bookingsRes.data || []
@@ -612,6 +702,7 @@ export default function Admin() {
     if (corporatesRes.data) setCorporates(corporatesRes.data)
     if (corporateRequestsRes.data) setCorporateRequests(corporateRequestsRes.data)
     if (reviewsRes.data) setReviews(reviewsRes.data)
+    if (promosRes.data)  setPromos(promosRes.data)
 
     if (membersRes.data) {
       setMemberships(membersRes.data)
@@ -703,6 +794,38 @@ export default function Admin() {
     if (!error) setReviews(prev => prev.map(x => x.id === r.id ? { ...x, status: 'rejected' } : x))
   }
 
+  async function createPromo() {
+    const { code, discount_pct, max_uses, expires_at } = promoForm
+    if (!code || !discount_pct) { alert('Code and discount % are required'); return }
+    const pct = Number(discount_pct)
+    if (isNaN(pct) || pct <= 0 || pct > 100) { alert('Discount must be between 1 and 100'); return }
+    setSavingPromo(true)
+    const payload = {
+      code: code.trim().toUpperCase(),
+      discount_pct: pct,
+      active: true,
+      uses_count: 0,
+      ...(max_uses ? { max_uses: Number(max_uses) } : {}),
+      ...(expires_at ? { expires_at: new Date(expires_at).toISOString() } : {}),
+    }
+    const { data, error } = await supabase.from('promo_codes').insert(payload).select().single()
+    setSavingPromo(false)
+    if (error) { alert(error.message || 'Failed to create promo code'); return }
+    setPromos(prev => [data, ...prev])
+    setPromoForm({})
+    setCreatingPromo(false)
+  }
+
+  async function togglePromoActive(promo) {
+    const { data, error } = await supabase
+      .from('promo_codes')
+      .update({ active: !promo.active })
+      .eq('id', promo.id)
+      .select()
+      .single()
+    if (!error && data) setPromos(prev => prev.map(p => p.id === promo.id ? data : p))
+  }
+
   // ── Real stats, derived from hg_bookings ──
   const confirmedBookings = bookings.filter(b => b.status === 'Confirmed')
   const cancelledBookings = bookings.filter(b => b.status === 'Cancelled')
@@ -733,7 +856,7 @@ export default function Admin() {
   })
   const propertiesList = Object.values(propertiesMap).sort((a, b) => b.bookingCount - a.bookingCount)
 
-  const TABS = ['overview', 'properties', 'bookings', 'waitlist', 'memberships', 'contacts', 'competition', 'corporates', 'reviews']
+  const TABS = ['overview', 'properties', 'bookings', 'waitlist', 'memberships', 'contacts', 'competition', 'corporates', 'reviews', 'promos']
 
   return (
     <div style={s.page}>
@@ -768,6 +891,7 @@ export default function Admin() {
               {t === 'memberships' && '🎟️ '}
               {t === 'contacts'    && '✉️ '}
               {t === 'reviews'     && '⭐ '}
+              {t === 'promos'      && '🏷️ '}
               {t.charAt(0).toUpperCase() + t.slice(1)}
               {t === 'memberships' && pendingMembers > 0 && (
                 <span style={{ marginLeft: 6, background: '#ef4056', color: '#fff', borderRadius: 99, padding: '1px 7px', fontSize: 11 }}>
@@ -807,6 +931,7 @@ export default function Admin() {
                 <StatCard icon="🎟️" label="Industry members" value={activeMembers} sub={`${pendingMembers} pending approval`} />
                 <StatCard icon="🏢" label="Corporate accounts" value={corporates.length} sub={`${corporateRequests.filter(r => r.status === 'pending').length} requests pending`} />
                 <StatCard icon="⭐" label="Reviews" value={reviews.length} sub={`${pendingReviews} pending approval`} />
+                <StatCard icon="🏷️" label="Promo codes" value={promos.length} sub={`${promos.filter(p => p.active).length} active`} />
               </div>
             )}
 
@@ -891,6 +1016,20 @@ export default function Admin() {
                 <p style={s.note}>Guest reviews submitted after verified stays. Approve to publish on the hotel page; reject to hide.</p>
                 <ReviewsTab reviews={reviews} onApprove={approveReview} onReject={rejectReview} />
               </>
+            )}
+
+            {/* Promo codes */}
+            {tab === 'promos' && (
+              <PromosTab
+                promos={promos}
+                onCreate={createPromo}
+                onToggle={togglePromoActive}
+                creating={creatingPromo}
+                setCreating={setCreatingPromo}
+                form={promoForm}
+                setForm={setPromoForm}
+                saving={savingPromo}
+              />
             )}
           </>
         )}
