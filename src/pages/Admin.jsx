@@ -629,6 +629,135 @@ function PromosTab({ promos, onCreate, onToggle, creating, setCreating, form, se
   )
 }
 
+// ── Events tab ───────────────────────────────────────────────
+const CATEGORIES = ['Festival', 'Sport', 'Business', 'Global']
+const PRIORITIES  = ['MEGA', 'LARGE', 'MEDIUM']
+
+const BLANK_EVENT = { name: '', sub: '', date_label: '', month: '', year: '', city: '', area: '', category: 'Festival', priority: 'LARGE', slug: '', icon: '📅', description: '', active: true }
+
+function EventsTab({ events, onCreate, onSave, onToggle, onDelete, creating, setCreating, editing, setEditing, form, setForm, saving }) {
+  const inputStyle = { width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e0db', fontSize: 13, fontFamily: 'var(--font-body)', boxSizing: 'border-box' }
+  const labelStyle = { fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#888', display: 'block', marginBottom: 4 }
+
+  function EventForm({ onSubmit, onCancel, title }) {
+    return (
+      <div style={{ background: '#fff', borderRadius: 16, padding: 28, marginBottom: 24, boxShadow: '0 1px 12px rgba(0,0,0,0.08)' }}>
+        <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 20 }}>{title}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 14 }}>
+          {[
+            { label: 'Event name *',  key: 'name',       type: 'text', span: 2 },
+            { label: 'Sub-title',     key: 'sub',        type: 'text', span: 2 },
+            { label: 'Date label *',  key: 'date_label', type: 'text', placeholder: '14 Jun 2026' },
+            { label: 'Month (1–12) *',key: 'month',      type: 'number', placeholder: '6' },
+            { label: 'Year *',        key: 'year',       type: 'number', placeholder: '2026' },
+            { label: 'Icon',          key: 'icon',       type: 'text', placeholder: '📅' },
+            { label: 'City *',        key: 'city',       type: 'text' },
+            { label: 'Area',          key: 'area',       type: 'text', placeholder: 'Western Cape' },
+            { label: 'Slug *',        key: 'slug',       type: 'text', placeholder: 'accommodation-event-city-2026', span: 2 },
+            { label: 'Event start',   key: 'event_start', type: 'date' },
+            { label: 'Event end',     key: 'event_end',   type: 'date' },
+          ].map(f => (
+            <div key={f.key} style={{ gridColumn: f.span ? `span ${f.span}` : 'span 1' }}>
+              <label style={labelStyle}>{f.label}</label>
+              <input type={f.type} value={form[f.key] ?? ''} placeholder={f.placeholder || ''} onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))} style={inputStyle} />
+            </div>
+          ))}
+          <div>
+            <label style={labelStyle}>Category *</label>
+            <select value={form.category ?? 'Festival'} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} style={inputStyle}>
+              {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>Priority *</label>
+            <select value={form.priority ?? 'LARGE'} onChange={e => setForm(p => ({ ...p, priority: e.target.value }))} style={inputStyle}>
+              {PRIORITIES.map(p => <option key={p}>{p}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>Active</label>
+            <select value={form.active ? 'yes' : 'no'} onChange={e => setForm(p => ({ ...p, active: e.target.value === 'yes' }))} style={inputStyle}>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+          </div>
+        </div>
+        <div style={{ marginBottom: 20 }}>
+          <label style={labelStyle}>Write-up / description</label>
+          <textarea value={form.description ?? ''} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={4} style={{ ...inputStyle, resize: 'vertical' }} />
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button style={{ ...s.btn('accent'), padding: '9px 24px' }} onClick={onSubmit} disabled={saving}>
+            {saving ? 'Saving…' : title.startsWith('New') ? 'Create event' : 'Save changes'}
+          </button>
+          <button style={{ ...s.btn('default'), padding: '9px 20px' }} onClick={onCancel}>Cancel</button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <p style={s.note}>Events shown on <strong>/events/south-africa</strong>. Edit the write-up, dates, priority or city at any time — changes go live instantly.</p>
+        <button style={{ ...s.btn('accent'), padding: '9px 20px', fontSize: 13 }} onClick={() => { setForm({ ...BLANK_EVENT }); setCreating(true); setEditing(null) }}>
+          + New event
+        </button>
+      </div>
+
+      {creating && (
+        <EventForm title="New event" onSubmit={onCreate} onCancel={() => { setCreating(false); setForm({}) }} />
+      )}
+      {editing && !creating && (
+        <EventForm title={`Edit — ${editing.name}`} onSubmit={() => onSave(editing.id)} onCancel={() => { setEditing(null); setForm({}) }} />
+      )}
+
+      <div style={{ overflowX: 'auto' }}>
+        <table style={s.table}>
+          <thead>
+            <tr>
+              {['','Event','Date','City','Category','Priority','Active','Actions'].map(h => (
+                <th key={h} style={s.th}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {events.length === 0 && (
+              <tr><td colSpan={8} style={{ ...s.td, color: '#aaa', textAlign: 'center', padding: 32 }}>No events yet.</td></tr>
+            )}
+            {events.map(ev => (
+              <tr key={ev.id} style={{ opacity: ev.active ? 1 : 0.5 }}>
+                <td style={{ ...s.td, fontSize: 22, width: 40 }}>{ev.icon}</td>
+                <td style={s.td}>
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>{ev.name}</div>
+                  {ev.sub && <div style={{ fontSize: 11, color: '#aaa' }}>{ev.sub}</div>}
+                  <div style={{ fontSize: 11, color: '#bbb', marginTop: 2, maxWidth: 280, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.description}</div>
+                </td>
+                <td style={{ ...s.td, whiteSpace: 'nowrap' }}>{ev.date_label}</td>
+                <td style={s.td}>{ev.city}</td>
+                <td style={s.td}>{ev.category}</td>
+                <td style={s.td}>
+                  <span style={{ fontSize: 11, fontWeight: 800, padding: '3px 10px', borderRadius: 99, background: ev.priority === 'MEGA' ? '#fff0f2' : ev.priority === 'LARGE' ? '#fff7ed' : '#f0f9ff', color: ev.priority === 'MEGA' ? '#c8001e' : ev.priority === 'LARGE' ? '#c2570a' : '#0369a1' }}>
+                    {ev.priority}
+                  </span>
+                </td>
+                <td style={s.td}>
+                  <span style={s.pill(ev.active ? 'green' : 'default')}>{ev.active ? 'Live' : 'Hidden'}</span>
+                </td>
+                <td style={{ ...s.td, whiteSpace: 'nowrap' }}>
+                  <button style={{ ...s.btn('default'), marginRight: 6 }} onClick={() => { setForm({ ...ev }); setEditing(ev); setCreating(false) }}>Edit</button>
+                  <button style={{ ...s.btn(ev.active ? 'red' : 'green'), marginRight: 6 }} onClick={() => onToggle(ev)}>{ev.active ? 'Hide' : 'Show'}</button>
+                  <button style={s.btn('red')} onClick={() => onDelete(ev.id)}>✕</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
 // ── Main Admin Page ───────────────────────────────────────────
 export default function Admin() {
   const { user, role, signOut } = useAuth()
@@ -656,6 +785,11 @@ export default function Admin() {
   const [promoForm,      setPromoForm]      = useState({})
   const [creatingPromo,  setCreatingPromo]  = useState(false)
   const [savingPromo,    setSavingPromo]    = useState(false)
+  const [events,         setEvents]         = useState([])
+  const [eventForm,      setEventForm]      = useState({})
+  const [creatingEvent,  setCreatingEvent]  = useState(false)
+  const [editingEvent,   setEditingEvent]   = useState(null)
+  const [savingEvent,    setSavingEvent]    = useState(false)
 
   // Redirect if not admin
   useEffect(() => {
@@ -667,7 +801,7 @@ export default function Admin() {
   async function fetchAll() {
     setLoading(true)
 
-    const [bookingsRes, staticCountRes, waitlistRes, contactsRes, membersRes, compRes, corporatesRes, corporateRequestsRes, reviewsRes, promosRes] = await Promise.all([
+    const [bookingsRes, staticCountRes, waitlistRes, contactsRes, membersRes, compRes, corporatesRes, corporateRequestsRes, reviewsRes, promosRes, eventsRes] = await Promise.all([
       supabase.from('hg_bookings').select('*').order('created_at', { ascending: false }),
       supabase.from('hg_property_static').select('hotel_id', { count: 'exact', head: true }),
       supabase.from('waitlist').select('*').order('created_at', { ascending: false }),
@@ -678,6 +812,7 @@ export default function Admin() {
       supabase.from('corporate_requests').select('*').order('created_at', { ascending: false }),
       supabase.from('reviews').select('*').order('created_at', { ascending: false }),
       supabase.from('promo_codes').select('*').order('created_at', { ascending: false }),
+      supabase.from('events').select('*').order('year').order('month'),
     ])
 
     let enrichedBookings = bookingsRes.data || []
@@ -703,6 +838,7 @@ export default function Admin() {
     if (corporateRequestsRes.data) setCorporateRequests(corporateRequestsRes.data)
     if (reviewsRes.data) setReviews(reviewsRes.data)
     if (promosRes.data)  setPromos(promosRes.data)
+    if (eventsRes.data)  setEvents(eventsRes.data)
 
     if (membersRes.data) {
       setMemberships(membersRes.data)
@@ -826,6 +962,73 @@ export default function Admin() {
     if (!error && data) setPromos(prev => prev.map(p => p.id === promo.id ? data : p))
   }
 
+  async function createEvent() {
+    const { name, date_label, month, year, city, category, priority, slug } = eventForm
+    if (!name || !date_label || !month || !year || !city || !slug) {
+      alert('Name, date, month, year, city, and slug are required'); return
+    }
+    setSavingEvent(true)
+    const payload = {
+      name: name.trim(),
+      sub: (eventForm.sub || '').trim(),
+      date_label: date_label.trim(),
+      month: Number(month), year: Number(year),
+      city: city.trim(), area: (eventForm.area || '').trim(),
+      category, priority,
+      slug: slug.trim().toLowerCase(),
+      icon: (eventForm.icon || '📅').trim(),
+      description: (eventForm.description || '').trim(),
+      active: eventForm.active !== false,
+      event_start: eventForm.event_start || null,
+      event_end:   eventForm.event_end   || null,
+    }
+    const { data, error } = await supabase.from('events').insert(payload).select().single()
+    setSavingEvent(false)
+    if (error) { alert(error.message || 'Failed to create event'); return }
+    setEvents(prev => [...prev, data].sort((a, b) => a.year !== b.year ? a.year - b.year : a.month - b.month))
+    setEventForm({})
+    setCreatingEvent(false)
+  }
+
+  async function saveEvent(id) {
+    const { name, date_label, month, year, city, category, priority, slug } = eventForm
+    if (!name || !date_label || !month || !year || !city || !slug) {
+      alert('Name, date, month, year, city, and slug are required'); return
+    }
+    setSavingEvent(true)
+    const payload = {
+      name: name.trim(),
+      sub: (eventForm.sub || '').trim(),
+      date_label: date_label.trim(),
+      month: Number(month), year: Number(year),
+      city: city.trim(), area: (eventForm.area || '').trim(),
+      category, priority,
+      slug: slug.trim().toLowerCase(),
+      icon: (eventForm.icon || '📅').trim(),
+      description: (eventForm.description || '').trim(),
+      active: eventForm.active !== false,
+      event_start: eventForm.event_start || null,
+      event_end:   eventForm.event_end   || null,
+    }
+    const { data, error } = await supabase.from('events').update(payload).eq('id', id).select().single()
+    setSavingEvent(false)
+    if (error) { alert(error.message || 'Failed to save event'); return }
+    setEvents(prev => prev.map(e => e.id === id ? data : e).sort((a, b) => a.year !== b.year ? a.year - b.year : a.month - b.month))
+    setEventForm({})
+    setEditingEvent(null)
+  }
+
+  async function toggleEventActive(ev) {
+    const { data, error } = await supabase.from('events').update({ active: !ev.active }).eq('id', ev.id).select().single()
+    if (!error && data) setEvents(prev => prev.map(e => e.id === ev.id ? data : e))
+  }
+
+  async function deleteEvent(id) {
+    if (!window.confirm('Delete this event permanently?')) return
+    const { error } = await supabase.from('events').delete().eq('id', id)
+    if (!error) setEvents(prev => prev.filter(e => e.id !== id))
+  }
+
   // ── Real stats, derived from hg_bookings ──
   const confirmedBookings = bookings.filter(b => b.status === 'Confirmed')
   const cancelledBookings = bookings.filter(b => b.status === 'Cancelled')
@@ -856,7 +1059,7 @@ export default function Admin() {
   })
   const propertiesList = Object.values(propertiesMap).sort((a, b) => b.bookingCount - a.bookingCount)
 
-  const TABS = ['overview', 'properties', 'bookings', 'waitlist', 'memberships', 'contacts', 'competition', 'corporates', 'reviews', 'promos']
+  const TABS = ['overview', 'properties', 'bookings', 'waitlist', 'memberships', 'contacts', 'competition', 'corporates', 'reviews', 'promos', 'events']
 
   return (
     <div style={s.page}>
@@ -892,6 +1095,7 @@ export default function Admin() {
               {t === 'contacts'    && '✉️ '}
               {t === 'reviews'     && '⭐ '}
               {t === 'promos'      && '🏷️ '}
+              {t === 'events'      && '🗓️ '}
               {t.charAt(0).toUpperCase() + t.slice(1)}
               {t === 'memberships' && pendingMembers > 0 && (
                 <span style={{ marginLeft: 6, background: '#ef4056', color: '#fff', borderRadius: 99, padding: '1px 7px', fontSize: 11 }}>
@@ -932,6 +1136,7 @@ export default function Admin() {
                 <StatCard icon="🏢" label="Corporate accounts" value={corporates.length} sub={`${corporateRequests.filter(r => r.status === 'pending').length} requests pending`} />
                 <StatCard icon="⭐" label="Reviews" value={reviews.length} sub={`${pendingReviews} pending approval`} />
                 <StatCard icon="🏷️" label="Promo codes" value={promos.length} sub={`${promos.filter(p => p.active).length} active`} />
+                <StatCard icon="🗓️" label="Events" value={events.length} sub={`${events.filter(e => e.active).length} live`} />
               </div>
             )}
 
@@ -1016,6 +1221,24 @@ export default function Admin() {
                 <p style={s.note}>Guest reviews submitted after verified stays. Approve to publish on the hotel page; reject to hide.</p>
                 <ReviewsTab reviews={reviews} onApprove={approveReview} onReject={rejectReview} />
               </>
+            )}
+
+            {/* Events */}
+            {tab === 'events' && (
+              <EventsTab
+                events={events}
+                onCreate={createEvent}
+                onSave={saveEvent}
+                onToggle={toggleEventActive}
+                onDelete={deleteEvent}
+                creating={creatingEvent}
+                setCreating={setCreatingEvent}
+                editing={editingEvent}
+                setEditing={setEditingEvent}
+                form={eventForm}
+                setForm={setEventForm}
+                saving={savingEvent}
+              />
             )}
 
             {/* Promo codes */}
