@@ -638,6 +638,46 @@ const BLANK_EVENT = { name: '', sub: '', date_label: '', month: '', year: '', ci
 const evInputStyle = { width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e0db', fontSize: 13, fontFamily: 'var(--font-body)', boxSizing: 'border-box' }
 const evLabelStyle = { fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#888', display: 'block', marginBottom: 4 }
 
+const EVENT_ICONS = [
+  { emoji: '📅', label: '📅 Calendar (default)' },
+  { emoji: '🎵', label: '🎵 Music' },
+  { emoji: '🎶', label: '🎶 Musical notes' },
+  { emoji: '🎸', label: '🎸 Guitar' },
+  { emoji: '🎺', label: '🎺 Trumpet' },
+  { emoji: '🎤', label: '🎤 Microphone' },
+  { emoji: '🎪', label: '🎪 Festival tent' },
+  { emoji: '🎭', label: '🎭 Theatre' },
+  { emoji: '🎨', label: '🎨 Art' },
+  { emoji: '🎉', label: '🎉 Celebration' },
+  { emoji: '🎊', label: '🎊 Party' },
+  { emoji: '🏉', label: '🏉 Rugby' },
+  { emoji: '⚽', label: '⚽ Soccer / Football' },
+  { emoji: '🏏', label: '🏏 Cricket' },
+  { emoji: '⛳', label: '⛳ Golf' },
+  { emoji: '🏊', label: '🏊 Swimming' },
+  { emoji: '🚴', label: '🚴 Cycling' },
+  { emoji: '🏃', label: '🏃 Running / Marathon' },
+  { emoji: '🏋️', label: '🏋️ Weightlifting' },
+  { emoji: '🥊', label: '🥊 Boxing / MMA' },
+  { emoji: '🏆', label: '🏆 Trophy / Championship' },
+  { emoji: '🏅', label: '🏅 Medal' },
+  { emoji: '🎯', label: '🎯 Target / Sport' },
+  { emoji: '💼', label: '💼 Business' },
+  { emoji: '🤝', label: '🤝 Conference / Deal' },
+  { emoji: '🏢', label: '🏢 Convention centre' },
+  { emoji: '📊', label: '📊 Expo / Trade show' },
+  { emoji: '🖥️', label: '🖥️ Tech / Digital' },
+  { emoji: '🌍', label: '🌍 Global / International' },
+  { emoji: '✈️', label: '✈️ Travel' },
+  { emoji: '🍷', label: '🍷 Wine festival' },
+  { emoji: '🍺', label: '🍺 Beer / Food festival' },
+  { emoji: '🎠', label: '🎠 Carnival' },
+  { emoji: '🎆', label: '🎆 Fireworks / New Year' },
+  { emoji: '🌊', label: '🌊 Water / Beach' },
+  { emoji: '🏖️', label: '🏖️ Beach event' },
+  { emoji: '🌄', label: '🌄 Outdoor / Nature' },
+]
+
 function EventForm({ onSubmit, onCancel, title, form, setForm, saving }) {
   return (
     <div style={{ background: '#fff', borderRadius: 16, padding: 28, marginBottom: 24, boxShadow: '0 1px 12px rgba(0,0,0,0.08)' }}>
@@ -649,7 +689,6 @@ function EventForm({ onSubmit, onCancel, title, form, setForm, saving }) {
           { label: 'Date label *',  key: 'date_label', type: 'text', placeholder: '14 Jun 2026' },
           { label: 'Month (1–12) *',key: 'month',      type: 'number', placeholder: '6' },
           { label: 'Year *',        key: 'year',       type: 'number', placeholder: '2026' },
-          { label: 'Icon',          key: 'icon',       type: 'text', placeholder: '📅' },
           { label: 'City *',        key: 'city',       type: 'text' },
           { label: 'Area',          key: 'area',       type: 'text', placeholder: 'Western Cape' },
           { label: 'Slug *',        key: 'slug',       type: 'text', placeholder: 'accommodation-event-city-2026', span: 2 },
@@ -661,6 +700,14 @@ function EventForm({ onSubmit, onCancel, title, form, setForm, saving }) {
             <input type={f.type} value={form[f.key] ?? ''} placeholder={f.placeholder || ''} onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))} style={evInputStyle} />
           </div>
         ))}
+        <div>
+          <label style={evLabelStyle}>Icon</label>
+          <select value={form.icon ?? '📅'} onChange={e => setForm(p => ({ ...p, icon: e.target.value }))} style={{ ...evInputStyle, fontSize: 15 }}>
+            {EVENT_ICONS.map(({ emoji, label }) => (
+              <option key={emoji} value={emoji}>{label}</option>
+            ))}
+          </select>
+        </div>
         <div>
           <label style={evLabelStyle}>Category *</label>
           <select value={form.category ?? 'Festival'} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} style={evInputStyle}>
