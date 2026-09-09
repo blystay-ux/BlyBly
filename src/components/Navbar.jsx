@@ -70,19 +70,18 @@ export default function Navbar() {
         {/* Links */}
         <div style={styles.actions}>
           <Link to="/" style={styles.link}>Home</Link>
-          <Link to="/win" style={styles.link}>Competition</Link>
           <Link to="/destinations" style={styles.link}>Destinations</Link>
-          <Link to="/events/south-africa" style={styles.link}>Events</Link>
-          <a href="/blog" style={styles.link}>Blog</a>
-          <Link to="/insiders" style={styles.link}>Bly Insiders</Link>
-          <Link to="/corporate/login" style={{ ...styles.link, fontWeight: 600, color: '#1a1a2e', borderBottom: '1.5px solid #1a1a2e', paddingBottom: 1, lineHeight: 1 }}>Corporate</Link>
-          <Link to="/promo" style={styles.linkAccent}>Promotions</Link>
-          <Link to="/contact" style={styles.link}>Contact</Link>
           <Link to="/manage-booking" style={styles.link}>Manage booking</Link>
+          {user && <Link to="/my-bookings" style={styles.link}>My stays</Link>}
+          <Link to="/corporate/login" style={{ ...styles.link, fontWeight: 600, color: '#1a1a2e', borderBottom: '1.5px solid #1a1a2e', paddingBottom: 1, lineHeight: 1 }}>Corporate</Link>
+          <Link to="/events/south-africa" style={styles.link}>Events</Link>
+          <Link to="/promo" style={styles.linkAccent}>Promotions</Link>
+          <Link to="/insiders" style={styles.link}>Bly Insiders</Link>
+          <Link to="/contact" style={styles.link}>Contact</Link>
+          <a href="/blog" style={styles.link}>Blog</a>
           {isAdmin && <Link to="/admin" style={styles.linkAccent}>Admin</Link>}
           {user ? (
             <>
-              <Link to="/my-bookings" style={styles.link}>My stays</Link>
               <Link
                 to="/my-bookings"
                 style={styles.avatar}
