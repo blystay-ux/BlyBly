@@ -75,6 +75,7 @@ export default function Navbar() {
           <a href="/blog" style={styles.link}>Blog</a>
           <Link to="/insiders" style={styles.link}>Bly Insiders</Link>
           <Link to="/corporate/login" style={{ ...styles.link, fontWeight: 600, color: '#1a1a2e', borderBottom: '1.5px solid #1a1a2e', paddingBottom: 1, lineHeight: 1 }}>Corporate</Link>
+          <Link to="/promo" style={styles.linkAccent}>Promotions</Link>
           <Link to="/contact" style={styles.link}>Contact</Link>
           <Link to="/manage-booking" style={styles.link}>Manage booking</Link>
           {isAdmin && <Link to="/admin" style={styles.linkAccent}>Admin</Link>}
