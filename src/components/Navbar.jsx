@@ -80,13 +80,15 @@ export default function Navbar() {
           {isAdmin && <Link to="/admin" style={styles.linkAccent}>Admin</Link>}
           {user ? (
             <>
-              <button
+              <Link to="/my-bookings" style={styles.link}>My stays</Link>
+              <Link
+                to="/my-bookings"
                 style={styles.avatar}
                 title={user.email}
-                aria-label={`Signed in as ${user.email}`}
+                aria-label={`Signed in as ${user.email} — view your stays`}
               >
                 {initial}
-              </button>
+              </Link>
               <button
                 style={{ ...styles.link, background: 'none', border: 'none', padding: 0 }}
                 onClick={() => signOut()}
