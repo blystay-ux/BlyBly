@@ -40,11 +40,6 @@ function StatCard({ icon, label, value, sub }) {
   )
 }
 
-// Real HyperGuest properties that have actually been booked through BLY,
-// grouped with booking counts and revenue -- replaces the old "Hotels" tab,
-// which managed individually-listed properties from before the pivot to
-// HyperGuest as the supply source (BLY no longer approves/lists properties
-// one at a time; HyperGuest supplies all of them).
 function ContactsTab({ contacts }) {
   return (
     <table style={s.table}>
@@ -64,7 +59,7 @@ function ContactsTab({ contacts }) {
             <td style={s.td}>{new Date(c.created_at).toLocaleDateString('en-ZA')}</td>
             <td style={s.td}>{c.name}</td>
             <td style={s.td}><a href={`mailto:${c.email}`} style={{ color: 'var(--accent)' }}>{c.email}</a></td>
-            <td style={s.td} style={{ whiteSpace: 'pre-wrap', maxWidth: 400 }}>{c.message}</td>
+            <td style={{ ...s.td, whiteSpace: 'pre-wrap', maxWidth: 400 }}>{c.message}</td>
           </tr>
         ))}
       </tbody>
@@ -103,11 +98,6 @@ function PropertiesTab({ properties }) {
   )
 }
 
-// Real bookings from hg_bookings (HyperGuest) -- replaces the old
-// "Bookings" tab, which read from the unused legacy `bookings` table.
-// Read-only except for Cancel, which calls the real hyperguest-cancel
-// Edge Function -- an actual cancellation with HyperGuest, not just a
-// local status flag.
 function BookingsTab({ bookings, onCancel, cancellingId }) {
   if (!bookings.length) return <div style={s.empty}>No bookings yet.</div>
   return (
@@ -169,7 +159,7 @@ function CompetitionTab({ entries }) {
         </thead>
         <tbody>
           {entries.map(e => (
-            <tr key={e.id} style={s.tr}>
+            <tr key={e.id}>
               <td style={s.td}>{e.first_name} {e.last_name}</td>
               <td style={s.td}><a href={`mailto:${e.email}`} style={{ color: 'var(--accent)', fontSize: 13 }}>{e.email}</a></td>
               <td style={s.td}>{e.phone || <span style={{ color: '#ccc' }}>—</span>}</td>
@@ -288,6 +278,78 @@ function MembersTab({ memberships, names, onApprove, onReject, onRevoke }) {
   )
 }
 
+// ── Reviews moderation tab ─────────────────────────────────────
+function ReviewsTab({ reviews, onApprove, onReject }) {
+  if (!reviews.length) return <div style={s.empty}>No reviews yet.</div>
+
+  const STAR = (n, v) => (
+    <span style={{ fontSize: 13 }}>
+      {[1,2,3,4,5].map(i => (
+        <span key={i} style={{ color: i <= v ? '#f59e0b' : '#e2e0db' }}>★</span>
+      ))}
+    </span>
+  )
+
+  return (
+    <div style={{ overflowX: 'auto' }}>
+      <table style={s.table}>
+        <thead>
+          <tr>
+            {['Date', 'Reviewer', 'Property', 'Ratings', 'Comment', 'Status', 'Actions'].map(h => (
+              <th key={h} style={s.th}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {reviews.map(r => (
+            <tr key={r.id} style={{ opacity: r.status === 'rejected' ? 0.5 : 1 }}>
+              <td style={{ ...s.td, fontSize: 12, color: '#888', whiteSpace: 'nowrap' }}>
+                {new Date(r.created_at).toLocaleDateString('en-ZA', { day: '2-digit', month: 'short', year: 'numeric' })}
+              </td>
+              <td style={s.td}>
+                <div style={{ fontWeight: 600 }}>{r.reviewer_name || 'Guest'}</div>
+              </td>
+              <td style={{ ...s.td, fontSize: 12, color: '#666' }}>
+                {r.hyperguest_property_id ? `HG #${r.hyperguest_property_id}` : '—'}
+              </td>
+              <td style={s.td}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {STAR(1, r.rating)}
+                    <span style={{ fontSize: 11, color: '#888' }}>Overall</span>
+                  </div>
+                  {r.cleanliness_rating != null && (
+                    <div style={{ fontSize: 11, color: '#aaa' }}>
+                      Clean {r.cleanliness_rating} · Location {r.location_rating} · Value {r.value_rating} · Service {r.service_rating}
+                    </div>
+                  )}
+                </div>
+              </td>
+              <td style={{ ...s.td, maxWidth: 260, fontSize: 13, color: '#555' }}>
+                {r.comment || <span style={{ color: '#ccc' }}>No comment</span>}
+              </td>
+              <td style={s.td}>
+                <span style={s.pill(r.status === 'approved' ? 'green' : r.status === 'rejected' ? 'red' : 'yellow')}>
+                  {r.status}
+                </span>
+              </td>
+              <td style={s.td}>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {r.status !== 'approved' && (
+                    <button style={s.btn('green')} onClick={() => onApprove(r)}>Approve</button>
+                  )}
+                  {r.status !== 'rejected' && (
+                    <button style={s.btn('red')} onClick={() => onReject(r)}>Reject</button>
+                  )}
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
 
 // ── Corporate accounts tab ──────────────────────────────────
 function CorporatesTab({ corporates, onSave, onToggleActive, creating, setCreating, form, setForm, saving, corporateRequests = [], onApproveRequest, onRejectRequest }) {
@@ -490,8 +552,8 @@ export default function Admin() {
   const isAdmin = role === 'admin'
 
   const [tab,      setTab]      = useState('overview')
-  const [bookings, setBookings] = useState([])       // real hg_bookings, enriched with property_name
-  const [propertyCount, setPropertyCount] = useState(0) // cached properties (hg_property_static) -- rough proxy for "Featured stays" pool
+  const [bookings, setBookings] = useState([])
+  const [propertyCount, setPropertyCount] = useState(0)
   const [waitlist, setWaitlist] = useState([])
   const [memberships, setMemberships] = useState([])
   const [memberNames, setMemberNames] = useState({})
@@ -504,6 +566,7 @@ export default function Admin() {
   const [corporateForm, setCorporateForm] = useState({})
   const [creatingCorporate, setCreatingCorporate] = useState(false)
   const [savingCorporate, setSavingCorporate] = useState(false)
+  const [reviews, setReviews] = useState([])
 
   // Redirect if not admin
   useEffect(() => {
@@ -515,7 +578,7 @@ export default function Admin() {
   async function fetchAll() {
     setLoading(true)
 
-    const [bookingsRes, staticCountRes, waitlistRes, contactsRes, membersRes, compRes, corporatesRes, corporateRequestsRes] = await Promise.all([
+    const [bookingsRes, staticCountRes, waitlistRes, contactsRes, membersRes, compRes, corporatesRes, corporateRequestsRes, reviewsRes] = await Promise.all([
       supabase.from('hg_bookings').select('*').order('created_at', { ascending: false }),
       supabase.from('hg_property_static').select('hotel_id', { count: 'exact', head: true }),
       supabase.from('waitlist').select('*').order('created_at', { ascending: false }),
@@ -524,6 +587,7 @@ export default function Admin() {
       supabase.from('competition_entries').select('*').order('created_at', { ascending: false }),
       supabase.from('corporate_accounts').select('*').order('created_at', { ascending: false }),
       supabase.from('corporate_requests').select('*').order('created_at', { ascending: false }),
+      supabase.from('reviews').select('*').order('created_at', { ascending: false }),
     ])
 
     let enrichedBookings = bookingsRes.data || []
@@ -547,6 +611,7 @@ export default function Admin() {
     if (compRes.data) setCompetition(compRes.data)
     if (corporatesRes.data) setCorporates(corporatesRes.data)
     if (corporateRequestsRes.data) setCorporateRequests(corporateRequestsRes.data)
+    if (reviewsRes.data) setReviews(reviewsRes.data)
 
     if (membersRes.data) {
       setMemberships(membersRes.data)
@@ -581,8 +646,6 @@ export default function Admin() {
     const { company_name, contact_name, email, password, commission_pct, notes } = corporateForm
     if (!company_name || !email || !password) { alert('Company name, email and password are required'); return }
     setSavingCorporate(true)
-    const { data: sessionData } = await supabase.auth.getSession()
-    const token = sessionData?.session?.access_token
     const { data, error } = await supabase.functions.invoke('corporate-account-create', {
       body: { company_name, contact_name, email, password, commission_pct: Number(commission_pct || 0), notes },
     })
@@ -595,7 +658,6 @@ export default function Admin() {
 
   async function toggleCorporateActive(corporate, newActive) {
     if (newActive === null) {
-      // commission update — replace in list
       setCorporates(prev => prev.map(c => c.id === corporate.id ? corporate : c))
       return
     }
@@ -603,7 +665,7 @@ export default function Admin() {
     if (data) setCorporates(prev => prev.map(c => c.id === corporate.id ? data : c))
   }
 
-    async function deleteWaitlist(id) {
+  async function deleteWaitlist(id) {
     const { error } = await supabase.from('waitlist').delete().eq('id', id)
     if (!error) setWaitlist(prev => prev.filter(w => w.id !== id))
   }
@@ -631,6 +693,16 @@ export default function Admin() {
     if (!error) setMemberships(prev => prev.map(x => x.id === m.id ? { ...x, status: 'cancelled' } : x))
   }
 
+  async function approveReview(r) {
+    const { error } = await supabase.from('reviews').update({ status: 'approved' }).eq('id', r.id)
+    if (!error) setReviews(prev => prev.map(x => x.id === r.id ? { ...x, status: 'approved' } : x))
+  }
+
+  async function rejectReview(r) {
+    const { error } = await supabase.from('reviews').update({ status: 'rejected' }).eq('id', r.id)
+    if (!error) setReviews(prev => prev.map(x => x.id === r.id ? { ...x, status: 'rejected' } : x))
+  }
+
   // ── Real stats, derived from hg_bookings ──
   const confirmedBookings = bookings.filter(b => b.status === 'Confirmed')
   const cancelledBookings = bookings.filter(b => b.status === 'Cancelled')
@@ -643,6 +715,7 @@ export default function Admin() {
   const distinctPropertyIds = new Set(bookings.map(b => b.hyperguest_property_id).filter(Boolean))
   const activeMembers   = memberships.filter(m => m.status === 'active').length
   const pendingMembers  = memberships.filter(m => m.status === 'pending').length
+  const pendingReviews  = reviews.filter(r => r.status === 'pending').length
 
   // Properties grouped for the Properties tab
   const propertiesMap = {}
@@ -660,7 +733,7 @@ export default function Admin() {
   })
   const propertiesList = Object.values(propertiesMap).sort((a, b) => b.bookingCount - a.bookingCount)
 
-  const TABS = ['overview', 'properties', 'bookings', 'waitlist', 'memberships', 'contacts', 'competition', 'corporates']
+  const TABS = ['overview', 'properties', 'bookings', 'waitlist', 'memberships', 'contacts', 'competition', 'corporates', 'reviews']
 
   return (
     <div style={s.page}>
@@ -693,11 +766,17 @@ export default function Admin() {
               {t === 'bookings'    && '📅 '}
               {t === 'waitlist'    && '📋 '}
               {t === 'memberships' && '🎟️ '}
-              {t === 'contacts' && '✉️ '}
+              {t === 'contacts'    && '✉️ '}
+              {t === 'reviews'     && '⭐ '}
               {t.charAt(0).toUpperCase() + t.slice(1)}
               {t === 'memberships' && pendingMembers > 0 && (
                 <span style={{ marginLeft: 6, background: '#ef4056', color: '#fff', borderRadius: 99, padding: '1px 7px', fontSize: 11 }}>
                   {pendingMembers}
+                </span>
+              )}
+              {t === 'reviews' && pendingReviews > 0 && (
+                <span style={{ marginLeft: 6, background: '#ef4056', color: '#fff', borderRadius: 99, padding: '1px 7px', fontSize: 11 }}>
+                  {pendingReviews}
                 </span>
               )}
             </button>
@@ -710,7 +789,7 @@ export default function Admin() {
           </div>
         ) : (
           <>
-            {/* Overview -- now sourced from real HyperGuest bookings */}
+            {/* Overview */}
             {tab === 'overview' && (
               <div style={s.grid}>
                 <StatCard icon="📅" label="Total bookings" value={bookings.length} sub={`${confirmedBookings.length} confirmed`} />
@@ -727,13 +806,14 @@ export default function Admin() {
                 <StatCard icon="🎁" label="Competition" value={competition.length} sub="entries received" />
                 <StatCard icon="🎟️" label="Industry members" value={activeMembers} sub={`${pendingMembers} pending approval`} />
                 <StatCard icon="🏢" label="Corporate accounts" value={corporates.length} sub={`${corporateRequests.filter(r => r.status === 'pending').length} requests pending`} />
+                <StatCard icon="⭐" label="Reviews" value={reviews.length} sub={`${pendingReviews} pending approval`} />
               </div>
             )}
 
             {/* Properties */}
             {tab === 'properties' && (
               <>
-                <p style={s.note}>Properties booked through BLY via HyperGuest, with booking counts and revenue. This replaces the old hotel-listing approval workflow, since HyperGuest supplies all properties directly.</p>
+                <p style={s.note}>Properties booked through BLY via HyperGuest, with booking counts and revenue.</p>
                 <PropertiesTab properties={propertiesList} />
               </>
             )}
@@ -750,10 +830,7 @@ export default function Admin() {
             {tab === 'waitlist' && (
               <>
                 <p style={s.note}>Note: this reads from the `waitlist` table. If your "Coming Soon" signup form writes to a different table (e.g. `property_leads`), this list may not reflect real signups -- worth double-checking.</p>
-                <WaitlistTab
-                  waitlist={waitlist}
-                  onDelete={deleteWaitlist}
-                />
+                <WaitlistTab waitlist={waitlist} onDelete={deleteWaitlist} />
               </>
             )}
 
@@ -806,6 +883,14 @@ export default function Admin() {
                 onReject={rejectMember}
                 onRevoke={revokeMember}
               />
+            )}
+
+            {/* Reviews moderation */}
+            {tab === 'reviews' && (
+              <>
+                <p style={s.note}>Guest reviews submitted after verified stays. Approve to publish on the hotel page; reject to hide.</p>
+                <ReviewsTab reviews={reviews} onApprove={approveReview} onReject={rejectReview} />
+              </>
             )}
           </>
         )}

@@ -26,6 +26,126 @@ function describeCancellationPolicy(p) {
   const deadline = p.cancellationDeadlineHour ? `, deadline ${p.cancellationDeadlineHour}` : ''
   return `Penalty: ${penalty} — applies ${when}${deadline}`
 }
+
+function StarDisplay({ value, size = 14 }) {
+  return (
+    <span style={{ fontSize: size, letterSpacing: 1 }}>
+      {[1,2,3,4,5].map(n => (
+        <span key={n} style={{ color: n <= Math.round(value) ? '#f59e0b' : '#d1d5db' }}>★</span>
+      ))}
+    </span>
+  )
+}
+
+function ReviewsSection({ propertyId }) {
+  const [reviews, setReviews] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!propertyId) return
+    async function load() {
+      setLoading(true)
+      const { data } = await supabase
+        .from('reviews')
+        .select('*')
+        .eq('hyperguest_property_id', propertyId)
+        .eq('status', 'approved')
+        .order('created_at', { ascending: false })
+        .limit(20)
+      setReviews(data || [])
+      setLoading(false)
+    }
+    load()
+  }, [propertyId])
+
+  if (loading) return null
+  if (!reviews.length) return null
+
+  // Compute averages
+  const avg = (key) => {
+    const valid = reviews.filter(r => r[key] != null)
+    if (!valid.length) return null
+    return valid.reduce((sum, r) => sum + r[key], 0) / valid.length
+  }
+
+  const avgOverall      = avg('rating')
+  const avgCleanliness  = avg('cleanliness_rating')
+  const avgLocation     = avg('location_rating')
+  const avgValue        = avg('value_rating')
+  const avgService      = avg('service_rating')
+
+  const categories = [
+    { label: 'Cleanliness', value: avgCleanliness },
+    { label: 'Location',    value: avgLocation },
+    { label: 'Value',       value: avgValue },
+    { label: 'Service',     value: avgService },
+  ].filter(c => c.value != null)
+
+  return (
+    <div style={{ marginTop: 24, borderTop: '1px solid var(--border)', paddingTop: 20 }}>
+      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 18, marginBottom: 16, color: 'var(--text)' }}>
+        Guest Reviews
+      </div>
+
+      {/* Overall score + category breakdown */}
+      <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', marginBottom: 20, flexWrap: 'wrap' }}>
+        {avgOverall != null && (
+          <div style={{ textAlign: 'center', minWidth: 80 }}>
+            <div style={{ fontWeight: 800, fontSize: 36, color: '#1a1a2e', lineHeight: 1 }}>
+              {avgOverall.toFixed(1)}
+            </div>
+            <StarDisplay value={avgOverall} size={16} />
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+              {reviews.length} review{reviews.length !== 1 ? 's' : ''}
+            </div>
+          </div>
+        )}
+        {categories.length > 0 && (
+          <div style={{ flex: 1, minWidth: 200 }}>
+            {categories.map(cat => (
+              <div key={cat.label} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', width: 90, flexShrink: 0 }}>{cat.label}</div>
+                <div style={{ flex: 1, height: 6, background: 'var(--border)', borderRadius: 99, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${(cat.value / 5) * 100}%`, background: '#f59e0b', borderRadius: 99 }} />
+                </div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)', width: 28, textAlign: 'right' }}>
+                  {cat.value.toFixed(1)}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Individual review cards */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {reviews.map(r => (
+          <div key={r.id} style={{ background: 'var(--bg)', borderRadius: 14, padding: '14px 16px', border: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>
+                  {r.reviewer_name || 'Guest'}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
+                  <StarDisplay value={r.rating} size={12} />
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                    {new Date(r.created_at).toLocaleDateString('en-ZA', { month: 'short', year: 'numeric' })}
+                  </span>
+                </div>
+              </div>
+            </div>
+            {r.comment && (
+              <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 10, lineHeight: 1.6 }}>
+                {r.comment}
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 const s = {
   page: { maxWidth: 860, margin: '0 auto' },
   lockedHeader: {
@@ -436,6 +556,11 @@ export default function HotelDetail() {
               </>
             )}
           </details>
+
+          {/* ── GUEST REVIEWS ── */}
+          {property?.propertyId && (
+            <ReviewsSection propertyId={property.propertyId} />
+          )}
         </div>
         {/* ── STICKY BOTTOM CTA ── */}
         <div style={s.ctaBar}>

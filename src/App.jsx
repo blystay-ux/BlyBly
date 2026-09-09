@@ -23,6 +23,7 @@ import BookingPaymentFailed from './pages/BookingPaymentFailed'
 import Win from './pages/Win'
 import CorporateLogin from './pages/CorporateLogin'
 import CorporateRequest from './pages/CorporateRequest'
+import WriteReview from './pages/WriteReview'
 
 export default function App() {
   return (
@@ -53,6 +54,9 @@ export default function App() {
         <Route path="/win"                    element={<Win />} />
         <Route path="/corporate/login"       element={<CorporateLogin />} />
         <Route path="/corporate/request"     element={<CorporateRequest />} />
+
+        {/* Review flow */}
+        <Route path="/review/hg/:hgBookingId" element={<WriteReview />} />
       </Routes>
     </AuthProvider>
   )
