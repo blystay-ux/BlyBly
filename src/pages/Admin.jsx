@@ -635,67 +635,67 @@ const PRIORITIES  = ['MEGA', 'LARGE', 'MEDIUM']
 
 const BLANK_EVENT = { name: '', sub: '', date_label: '', month: '', year: '', city: '', area: '', category: 'Festival', priority: 'LARGE', slug: '', icon: '📅', description: '', active: true }
 
-function EventsTab({ events, onCreate, onSave, onToggle, onDelete, creating, setCreating, editing, setEditing, form, setForm, saving }) {
-  const inputStyle = { width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e0db', fontSize: 13, fontFamily: 'var(--font-body)', boxSizing: 'border-box' }
-  const labelStyle = { fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#888', display: 'block', marginBottom: 4 }
+const evInputStyle = { width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e0db', fontSize: 13, fontFamily: 'var(--font-body)', boxSizing: 'border-box' }
+const evLabelStyle = { fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#888', display: 'block', marginBottom: 4 }
 
-  function EventForm({ onSubmit, onCancel, title }) {
-    return (
-      <div style={{ background: '#fff', borderRadius: 16, padding: 28, marginBottom: 24, boxShadow: '0 1px 12px rgba(0,0,0,0.08)' }}>
-        <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 20 }}>{title}</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 14 }}>
-          {[
-            { label: 'Event name *',  key: 'name',       type: 'text', span: 2 },
-            { label: 'Sub-title',     key: 'sub',        type: 'text', span: 2 },
-            { label: 'Date label *',  key: 'date_label', type: 'text', placeholder: '14 Jun 2026' },
-            { label: 'Month (1–12) *',key: 'month',      type: 'number', placeholder: '6' },
-            { label: 'Year *',        key: 'year',       type: 'number', placeholder: '2026' },
-            { label: 'Icon',          key: 'icon',       type: 'text', placeholder: '📅' },
-            { label: 'City *',        key: 'city',       type: 'text' },
-            { label: 'Area',          key: 'area',       type: 'text', placeholder: 'Western Cape' },
-            { label: 'Slug *',        key: 'slug',       type: 'text', placeholder: 'accommodation-event-city-2026', span: 2 },
-            { label: 'Event start',   key: 'event_start', type: 'date' },
-            { label: 'Event end',     key: 'event_end',   type: 'date' },
-          ].map(f => (
-            <div key={f.key} style={{ gridColumn: f.span ? `span ${f.span}` : 'span 1' }}>
-              <label style={labelStyle}>{f.label}</label>
-              <input type={f.type} value={form[f.key] ?? ''} placeholder={f.placeholder || ''} onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))} style={inputStyle} />
-            </div>
-          ))}
-          <div>
-            <label style={labelStyle}>Category *</label>
-            <select value={form.category ?? 'Festival'} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} style={inputStyle}>
-              {CATEGORIES.map(c => <option key={c}>{c}</option>)}
-            </select>
+function EventForm({ onSubmit, onCancel, title, form, setForm, saving }) {
+  return (
+    <div style={{ background: '#fff', borderRadius: 16, padding: 28, marginBottom: 24, boxShadow: '0 1px 12px rgba(0,0,0,0.08)' }}>
+      <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 20 }}>{title}</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 14 }}>
+        {[
+          { label: 'Event name *',  key: 'name',       type: 'text', span: 2 },
+          { label: 'Sub-title',     key: 'sub',        type: 'text', span: 2 },
+          { label: 'Date label *',  key: 'date_label', type: 'text', placeholder: '14 Jun 2026' },
+          { label: 'Month (1–12) *',key: 'month',      type: 'number', placeholder: '6' },
+          { label: 'Year *',        key: 'year',       type: 'number', placeholder: '2026' },
+          { label: 'Icon',          key: 'icon',       type: 'text', placeholder: '📅' },
+          { label: 'City *',        key: 'city',       type: 'text' },
+          { label: 'Area',          key: 'area',       type: 'text', placeholder: 'Western Cape' },
+          { label: 'Slug *',        key: 'slug',       type: 'text', placeholder: 'accommodation-event-city-2026', span: 2 },
+          { label: 'Event start',   key: 'event_start', type: 'date' },
+          { label: 'Event end',     key: 'event_end',   type: 'date' },
+        ].map(f => (
+          <div key={f.key} style={{ gridColumn: f.span ? `span ${f.span}` : 'span 1' }}>
+            <label style={evLabelStyle}>{f.label}</label>
+            <input type={f.type} value={form[f.key] ?? ''} placeholder={f.placeholder || ''} onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))} style={evInputStyle} />
           </div>
-          <div>
-            <label style={labelStyle}>Priority *</label>
-            <select value={form.priority ?? 'LARGE'} onChange={e => setForm(p => ({ ...p, priority: e.target.value }))} style={inputStyle}>
-              {PRIORITIES.map(p => <option key={p}>{p}</option>)}
-            </select>
-          </div>
-          <div>
-            <label style={labelStyle}>Active</label>
-            <select value={form.active ? 'yes' : 'no'} onChange={e => setForm(p => ({ ...p, active: e.target.value === 'yes' }))} style={inputStyle}>
-              <option value="yes">Yes</option>
-              <option value="no">No</option>
-            </select>
-          </div>
+        ))}
+        <div>
+          <label style={evLabelStyle}>Category *</label>
+          <select value={form.category ?? 'Festival'} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} style={evInputStyle}>
+            {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+          </select>
         </div>
-        <div style={{ marginBottom: 20 }}>
-          <label style={labelStyle}>Write-up / description</label>
-          <textarea value={form.description ?? ''} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={4} style={{ ...inputStyle, resize: 'vertical' }} />
+        <div>
+          <label style={evLabelStyle}>Priority *</label>
+          <select value={form.priority ?? 'LARGE'} onChange={e => setForm(p => ({ ...p, priority: e.target.value }))} style={evInputStyle}>
+            {PRIORITIES.map(p => <option key={p}>{p}</option>)}
+          </select>
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button style={{ ...s.btn('accent'), padding: '9px 24px' }} onClick={onSubmit} disabled={saving}>
-            {saving ? 'Saving…' : title.startsWith('New') ? 'Create event' : 'Save changes'}
-          </button>
-          <button style={{ ...s.btn('default'), padding: '9px 20px' }} onClick={onCancel}>Cancel</button>
+        <div>
+          <label style={evLabelStyle}>Active</label>
+          <select value={form.active ? 'yes' : 'no'} onChange={e => setForm(p => ({ ...p, active: e.target.value === 'yes' }))} style={evInputStyle}>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
         </div>
       </div>
-    )
-  }
+      <div style={{ marginBottom: 20 }}>
+        <label style={evLabelStyle}>Write-up / description</label>
+        <textarea value={form.description ?? ''} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={4} style={{ ...evInputStyle, resize: 'vertical' }} />
+      </div>
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button style={{ ...s.btn('accent'), padding: '9px 24px' }} onClick={onSubmit} disabled={saving}>
+          {saving ? 'Saving…' : title.startsWith('New') ? 'Create event' : 'Save changes'}
+        </button>
+        <button style={{ ...s.btn('default'), padding: '9px 20px' }} onClick={onCancel}>Cancel</button>
+      </div>
+    </div>
+  )
+}
 
+function EventsTab({ events, onCreate, onSave, onToggle, onDelete, creating, setCreating, editing, setEditing, form, setForm, saving }) {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -706,10 +706,10 @@ function EventsTab({ events, onCreate, onSave, onToggle, onDelete, creating, set
       </div>
 
       {creating && (
-        <EventForm title="New event" onSubmit={onCreate} onCancel={() => { setCreating(false); setForm({}) }} />
+        <EventForm title="New event" onSubmit={onCreate} onCancel={() => { setCreating(false); setForm({}) }} form={form} setForm={setForm} saving={saving} />
       )}
       {editing && !creating && (
-        <EventForm title={`Edit — ${editing.name}`} onSubmit={() => onSave(editing.id)} onCancel={() => { setEditing(null); setForm({}) }} />
+        <EventForm title={`Edit — ${editing.name}`} onSubmit={() => onSave(editing.id)} onCancel={() => { setEditing(null); setForm({}) }} form={form} setForm={setForm} saving={saving} />
       )}
 
       <div style={{ overflowX: 'auto' }}>
