@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
-const CATEGORIES = ['All', 'Festival', 'Sport', 'Business', 'Global']
+const CATEGORIES = ['All', 'Festival', 'Sport', 'Business', 'Global', 'Convention']
 const PRIORITIES  = ['All', 'MEGA', 'LARGE', 'MEDIUM']
 
 const PRIORITY_STYLE = {

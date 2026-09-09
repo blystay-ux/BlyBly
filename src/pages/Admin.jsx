@@ -630,7 +630,7 @@ function PromosTab({ promos, onCreate, onToggle, creating, setCreating, form, se
 }
 
 // ── Events tab ───────────────────────────────────────────────
-const CATEGORIES = ['Festival', 'Sport', 'Business', 'Global']
+const CATEGORIES = ['Festival', 'Sport', 'Business', 'Global', 'Convention']
 const PRIORITIES  = ['MEGA', 'LARGE', 'MEDIUM']
 
 const BLANK_EVENT = { name: '', sub: '', date_label: '', month: '', year: '', city: '', area: '', category: 'Festival', priority: 'LARGE', slug: '', icon: '📅', description: '', active: true }
