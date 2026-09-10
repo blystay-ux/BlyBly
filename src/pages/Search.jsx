@@ -38,10 +38,11 @@ function cheapestOffer(property) {
 
 function ResultCard({ property, checkIn, nights, adults, rooms, zarRates = {} }) {
   const navigate = useNavigate()
-  const { isInsider, corporateAccount } = useAuth()
+  const { isInsider, corporateAccount, role } = useAuth()
   const cheapestRaw = cheapestOffer(property)
   const zarRate = cheapestRaw ? (zarRates[cheapestRaw.currency?.toUpperCase()] ?? null) : null
-  const offer = cheapestRaw ? calculateGuestPriceZAR(cheapestRaw.netPrice, cheapestRaw.sellPrice, cheapestRaw.currency, isInsider, zarRate, corporateAccount?.commission_pct ?? 0) : null
+  const effectiveIsInsider = isInsider && role !== 'admin'
+  const offer = cheapestRaw ? calculateGuestPriceZAR(cheapestRaw.netPrice, cheapestRaw.sellPrice, cheapestRaw.currency, effectiveIsInsider, zarRate, corporateAccount?.commission_pct ?? 0) : null
   const info = property.propertyInfo
 
   const handleView = () => {

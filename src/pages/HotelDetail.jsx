@@ -231,7 +231,8 @@ export default function HotelDetail() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
-  const { isInsider, corporateAccount } = useAuth()
+  const { isInsider, corporateAccount, role } = useAuth()
+  const effectiveIsInsider = isInsider && role !== 'admin'
   const isHyperGuest = slug?.startsWith('hg-')
   const stateProperty = location.state?.property
   const stateCheckIn = location.state?.checkIn
@@ -493,7 +494,7 @@ export default function HotelDetail() {
                 const sell = offer.plan.prices?.sell
                 const policies = offer.plan.cancellationPolicies || []
                 const zarRate = sell ? (zarRates[sell.currency?.toUpperCase()] ?? null) : null
-                const guestPrice = sell ? calculateGuestPriceZAR(net?.price ?? sell.price, sell.price, sell.currency, isInsider, zarRate, corporateAccount?.commission_pct ?? 0) : null
+                const guestPrice = sell ? calculateGuestPriceZAR(net?.price ?? sell.price, sell.price, sell.currency, effectiveIsInsider, zarRate, corporateAccount?.commission_pct ?? 0) : null
                 return (
                   <div key={i} style={s.offerCard(isSelected)} onClick={() => { setSelectedOffer(offer); setPrebookError(null) }}>
                     <div style={s.offerTop}>
