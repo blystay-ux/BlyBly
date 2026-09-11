@@ -56,6 +56,46 @@ function buildFallbackGroups() {
   return [{ label: 'South Africa', cities: FALLBACK_SA_CITIES }]
 }
 
+// Converts an ISO country code (e.g. "ZA") to a readable name (e.g. "South
+// Africa") using the browser's built-in Intl API -- no need to hand-maintain
+// a country code lookup table. Falls back to the raw code if unsupported.
+let countryNamer = null
+try {
+  countryNamer = new Intl.DisplayNames(['en'], { type: 'region' })
+} catch {
+  countryNamer = null
+}
+function countryName(code) {
+  if (!code) return 'Other'
+  try {
+    return (countryNamer && countryNamer.of(code)) || code
+  } catch {
+    return code
+  }
+}
+
+// Fetches EVERY row from hg_cities, paginating past Supabase's default
+// 1000-row cap on unfiltered queries. This is the actual root cause of an
+// earlier bug where most cities silently never appeared in the dropdown --
+// the fix isn't to restrict scope (a workaround), it's to paginate properly.
+async function fetchAllCities() {
+  const PAGE_SIZE = 1000
+  let allRows = []
+  let from = 0
+  while (true) {
+    const { data, error } = await supabase
+      .from('hg_cities')
+      .select('city, country')
+      .range(from, from + PAGE_SIZE - 1)
+    if (error) throw error
+    if (!data || data.length === 0) break
+    allRows = allRows.concat(data)
+    if (data.length < PAGE_SIZE) break // last page
+    from += PAGE_SIZE
+  }
+  return allRows
+}
+
 // Base styles are desktop-first (single row, pill-shaped). The <style>
 // block below overrides these via classes on narrow screens -- inline
 // styles alone can't express @media queries, and trying to force the
@@ -118,40 +158,48 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
   useEffect(() => {
     if (CERT_RESTRICTED) return
     async function fetchListedCities() {
-      // BUG FIX (2026-09-11): hg_cities has ~11,900 distinct cities across
-      // every country HyperGuest supports, but this fetch had no filter or
-      // limit at all -- Supabase's default 1000-row cap on unfiltered
-      // queries meant only an arbitrary, incomplete slice of cities ever
-      // made it into the dropdown, silently missing most South African
-      // towns (confirmed directly: Franschhoek and ~100+ others never
-      // appeared at all). Filtering to South Africa specifically (only 181
-      // distinct cities) fixes this completely and matches BLY's actual
-      // focus, rather than trying to handle HyperGuest's full global list.
-      const { data, error } = await supabase
-        .from('hg_cities')
-        .select('city')
-        .eq('country', 'ZA')
-      if (error) {
+      // Fetches HyperGuest's ENTIRE global city list, properly paginated
+      // (see fetchAllCities -- this is the real fix for the earlier bug
+      // where only ~1000 arbitrary cities loaded and most of them, SA
+      // included, never appeared). Grouped by country: South Africa is
+      // pinned to appear right after "Popular", every other country
+      // follows alphabetically by its resolved display name.
+      let data
+      try {
+        data = await fetchAllCities()
+      } catch (error) {
         console.error('Failed to load HyperGuest city list:', error)
         return
       }
-      if (!data) return
+      if (!data.length) return
 
-      // One "South Africa" group, everything except the 4 priority cities
-      // (shown separately above as "Popular"), alphabetical.
-      const citySet = new Set()
+      const byCountry = {}
       for (const row of data) {
         if (!row.city || PRIORITY_CITIES.includes(row.city)) continue
-        citySet.add(row.city)
+        const label = countryName(row.country)
+        if (!byCountry[label]) byCountry[label] = new Set()
+        byCountry[label].add(row.city)
       }
-      // Make sure the fallback list is included too, in case live data is
-      // sparse for some SA cities.
-      for (const c of FALLBACK_SA_CITIES) citySet.add(c)
+      // Make sure South Africa's fallback list is included too, in case
+      // live data is ever sparse for some SA cities.
+      const saLabel = countryName('ZA')
+      if (!byCountry[saLabel]) byCountry[saLabel] = new Set()
+      for (const c of FALLBACK_SA_CITIES) byCountry[saLabel].add(c)
 
-      const groups = [{
-        label: 'South Africa',
-        cities: Array.from(citySet).sort((a, b) => a.localeCompare(b)),
-      }]
+      const otherGroups = Object.entries(byCountry)
+        .filter(([label]) => label !== saLabel)
+        .map(([label, citySet]) => ({
+          label,
+          cities: Array.from(citySet).sort((a, b) => a.localeCompare(b)),
+        }))
+        .sort((a, b) => a.label.localeCompare(b.label))
+
+      // South Africa first (pinned, right after "Popular" above), then
+      // every other country alphabetically.
+      const groups = [
+        { label: saLabel, cities: Array.from(byCountry[saLabel]).sort((a, b) => a.localeCompare(b)) },
+        ...otherGroups,
+      ]
 
       setCityGroups(groups)
     }
