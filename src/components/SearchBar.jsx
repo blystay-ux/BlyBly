@@ -28,23 +28,6 @@ const FALLBACK_SA_CITIES = [
   'Sun City', 'Tzaneen', 'Umhlanga', 'Upington', 'White River',
 ].sort((a, b) => a.localeCompare(b))
 
-// Converts an ISO country code (e.g. "ZA") to a readable name (e.g. "South
-// Africa") using the browser's built-in Intl API -- no need to hand-maintain
-// a country code lookup table. Falls back to the raw code if unsupported.
-let countryNamer = null
-try {
-  countryNamer = new Intl.DisplayNames(['en'], { type: 'region' })
-} catch {
-  countryNamer = null
-}
-function countryName(code) {
-  if (!code) return 'Other'
-  try {
-    return (countryNamer && countryNamer.of(code)) || code
-  } catch {
-    return code
-  }
-}
 
 // ── Date helpers, all guarded against invalid/empty input ──
 function isValidDateStr(str) {
@@ -135,35 +118,40 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
   useEffect(() => {
     if (CERT_RESTRICTED) return
     async function fetchListedCities() {
-      const { data, error } = await supabase.from('hg_cities').select('city, country')
+      // BUG FIX (2026-09-11): hg_cities has ~11,900 distinct cities across
+      // every country HyperGuest supports, but this fetch had no filter or
+      // limit at all -- Supabase's default 1000-row cap on unfiltered
+      // queries meant only an arbitrary, incomplete slice of cities ever
+      // made it into the dropdown, silently missing most South African
+      // towns (confirmed directly: Franschhoek and ~100+ others never
+      // appeared at all). Filtering to South Africa specifically (only 181
+      // distinct cities) fixes this completely and matches BLY's actual
+      // focus, rather than trying to handle HyperGuest's full global list.
+      const { data, error } = await supabase
+        .from('hg_cities')
+        .select('city')
+        .eq('country', 'ZA')
       if (error) {
         console.error('Failed to load HyperGuest city list:', error)
         return
       }
       if (!data) return
 
-      // Group everything (except the 4 priority cities, shown separately
-      // above) by country, cities alphabetical within each group, groups
-      // alphabetical by their resolved display name.
-      const byCountry = {}
+      // One "South Africa" group, everything except the 4 priority cities
+      // (shown separately above as "Popular"), alphabetical.
+      const citySet = new Set()
       for (const row of data) {
         if (!row.city || PRIORITY_CITIES.includes(row.city)) continue
-        const label = countryName(row.country)
-        if (!byCountry[label]) byCountry[label] = new Set()
-        byCountry[label].add(row.city)
+        citySet.add(row.city)
       }
-      // Make sure the South Africa group exists and includes the fallback
-      // list too, in case live data is sparse for some SA cities.
-      const saLabel = countryName('ZA')
-      if (!byCountry[saLabel]) byCountry[saLabel] = new Set()
-      for (const c of FALLBACK_SA_CITIES) byCountry[saLabel].add(c)
+      // Make sure the fallback list is included too, in case live data is
+      // sparse for some SA cities.
+      for (const c of FALLBACK_SA_CITIES) citySet.add(c)
 
-      const groups = Object.entries(byCountry)
-        .map(([label, citySet]) => ({
-          label,
-          cities: Array.from(citySet).sort((a, b) => a.localeCompare(b)),
-        }))
-        .sort((a, b) => a.label.localeCompare(b.label))
+      const groups = [{
+        label: 'South Africa',
+        cities: Array.from(citySet).sort((a, b) => a.localeCompare(b)),
+      }]
 
       setCityGroups(groups)
     }
