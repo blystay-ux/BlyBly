@@ -71,6 +71,7 @@ export default function DatePicker({ value, onChange, min, label }) {
   const triggerRef = useRef(null)
   const popoverRef = useRef(null)
 
+  // Close on outside click
   useEffect(() => {
     function onClickOutside(e) {
       const clickedTrigger = triggerRef.current && triggerRef.current.contains(e.target)
@@ -80,6 +81,18 @@ export default function DatePicker({ value, onChange, min, label }) {
     document.addEventListener('mousedown', onClickOutside)
     return () => document.removeEventListener('mousedown', onClickOutside)
   }, [])
+
+  // Close when the page scrolls -- the popover is position:fixed so its
+  // coordinates become stale the moment the user scrolls, and the calendar
+  // ends up floating in the wrong place. Closing on scroll is the simplest
+  // correct fix. Use capture:true so any scrolling element (not just window)
+  // triggers the close.
+  useEffect(() => {
+    if (!open) return
+    function onScroll() { setOpen(false) }
+    window.addEventListener('scroll', onScroll, { passive: true, capture: true })
+    return () => window.removeEventListener('scroll', onScroll, { capture: true })
+  }, [open])
 
   useEffect(() => {
     if (isValidDateStr(value)) setViewDate(parseLocal(value))
