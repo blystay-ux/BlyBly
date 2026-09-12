@@ -138,12 +138,9 @@ function AuthStep({ onDone }) {
   return (
     <div style={card}>
       
-      <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: 22, marginBottom: 4 }}>
+      <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: 22, marginBottom: 20 }}>
         Create your account
       </h2>
-      <p style={{ color: '#777', fontSize: 14, marginBottom: 24, lineHeight: 1.5 }}>
-        Already have a BLY. account? Switch to sign in below.
-      </p>
 
       <div style={toggle}>
         <button style={tabStyle(mode === 'signup')} onClick={() => { setMode('signup'); setError('') }}>
@@ -380,17 +377,45 @@ function PendingView({ onGoHome }) {
     <div style={{ ...card, textAlign: 'center' }}>
       <div style={pill('#FFF8E1', '#B45309')}>⏳ Awaiting approval</div>
       <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: 24, margin: '4px 0 12px' }}>
-        Application received
+        Payment received — you're almost in.
       </h2>
-      <p style={{ color: '#666', fontSize: 15, lineHeight: 1.7, maxWidth: 420, margin: '0 auto 28px' }}>
-        Your application and payment are being reviewed by the BLY. team.
-        You'll have access to Insider rates as soon as your membership is activated.
+      <p style={{ color: '#666', fontSize: 15, lineHeight: 1.7, maxWidth: 440, margin: '0 auto 20px' }}>
+        Thank you for joining Bly Insiders. The BLY. team will now verify your trade status
+        and activate your membership — usually within 1 business day.
       </p>
+
+      {/* Step timeline */}
+      <div style={{ display: 'grid', gap: 10, maxWidth: 360, margin: '0 auto 28px', textAlign: 'left' }}>
+        {[
+          { done: true,  label: 'Payment received' },
+          { done: false, label: 'BLY. team verifies your details' },
+          { done: false, label: 'Membership activated — Insider rates unlock' },
+        ].map(({ done, label }) => (
+          <div key={label} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <div style={{
+              width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
+              background: done ? '#2E9E5B' : '#E7E4E0',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 11, color: done ? '#fff' : '#bbb', fontWeight: 800,
+            }}>
+              {done ? '✓' : '○'}
+            </div>
+            <span style={{ fontSize: 14, color: done ? '#111' : '#999', fontWeight: done ? 600 : 400 }}>{label}</span>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ ...infoBox, textAlign: 'left', marginBottom: 24 }}>
+        <strong style={{ display: 'block', marginBottom: 4, color: '#333' }}>Important</strong>
+        Insider rates will <strong>not</strong> appear until your membership is approved.
+        You will receive a notification once access is activated.
+      </div>
+
       <button style={btn} onClick={onGoHome}>
         Return to home →
       </button>
       <p style={{ color: '#aaa', fontSize: 12, marginTop: 14 }}>
-        Clicking this will sign you out until your account is activated.
+        You will be signed out until your account is activated.
       </p>
     </div>
   )
