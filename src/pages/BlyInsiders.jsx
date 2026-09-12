@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { prefetchZARRates } from '../lib/pricing'
 
 const FEE = 150
 const IK_PAY_URL = 'https://pay.ikhokha.com/bly-travel/buy/blytravel'
@@ -422,6 +423,11 @@ export default function BlyInsiders() {
 
   const [loading, setLoading] = useState(true)
   const [membership, setMembership] = useState(null)
+  const [zarRates, setZarRates] = useState({})
+
+  useEffect(() => {
+    prefetchZARRates(['USD', 'EUR', 'GBP']).then(setZarRates)
+  }, [])
 
   useEffect(() => {
     if (!user) { setLoading(false); return }
@@ -487,6 +493,52 @@ export default function BlyInsiders() {
             </div>
           ))}
         </div>
+
+        {/* Pricing */}
+        {(() => {
+          const fxLines = [
+            { code: 'USD', symbol: '$' },
+            { code: 'EUR', symbol: '€' },
+            { code: 'GBP', symbol: '£' },
+          ]
+            .map(({ code, symbol }) => {
+              const rate = zarRates[code]
+              if (!rate) return null
+              const approx = Math.ceil(FEE / rate)
+              return `${symbol}${approx} ${code}`
+            })
+            .filter(Boolean)
+
+          return (
+            <div style={{
+              background: '#111', borderRadius: 20, padding: '28px 28px 24px',
+              marginBottom: 28, display: 'flex', alignItems: 'center',
+              justifyContent: 'space-between', gap: 20, flexWrap: 'wrap',
+            }}>
+              <div>
+                <div style={{ color: '#aaa', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>
+                  Annual membership fee
+                </div>
+                <div style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 900, fontSize: 40, letterSpacing: '-0.04em', color: '#fff', lineHeight: 1 }}>
+                  R{FEE}
+                  <span style={{ fontSize: 15, fontWeight: 500, color: '#888' }}> / year</span>
+                </div>
+                {fxLines.length > 0 && (
+                  <div style={{ color: '#888', fontSize: 12, marginTop: 8 }}>
+                    ≈ {fxLines.join(' · ')}
+                  </div>
+                )}
+              </div>
+              <div style={{
+                background: '#1e1e1e', borderRadius: 14, padding: '14px 18px',
+                fontSize: 13, color: '#aaa', lineHeight: 1.6, maxWidth: 260,
+              }}>
+                <strong style={{ color: '#fff', display: 'block', marginBottom: 2 }}>One flat annual fee.</strong>
+                Insider rates across all BLY. properties for a full year — no commissions, no catches.
+              </div>
+            </div>
+          )
+        })()}
 
         {/* Action panel */}
         {showAuth    && <AuthStep onDone={fetchMembership} />}
