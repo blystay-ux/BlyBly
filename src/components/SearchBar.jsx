@@ -12,7 +12,7 @@ const CERT_RESTRICTED_CITIES = ['Haifa']
 
 // Always shown first, in this exact order -- not alphabetized among
 // themselves, unlike everything else in the dropdown.
-const PRIORITY_CITIES = ['Cape Town', 'Johannesburg', 'Pretoria', 'Durban']
+const PRIORITY_CITIES = ['Cape Town', 'Johannesburg', 'Durban', 'Pretoria']
 
 // Fallback South African cities shown before the live hg_cities fetch
 // completes (or if it fails). Priority cities are deliberately excluded
@@ -395,9 +395,6 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
         <button className="bly-searchbar-btn" style={s.searchBtn} onClick={go}>🔍 Search</button>
       </div>
       {error && <div style={s.error}>{error}</div>}
-      {CERT_RESTRICTED && !error && (
-        <div style={s.notice}>Search is temporarily limited to Haifa while our HyperGuest integration completes certification.</div>
-      )}
     </div>
   )
 }

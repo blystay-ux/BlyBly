@@ -222,7 +222,7 @@ export default function Contact() {
       if (!res.ok) throw new Error('Failed')
       setSubmitted(true)
     } catch {
-      setError('Something went wrong. Please email us directly at Info@blytravel.co.za')
+      setError('Something went wrong. Please email us directly at info@blytravel.co.za')
     } finally {
       setSubmitting(false)
     }
@@ -304,11 +304,11 @@ export default function Contact() {
         <div style={S.sidebar}>
           <div style={S.sectionLabel}>Contact details</div>
           <div style={S.contactCard}>
-            <a href="mailto:Info@blytravel.co.za" style={S.contactItem}>
+            <a href="mailto:info@blytravel.co.za" style={S.contactItem}>
               <div style={S.contactIcon}>✉️</div>
               <div style={S.contactMeta}>
                 <div style={S.contactMetaLabel}>Email</div>
-                <div style={S.contactMetaValue}>Info@blytravel.co.za</div>
+                <div style={S.contactMetaValue}>info@blytravel.co.za</div>
               </div>
             </a>
             <a href="https://wa.me/27793825684" style={{ ...S.contactItem, marginBottom: 0 }}>

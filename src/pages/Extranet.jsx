@@ -83,7 +83,7 @@ function EmptyState() {
       <div className="text-5xl">🏨</div>
       <p className="mt-4 text-lg font-black">No properties listed yet</p>
       <p className="mt-2 text-sm text-black/50">
-        List your first property and start reaching guests across South Africa.
+        List your first property and start reaching guests worldwide.
       </p>
       <button
         onClick={() => navigate('/list-hotel')}

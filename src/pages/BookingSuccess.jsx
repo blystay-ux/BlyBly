@@ -126,7 +126,7 @@ export default function BookingSuccess() {
               <DetailRow label="Check-in"    value={checkIn} />
               <DetailRow label="Check-out"   value={checkOut} />
               <DetailRow label="Booking ref" value={agencyRef} />
-              {hgRef !== '—' && <DetailRow label="HyperGuest ref" value={hgRef} />}
+              {hgRef !== '—' && <DetailRow label="Booking ref" value={hgRef} />}
             </div>
 
             <div style={styles.actions}>

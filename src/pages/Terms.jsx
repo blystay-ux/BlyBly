@@ -61,7 +61,7 @@ const SECTIONS = [
   {
     title: '8. Bly Insiders Membership',
     content: [
-      { p: 'Bly Insiders is a paid annual membership programme available to verified South African travel industry professionals. Membership costs R100 per year and is subject to application and approval by BLY.' },
+      { p: 'Bly Insiders is a paid annual membership programme available to verified South African travel industry professionals. Membership costs R150 per year, requires proof of employment in the travel industry, and is subject to application and approval by BLY.' },
       { ul: [
         'Applicants must provide accurate details of their employer and role within the travel industry, and acknowledge that BLY (or the Property) may request proof of employment at the time of booking or check-in.',
         'Approved members receive access to preferential "Insider" pricing on eligible Rate Plans, calculated as set out in BLY\u2019s pricing policy.',

@@ -282,7 +282,7 @@ function PaymentStep({ userId, onMembershipCreated }) {
         Your details
       </h2>
       <p style={{ color: '#777', fontSize: 14, marginBottom: 24, lineHeight: 1.5 }}>
-        Tell us a little about yourself. These details are used to verify your trade status.
+        Tell us a little about yourself. These details are used to verify your industry credentials.
       </p>
 
       <div style={{ display: 'grid', gap: 16, marginBottom: 28 }}>
@@ -380,7 +380,7 @@ function PendingView({ onGoHome }) {
         Payment received — you're almost in.
       </h2>
       <p style={{ color: '#666', fontSize: 15, lineHeight: 1.7, maxWidth: 440, margin: '0 auto 20px' }}>
-        Thank you for joining Bly Insiders. The BLY. team will now verify your trade status
+        Thank you for joining Bly Insiders. The BLY. team will now verify your industry credentials
         and activate your membership — usually within 1 business day.
       </p>
 

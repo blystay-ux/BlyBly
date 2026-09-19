@@ -252,7 +252,7 @@ export default function Home() {
           fontSize: 16, position: 'relative', flexWrap: 'wrap', textAlign: 'center',
         }}>
           <span style={{ color: 'var(--accent)', fontSize: 18 }}>✨</span>
-          <span>Travel industry professional? Get Insider rates on every stay —</span>
+          <span>Travel agent, airline or hotel staff? Get Insider rates on every stay —</span>
           <span
             onClick={() => navigate('/insiders')}
             style={{ fontWeight: 700, textDecoration: 'underline', textUnderlineOffset: 3, cursor: 'pointer' }}
