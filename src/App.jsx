@@ -26,6 +26,7 @@ import CorporateRequest from './pages/CorporateRequest'
 import WriteReview from './pages/WriteReview'
 import PromoCode from './pages/PromoCode'
 import EventsCalendar from './pages/EventsCalendar'
+import EventPage from './pages/EventPage'
 import SeoManager from './seo/SeoManager'
 
 export default function App() {
@@ -67,6 +68,7 @@ export default function App() {
 
         {/* Events calendar */}
         <Route path="/events/south-africa" element={<EventsCalendar />} />
+        <Route path="/events/:slug" element={<EventPage />} />
       </Routes>
     </AuthProvider>
   )

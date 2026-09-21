@@ -20,7 +20,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { DESTINATIONS } from '../src/data/destinations.js'
-import { SITE, STATIC_PAGES, getSeoForPath, isFullDestination } from '../src/seo/seo.js'
+import {
+  SITE, STATIC_PAGES, getSeoForPath, isFullDestination, DEFAULT_OG_IMAGE,
+  eventRegistry, eventHeading, eventSearchUrl, relatedForEvent,
+} from '../src/seo/seo.js'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const dist = path.join(root, 'dist')
@@ -47,6 +50,42 @@ const BLOG = [
   ['/blog/garden-route-hotels-guide', 'Garden Route road trip: best hotels along the way'],
   ['/blog/stellenbosch-vs-franschhoek', 'Stellenbosch vs Franschhoek: which Winelands town to stay in'],
 ]
+
+// -- Events (active only) - fetched from Supabase at build time ----------------
+// Needs VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY (already set on Vercel).
+// For local testing, point SEO_EVENTS_FILE at a JSON file instead. Never fails the deploy.
+async function loadEvents() {
+  try {
+    let rows
+    if (process.env.SEO_EVENTS_FILE) {
+      rows = JSON.parse(fs.readFileSync(process.env.SEO_EVENTS_FILE, 'utf8'))
+    } else {
+      const url = process.env.VITE_SUPABASE_URL
+      const key = process.env.VITE_SUPABASE_ANON_KEY
+      if (!url || !key) { console.warn('[seo-prerender] no Supabase env vars - skipping event pages'); return [] }
+      const res = await fetch(`${url}/rest/v1/events?select=*&active=eq.true&order=year.asc,month.asc`, {
+        headers: { apikey: key, Authorization: `Bearer ${key}` },
+      })
+      if (!res.ok) throw new Error(`Supabase responded ${res.status}`)
+      rows = await res.json()
+    }
+    const today = new Date().toISOString().slice(0, 10)
+    return rows.filter((e) => {
+      const last = e.event_end || e.event_start
+      return e.slug && e.name && e.city && !(last && last < today)
+    })
+  } catch (err) {
+    console.warn(`[seo-prerender] events skipped: ${err.message}`)
+    return []
+  }
+}
+const EVENTS = await loadEvents()
+for (const e of EVENTS) eventRegistry.set(e.slug, e)
+
+function eventLinksHtml() {
+  if (!EVENTS.length) return ''
+  return `<h2>Upcoming events</h2><ul>${EVENTS.map((e) => `<li><a href="/events/${esc(e.slug)}">${esc(e.name)}</a> - ${esc(e.city)}, ${esc(e.date_label)}</li>`).join('')}</ul>`
+}
 
 const WRAP =
   'max-width:820px;margin:0 auto;padding:96px 24px 64px;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;line-height:1.65;color:#0a0a0a'
@@ -113,7 +152,7 @@ const eventsBody = () =>
   main(`
 <h1>Events Calendar.</h1>
 <p>Every major festival, race, conference and sporting moment in South Africa and beyond &mdash; with BLY. accommodation for each one.</p>
-<p><a href="/destinations">Browse destinations</a> &middot; <a href="/search">Search stays</a></p>`)
+<p><a href="/destinations">Browse destinations</a> &middot; <a href="/search">Search stays</a></p>${eventLinksHtml()}`)
 
 const insidersBody = () =>
   main(`
@@ -214,6 +253,65 @@ for (const d of DESTINATIONS) {
     ].join('\n    ')
   })
 }
+// -- Event pages (one per active, upcoming event) -------------------------------
+function eventBody(ev) {
+  const rel = relatedForEvent(ev)
+  const same = EVENTS.filter((x) => x.slug !== ev.slug && x.city === ev.city).slice(0, 5)
+  return main(`
+<p><a href="/">Home</a> &rsaquo; <a href="/events/south-africa">Events</a> &rsaquo; ${esc(ev.name)}</p>
+<h1>${esc(eventHeading(ev))}</h1>
+${ev.sub ? `<p><em>${esc(ev.sub)}</em></p>` : ''}
+<ul><li><strong>When:</strong> ${esc(ev.date_label)}</li><li><strong>Where:</strong> ${esc(ev.city)}${ev.area && ev.area !== ev.city ? ', ' + esc(ev.area) : ''}</li><li><strong>Type:</strong> ${esc(ev.category)}</li></ul>
+<p>${esc(ev.description)}</p>
+<h2>Find accommodation in ${esc(ev.city)}</h2>
+<p><a href="${esc(eventSearchUrl(ev))}">Search stays in ${esc(ev.city)}</a>${ev.event_start ? '' : ' (exact dates are still to be confirmed, so pick your own dates)'}</p>
+${rel.destination ? `<p><a href="/accommodation/${rel.destination.slug}">${esc(rel.destination.name)} accommodation guide</a></p>` : ''}
+${rel.guide ? `<p><a href="${rel.guide.url}">${esc(rel.guide.title)}</a></p>` : ''}
+${same.length ? `<h2>More events in ${esc(ev.city)}</h2><ul>${same.map((x) => `<li><a href="/events/${esc(x.slug)}">${esc(x.name)}</a> - ${esc(x.date_label)}</li>`).join('')}</ul>` : ''}
+<p><a href="/events/south-africa">All events</a> &middot; <a href="/destinations">Destinations</a></p>`)
+}
+
+function eventLd(ev) {
+  const p = `/events/${ev.slug}`
+  const out = []
+  if (ev.event_start) {
+    out.push(
+      ld('bly-event-schema', p, {
+        '@context': 'https://schema.org',
+        '@type': 'Event',
+        name: ev.name,
+        description: ev.description,
+        startDate: ev.event_start,
+        ...(ev.event_end ? { endDate: ev.event_end } : {}),
+        eventStatus: 'https://schema.org/EventScheduled',
+        eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+        location: {
+          '@type': 'Place',
+          name: ev.city,
+          address: { '@type': 'PostalAddress', addressLocality: ev.city, ...(ev.area ? { addressRegion: ev.area } : {}) },
+        },
+        image: [DEFAULT_OG_IMAGE],
+        url: `${SITE}${p}`,
+      })
+    )
+  }
+  out.push(
+    ld('bly-breadcrumb-schema', p, {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE}/` },
+        { '@type': 'ListItem', position: 2, name: 'Events', item: `${SITE}/events/south-africa` },
+        { '@type': 'ListItem', position: 3, name: ev.name, item: `${SITE}${p}` },
+      ],
+    })
+  )
+  return out.join('\n    ')
+}
+
+for (const ev of EVENTS) tryWrite(`/events/${ev.slug}`, () => eventBody(ev), () => eventLd(ev))
+console.log(`[seo-prerender] event pages: ${EVENTS.length}`)
+
 // -- Sitemap (rebuilt on every deploy from the same data as the pages) ---------
 // Only indexable pages are listed. Blog lastmod dates are kept from public/sitemap.xml.
 try {
@@ -229,6 +327,7 @@ try {
     '/', '/destinations', '/events/south-africa', '/insiders', '/blog',
     ...DESTINATIONS.filter(isFullDestination).map((d) => `/accommodation/${d.slug}`),
     ...BLOG.map(([u]) => u),
+    ...EVENTS.map((e) => `/events/${e.slug}`),
   ]
   const xml = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
   for (const u of urls) {
