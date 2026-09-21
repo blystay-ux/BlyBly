@@ -57,7 +57,7 @@ export default function DestinationsPage() {
           maxWidth: 520,
           lineHeight: 1.65,
         }}>
-          South Africa's best destinations and the international spots SA travellers love most. Book direct. No middleman. Better value.
+          South Africa's best destinations and the international spots SA travellers love most. Book on BLY., built for South African travellers.
         </p>
       </section>
 

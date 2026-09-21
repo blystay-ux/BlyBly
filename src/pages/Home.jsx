@@ -308,7 +308,7 @@ export default function Home() {
             Book Accommodation,<br />South Africa &amp; Beyond<span style={{ color: 'var(--accent-light)' }}>.</span>
           </h1>
           <p className="bly-hero-sub" style={{ color: 'rgba(255,255,255,0.85)', fontSize: 'clamp(16px, 2vw, 20px)', maxWidth: 540, lineHeight: 1.6, marginBottom: 40 }}>
-            Discover real stays across Cape Town, Joburg, Durban and Pretoria — direct from the host, better value.
+            Discover real stays across Cape Town, Joburg, Durban and Pretoria — book on BLY., built for South African travellers.
           </p>
           <SearchBar />
         </div>

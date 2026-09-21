@@ -58,7 +58,7 @@ const main = (inner) => `<main id="seo-fallback" style="${WRAP}">${inner}</main>
 function homeBody() {
   return main(`
 <h1>Book Accommodation, South Africa &amp; Beyond.</h1>
-<p>Discover real stays across Cape Town, Joburg, Durban and Pretoria &mdash; direct from the host, better value.</p>
+<p>Discover real stays across Cape Town, Joburg, Durban and Pretoria &mdash; book on BLY., built for South African travellers.</p>
 <h2>Popular destinations</h2>
 <ul>${saDests.filter(isFullDestination).map(destLink).join('')}</ul>
 <p><a href="/destinations">See all destinations</a> &middot; <a href="/events/south-africa">Events calendar</a> &middot; <a href="/insiders">Bly Insiders</a></p>
