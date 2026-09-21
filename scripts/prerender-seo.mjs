@@ -144,6 +144,9 @@ function build(urlPath, body, extraHead = '') {
     `<meta property="og:title" content="${esc(seo.title)}" />`,
     `<meta property="og:description" content="${esc(seo.description)}" />`,
     `<meta property="og:url" content="${esc(seo.canonical)}" />`,
+    `<meta property="og:image" content="${esc(seo.image)}" />`,
+    `<meta name="twitter:card" content="summary_large_image" />`,
+    `<meta name="twitter:image" content="${esc(seo.image)}" />`,
     extraHead,
   ].join('\n    ')
   swap(/<\/head>/, `    ${extra}\n  </head>`, '</head>')
