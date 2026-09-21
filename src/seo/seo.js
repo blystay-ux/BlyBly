@@ -12,11 +12,11 @@ import { DESTINATIONS } from '../data/destinations.js'
 
 export const SITE = 'https://blytravel.co.za'
 
-// Homepage strings are unchanged from index.html (wording is reviewed in a later step)
+// Homepage strings: keep in sync with the <title> and description in index.html
 const HOME = {
-  title: 'Bly \u2014 Book Accommodation in South Africa | Direct, Better Value',
+  title: 'BLY. Travel | Book Hotels & Guesthouses in South Africa',
   description:
-    'Book accommodation across South Africa \u2014 Cape Town, Johannesburg, Durban, Pretoria and beyond. Direct bookings, no middleman fees. Find your stay on Bly.',
+    'Book hotels, guesthouses and self-catering stays across South Africa and beyond. Local, honest rates, built for South African travellers. Find. Book. Bly.',
 }
 
 // Pages that must never appear in Google (private, transactional or thin).
@@ -29,30 +29,30 @@ const NOINDEX_PREFIX = ['/booking/', '/review/', '/corporate/']
 
 export const STATIC_PAGES = {
   '/destinations': {
-    title: 'Destinations \u2014 Where to Stay in South Africa & Beyond | Bly',
+    title: 'Where to Stay in South Africa & Beyond | BLY. Travel',
     description:
-      "Browse Bly's destinations: Cape Town, Johannesburg, Durban, Kruger, the Garden Route and more. Guides, things to do and stays for every trip.",
+      'Browse destinations across South Africa and beyond: Cape Town, Johannesburg, Durban, Kruger, the Garden Route and more. Guides, things to do and places to stay.',
   },
   '/events/south-africa': {
-    title: 'South Africa Events Calendar \u2014 Festivals, Sport & Conferences | Bly',
+    title: 'South Africa Events Calendar | BLY. Travel',
     description:
-      'Every major festival, race, conference and sporting moment in South Africa and beyond, with Bly accommodation for each one.',
+      'Every major festival, race, conference and sporting moment in South Africa and beyond, with places to stay for each one on BLY.',
   },
   '/insiders': {
-    title: 'Bly Insiders \u2014 Industry Rates for Travel Professionals',
+    title: 'BLY. Insiders | Industry Rates for Travel Professionals',
     description:
-      'A members-only programme for travel agents, airline staff and hotel staff. Unlock Insider rates across Bly properties.',
+      'A members-only programme for travel agents, airline staff and hotel staff. Unlock Insider rates across BLY. properties.',
   },
-  '/terms': { title: 'Terms & Conditions | Bly Travel', description: 'Terms and conditions for booking with Bly Travel (Pty) Ltd.' },
-  '/contact': { title: 'Contact Bly Travel', description: 'Get in touch with the Bly Travel team in Centurion, Pretoria.' },
+  '/terms': { title: 'Terms & Conditions | BLY. Travel', description: 'Terms and conditions for booking with Bly Travel (Pty) Ltd.' },
+  '/contact': { title: 'Contact BLY. Travel', description: 'Get in touch with the BLY. Travel team in Centurion, Pretoria.' },
 }
 
 export const isFullDestination = (d) => Array.isArray(d.overview) && d.overview.length > 0
 
 export function destinationSeo(dest) {
   return {
-    title: `${dest.name} Accommodation | Book Direct on Bly`,
-    description: `Find accommodation in ${dest.name}. ${dest.cardTagline} Book direct on Bly \u2014 no middleman, better rates.`,
+    title: `Hotels & Guesthouses in ${dest.name} | BLY. Travel`,
+    description: `Find hotels, guesthouses and stays in ${dest.name}. ${dest.cardTagline} Book on BLY., the South African travel platform.`,
     // Stub destinations (no copy yet) stay out of Google until content is written.
     robots: isFullDestination(dest) ? 'index,follow' : 'noindex,follow',
   }
