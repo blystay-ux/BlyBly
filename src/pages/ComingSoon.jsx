@@ -109,7 +109,7 @@ export default function ComingSoon() {
           </h1>
 
           <p className="fadeUp-3" style={{ fontSize: 'clamp(16px, 2vw, 20px)', color: '#6B6B6B', maxWidth: 520, lineHeight: 1.6, marginBottom: 44 }}>
-            South Africa's new way to discover and book local stays — direct, simple, and better value. We're launching soon.
+            South Africa's new way to discover and book local stays — simple and built for South African travellers. We're launching soon.
           </p>
 
           <div className="fadeUp-4" style={{ display: 'flex', flexWrap: 'wrap', gap: 14, alignItems: 'center' }}>

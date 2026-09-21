@@ -29,7 +29,7 @@ export function ogImageFor(dest) {
 const HOME = {
   title: 'BLY. Travel | Book Hotels & Guesthouses in South Africa',
   description:
-    'Book hotels, guesthouses and self-catering stays across South Africa and beyond. Local, honest rates, built for South African travellers. Find. Book. Bly.',
+    'Book hotels, guesthouses and self-catering stays across South Africa and beyond. Local, simple and built for South African travellers. Find. Book. Bly.',
 }
 
 // Pages that must never appear in Google (private, transactional or thin).

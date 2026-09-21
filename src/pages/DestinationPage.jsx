@@ -471,7 +471,7 @@ export default function DestinationPage() {
                 color: PINK,
                 marginBottom: 12,
               }}>
-                Book Direct on Bly
+                Book on BLY.
               </p>
               <h2 style={{
                 fontFamily: "'Poppins', sans-serif",

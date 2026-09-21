@@ -559,7 +559,7 @@ export default function BlyInsiders() {
                 fontSize: 13, color: '#aaa', lineHeight: 1.6, maxWidth: 260,
               }}>
                 <strong style={{ color: '#fff', display: 'block', marginBottom: 2 }}>One flat annual fee.</strong>
-                Insider rates across all BLY. properties for a full year — no commissions, no catches.
+                Insider rates across all BLY. properties for a full year.
               </div>
             </div>
           )
