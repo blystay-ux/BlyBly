@@ -36,6 +36,8 @@ export default function SeoManager() {
     if (seo.title) setMeta('property', 'og:title', seo.title)
     if (seo.description) setMeta('property', 'og:description', seo.description)
     setMeta('property', 'og:url', seo.canonical)
+    if (seo.image) { setMeta('property', 'og:image', seo.image); setMeta('name', 'twitter:image', seo.image) }
+    setMeta('name', 'twitter:card', 'summary_large_image')
     setMeta('property', 'og:type', 'website')
     setMeta('property', 'og:site_name', 'BLY.')
 

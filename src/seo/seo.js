@@ -12,6 +12,19 @@ import { DESTINATIONS } from '../data/destinations.js'
 
 export const SITE = 'https://blytravel.co.za'
 
+// Link-preview image (WhatsApp, Facebook, X, LinkedIn). Same photo as the homepage hero.
+export const DEFAULT_OG_IMAGE =
+  'https://images.unsplash.com/photo-1580060839134-75a5edca2e99?auto=format&fit=crop&w=1200&q=75'
+
+// City pages use their own hero photo when it is hosted on Unsplash (sized for previews).
+export function ogImageFor(dest) {
+  const u = dest && dest.heroImage
+  if (typeof u === 'string' && u.startsWith('https://images.unsplash.com/')) {
+    return u.replace(/w=\d+/, 'w=1200').replace(/q=\d+/, 'q=75')
+  }
+  return DEFAULT_OG_IMAGE
+}
+
 // Homepage strings: keep in sync with the <title> and description in index.html
 const HOME = {
   title: 'BLY. Travel | Book Hotels & Guesthouses in South Africa',
@@ -58,9 +71,13 @@ export function destinationSeo(dest) {
   }
 }
 
-// Returns { title?, description?, canonical, robots }
+// Returns { title?, description?, canonical, robots, image }
 // title/description are omitted for routes that set their own (e.g. hotel pages).
 export function getSeoForPath(rawPath) {
+  return { image: DEFAULT_OG_IMAGE, ...seoForPath(rawPath) }
+}
+
+function seoForPath(rawPath) {
   let path = (rawPath || '/').split('?')[0].split('#')[0]
   if (path.length > 1) path = path.replace(/\/+$/, '')
 
@@ -75,7 +92,7 @@ export function getSeoForPath(rawPath) {
   if (m) {
     const dest = DESTINATIONS.find((d) => d.slug === m[1])
     if (!dest) return { canonical: `${SITE}/destinations`, robots: 'noindex,follow' }
-    return { ...destinationSeo(dest), canonical: `${SITE}/accommodation/${dest.slug}` }
+    return { ...destinationSeo(dest), canonical: `${SITE}/accommodation/${dest.slug}`, image: ogImageFor(dest) }
   }
 
   // Default (e.g. /hotel/:slug): self-referencing canonical, never the homepage
