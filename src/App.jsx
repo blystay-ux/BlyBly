@@ -26,10 +26,12 @@ import CorporateRequest from './pages/CorporateRequest'
 import WriteReview from './pages/WriteReview'
 import PromoCode from './pages/PromoCode'
 import EventsCalendar from './pages/EventsCalendar'
+import SeoManager from './seo/SeoManager'
 
 export default function App() {
   return (
     <AuthProvider>
+      <SeoManager />
       <Navbar />
       <Routes>
         <Route path="/"                    element={<Home />} />

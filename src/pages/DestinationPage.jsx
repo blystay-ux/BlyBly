@@ -37,6 +37,7 @@ export default function DestinationPage() {
         description: a.desc,
       })),
     }
+    document.getElementById('bly-destination-schema')?.remove()
     const el = document.createElement('script')
     el.type  = 'application/ld+json'
     el.id    = `bly-destination-schema`
@@ -45,14 +46,7 @@ export default function DestinationPage() {
     return () => document.getElementById('bly-destination-schema')?.remove()
   }, [dest])
 
-  // ── Page title ────────────────────────────────────────────────────────────
-  useEffect(() => {
-    document.title = `${dest.name} Accommodation | Book Direct on Bly`
-    const meta = document.querySelector('meta[name="description"]')
-    if (meta) meta.setAttribute('content',
-      `Find accommodation in ${dest.name}. ${dest.cardTagline} Book direct on Bly — no middleman, better rates.`
-    )
-  }, [dest])
+  // Page title, description and canonical are handled by <SeoManager /> - edit them in src/seo/seo.js
 
   const hasFull = dest.overview.length > 0
 
