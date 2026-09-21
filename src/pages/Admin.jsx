@@ -760,7 +760,7 @@ function EventsTab({ events, onCreate, onSave, onToggle, onDelete, creating, set
       )}
 
       <div style={{ overflowX: 'auto' }}>
-        <table style={s.table}>
+        <table style={{ ...s.table, tableLayout: 'fixed', minWidth: 940 }}><colgroup><col style={{ width: 52 }} /><col /><col style={{ width: 150 }} /><col style={{ width: 130 }} /><col style={{ width: 110 }} /><col style={{ width: 90 }} /><col style={{ width: 80 }} /><col style={{ width: 200 }} /></colgroup>
           <thead>
             <tr>
               {['','Event','Date','City','Category','Priority','Active','Actions'].map(h => (
@@ -776,12 +776,12 @@ function EventsTab({ events, onCreate, onSave, onToggle, onDelete, creating, set
               <tr key={ev.id} style={{ opacity: ev.active ? 1 : 0.5 }}>
                 <td style={{ ...s.td, fontSize: 22, width: 40 }}>{ev.icon}</td>
                 <td style={s.td}>
-                  <div style={{ fontWeight: 700, fontSize: 14 }}>{ev.name}</div>
-                  {ev.sub && <div style={{ fontSize: 11, color: '#aaa' }}>{ev.sub}</div>}
+                  <div style={{ fontWeight: 700, fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.name}</div>
+                  {ev.sub && <div style={{ fontSize: 11, color: '#aaa', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.sub}</div>}
                   <div style={{ fontSize: 11, color: '#bbb', marginTop: 2, maxWidth: 280, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.description}</div>
                 </td>
                 <td style={{ ...s.td, whiteSpace: 'nowrap' }}>{ev.date_label}</td>
-                <td style={s.td}>{ev.city}</td>
+                <td style={{ ...s.td, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.city}</td>
                 <td style={s.td}>{ev.category}</td>
                 <td style={s.td}>
                   <span style={{ fontSize: 11, fontWeight: 800, padding: '3px 10px', borderRadius: 99, background: ev.priority === 'MEGA' ? '#fff0f2' : ev.priority === 'LARGE' ? '#fff7ed' : '#f0f9ff', color: ev.priority === 'MEGA' ? '#c8001e' : ev.priority === 'LARGE' ? '#c2570a' : '#0369a1' }}>
