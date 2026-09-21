@@ -211,4 +211,33 @@ for (const d of DESTINATIONS) {
     ].join('\n    ')
   })
 }
+// -- Sitemap (rebuilt on every deploy from the same data as the pages) ---------
+// Only indexable pages are listed. Blog lastmod dates are kept from public/sitemap.xml.
+try {
+  const smPath = path.join(root, 'public', 'sitemap.xml')
+  const oldXml = fs.existsSync(smPath) ? fs.readFileSync(smPath, 'utf8') : ''
+  const lastmods = {}
+  for (const m of oldXml.matchAll(/<url>[\s\S]*?<\/url>/g)) {
+    const loc = (m[0].match(/<loc>([^<]+)<\/loc>/) || [])[1]
+    const lm = (m[0].match(/<lastmod>([^<]+)<\/lastmod>/) || [])[1]
+    if (loc) lastmods[loc.trim()] = lm
+  }
+  const urls = [
+    '/', '/destinations', '/events/south-africa', '/insiders', '/blog',
+    ...DESTINATIONS.filter(isFullDestination).map((d) => `/accommodation/${d.slug}`),
+    ...BLOG.map(([u]) => u),
+  ]
+  const xml = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+  for (const u of urls) {
+    const loc = `${SITE}${u}`
+    xml.push('  <url>', `    <loc>${loc}</loc>`)
+    if (lastmods[loc]) xml.push(`    <lastmod>${lastmods[loc]}</lastmod>`)
+    xml.push('  </url>')
+  }
+  xml.push('</urlset>', '')
+  fs.writeFileSync(path.join(dist, 'sitemap.xml'), xml.join('\n'))
+  console.log(`[seo-prerender] sitemap.xml  ->  ${urls.length} URLs`)
+} catch (err) {
+  console.warn(`[seo-prerender] sitemap skipped: ${err.message}`)
+}
 console.log('[seo-prerender] done')
