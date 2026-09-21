@@ -227,7 +227,7 @@ export default function EventsCalendar() {
                       <span style={s.pill(e.priority)}>{e.priority}</span>
                     </div>
                     <div style={s.cat}>{e.category}</div>
-                    <div style={s.name}>{e.name}</div>
+                    <div style={s.name}><Link to={`/events/${e.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>{e.name}</Link></div>
                     {e.sub && <div style={s.sub}>{e.sub}</div>}
                     <div style={s.meta}>
                       <span style={s.metaItem}>📅 {e.date_label}</span>
