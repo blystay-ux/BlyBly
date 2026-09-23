@@ -13,7 +13,8 @@
 //     adds its own 10% on top of Sell in that case.
 //
 // BLY INSIDERS pricing (added 2026-08-20): a logged-in, active Bly
-// Insiders member always gets Net + 3%, regardless of the Net/Sell
+// Insiders member always gets Net + 6% (raised from 3% on 2026-09-22, "for
+// now" -- worth checking whether this should revert), regardless of the Net/Sell
 // relationship -- a flat, simpler, cheaper rate as their membership perk.
 // Insider status is checked once globally in AuthContext.jsx
 // (useAuth().isInsider) and passed into this function by the caller.
@@ -26,7 +27,7 @@
 // Mutually exclusive with Insider rate (corporates are not consumers).
 
 export const COMMISSION_RATE = 0.10         // public rate: 10% when Net === Sell
-export const INSIDER_COMMISSION_RATE = 0.03 // Bly Insiders rate: flat 3% on Net, always
+export const INSIDER_COMMISSION_RATE = 0.06 // Bly Insiders rate: flat 6% on Net, always (raised from 3% on 2026-09-22, "for now")
 const SAME_RATE_TOLERANCE = 0.01            // treat net/sell as "the same" if they differ by less than 1 cent (floating point safety)
 
 function round2(n) {
