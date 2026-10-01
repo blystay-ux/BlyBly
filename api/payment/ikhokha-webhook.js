@@ -10,13 +10,39 @@ const IK_APP_ID     = process.env.IK_APP_ID     || ''
 const IK_APP_SECRET = process.env.IK_APP_SECRET || ''
 const CALLBACK_PATH = '/api/payment/ikhokha-webhook'
 
+// FIX (2026-10-01): Vercel auto-parses the JSON body by default, and the
+// signature was being computed over JSON.stringify(parsedBody) -- a
+// RE-SERIALIZED version of the payload, not the exact bytes iKhokha
+// actually sent and signed. Key order, spacing, and number formatting can
+// all differ after a parse+stringify round-trip, so the signature could
+// never match theirs. This is a well-known, common class of webhook bug
+// (every major provider's docs say the same thing: sign/verify the RAW
+// body, never a re-serialized one). Disabling Vercel's body parser for
+// this route and reading the raw request stream directly fixes this at
+// the root, rather than patching around a specific symptom.
+export const config = {
+  api: { bodyParser: false },
+}
+
+function getRawBody(req) {
+  return new Promise((resolve, reject) => {
+    let data = ''
+    req.setEncoding('utf8')
+    req.on('data', (chunk) => { data += chunk })
+    req.on('end', () => resolve(data))
+    req.on('error', reject)
+  })
+}
+
 // iKhokha requires jsStringEscape before HMAC — same rule for inbound webhooks.
 function jsStringEscape(str) {
   return JSON.stringify(str).slice(1, -1)
 }
 
-function computeSignature(urlPath, body) {
-  const payload = jsStringEscape(urlPath + JSON.stringify(body))
+// `rawBody` must be the exact raw request body STRING -- never an object
+// that's been through JSON.parse() and re-stringified.
+function computeSignature(urlPath, rawBody) {
+  const payload = jsStringEscape(urlPath + rawBody)
   return crypto.createHmac('sha256', IK_APP_SECRET.trim()).update(payload).digest('hex')
 }
 
@@ -211,21 +237,25 @@ export default async function handler(req, res) {
   }
 
   // ── Signature check ───────────────────────────────────────────────────────
-  // FIX (2026-10-01): previously stripped a `text` field from the body
-  // before computing our expected signature. iKhokha's docs say the
-  // signature is generated from "the request payload and callback url" --
-  // nothing about any field being excluded -- so modifying the payload
-  // before verifying against it meant the signature could never match
-  // theirs. Confirmed via Vercel logs: every real webhook call was being
-  // rejected with 403 Signature mismatch, completely silently from the
-  // guest's perspective (iKhokha just sees a failed callback).
-  const body = req.body
+  // Read the RAW body first (bodyParser is disabled above specifically so
+  // this is possible) -- the signature must be computed over these exact
+  // bytes, not a parsed-then-re-stringified version of them.
+  const rawBody = await getRawBody(req)
 
   const receivedSign = req.headers['ik-sign'] || ''
-  const expectedSign = computeSignature(CALLBACK_PATH, body)
+  const expectedSign = computeSignature(CALLBACK_PATH, rawBody)
   if (!receivedSign || receivedSign !== expectedSign) {
     console.error('[iKhokha webhook] Signature mismatch — received:', receivedSign, '| expected:', expectedSign)
     return res.status(403).json({ error: 'Signature mismatch' })
+  }
+
+  // Only parse into an object AFTER signature verification has passed.
+  let body
+  try {
+    body = JSON.parse(rawBody)
+  } catch (err) {
+    console.error('[iKhokha webhook] Failed to parse raw body as JSON:', err.message)
+    return res.status(400).json({ error: 'Invalid JSON body' })
   }
 
   // ── Parse payload ─────────────────────────────────────────────────────────
