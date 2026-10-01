@@ -211,8 +211,15 @@ export default async function handler(req, res) {
   }
 
   // ── Signature check ───────────────────────────────────────────────────────
-  const body = { ...req.body }
-  delete body.text
+  // FIX (2026-10-01): previously stripped a `text` field from the body
+  // before computing our expected signature. iKhokha's docs say the
+  // signature is generated from "the request payload and callback url" --
+  // nothing about any field being excluded -- so modifying the payload
+  // before verifying against it meant the signature could never match
+  // theirs. Confirmed via Vercel logs: every real webhook call was being
+  // rejected with 403 Signature mismatch, completely silently from the
+  // guest's perspective (iKhokha just sees a failed callback).
+  const body = req.body
 
   const receivedSign = req.headers['ik-sign'] || ''
   const expectedSign = computeSignature(CALLBACK_PATH, body)
