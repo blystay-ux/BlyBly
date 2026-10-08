@@ -333,7 +333,7 @@ export default function Checkout() {
                 </div>
                 <div style={{ ...s.summaryRow, color: '#16a34a', fontWeight: 700 }}>
                   <span>Promo: {promo.code}</span>
-                  <span>-{promo.discount_pct}%</span>
+                  <span>Applied</span>
                 </div>
               </>
             )}
@@ -525,7 +525,7 @@ export default function Checkout() {
             </div>
             {promo && discountedPrice?.originalAmountZAR && (
               <div style={{ fontSize: 11, color: '#16a34a', fontWeight: 600, marginTop: 1 }}>
-                {promo.discount_pct}% off applied
+                Promo code applied
               </div>
             )}
             {discountedPrice?.totalAmountZAR != null && (() => {

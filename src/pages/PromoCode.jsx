@@ -211,7 +211,7 @@ export default function PromoCode() {
             <div style={s.successBox}>
               <div style={{ fontSize: 40, marginBottom: 10 }}>🎉</div>
               <div style={{ fontWeight: 800, fontSize: 28, color: '#16a34a', letterSpacing: '-0.04em' }}>
-                {promo.discount_pct}% off
+                Promo code applied
               </div>
               <div style={{ fontWeight: 700, fontSize: 16, color: '#1a1a2e', marginTop: 6, letterSpacing: '0.08em' }}>
                 {promo.code}
