@@ -629,6 +629,64 @@ function PromosTab({ promos, onCreate, onToggle, creating, setCreating, form, se
   )
 }
 
+// ── Group requests tab ───────────────────────────────────────
+const GROUP_STATUSES = ['new', 'contacted', 'quoted', 'booked', 'closed']
+function GroupRequestsTab({ requests, onStatus }) {
+  return (
+    <div style={{ overflowX: 'auto' }}>
+      <table style={{ ...s.table, minWidth: 980 }}>
+        <thead>
+          <tr>
+            {['Date','Ref','Contact','Trip','Group','Needs','Status'].map(h => (
+              <th key={h} style={s.th}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {requests.length === 0 && (
+            <tr><td colSpan={7} style={{ ...s.td, color: '#aaa', textAlign: 'center', padding: 32 }}>No group requests yet</td></tr>
+          )}
+          {requests.map(r => (
+            <tr key={r.id}>
+              <td style={s.td}>{new Date(r.created_at).toLocaleDateString('en-ZA')}</td>
+              <td style={{ ...s.td, fontWeight: 700 }}>{r.reference}</td>
+              <td style={s.td}>
+                <div style={{ fontWeight: 600 }}>{r.contact_name}</div>
+                <a href={`mailto:${r.contact_email}?subject=${encodeURIComponent('Your BLY group request ' + r.reference)}`} style={{ color: 'var(--accent)' }}>{r.contact_email}</a>
+                {r.contact_phone && <div style={{ color: '#666', fontSize: 12 }}>{r.contact_phone}</div>}
+                {r.company && <div style={{ color: '#666', fontSize: 12 }}>{r.company}</div>}
+              </td>
+              <td style={s.td}>
+                <div style={{ fontWeight: 600 }}>{r.destination}</div>
+                <div style={{ color: '#666', fontSize: 12 }}>
+                  {r.check_in && r.check_out ? `${r.check_in} to ${r.check_out}` : 'Dates not set'}{r.dates_flexible ? ' (flexible)' : ''}
+                </div>
+              </td>
+              <td style={s.td}>
+                <div>{r.group_type}</div>
+                <div style={{ color: '#666', fontSize: 12 }}>
+                  {r.adults ?? '?'} adults{r.children ? `, ${r.children} children` : ''} · {r.rooms ?? '?'} rooms
+                </div>
+                {r.budget && <div style={{ color: '#666', fontSize: 12 }}>Budget: {r.budget}</div>}
+              </td>
+              <td style={{ ...s.td, maxWidth: 260 }}>
+                {(r.needs || []).join(', ') || '-'}
+                {r.notes && <div style={{ color: '#666', fontSize: 12, whiteSpace: 'pre-wrap', marginTop: 4 }}>{r.notes}</div>}
+              </td>
+              <td style={s.td}>
+                <select value={r.status} onChange={e => onStatus(r, e.target.value)}
+                  style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #E2DFDB', fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 600 }}>
+                  {GROUP_STATUSES.map(st => <option key={st} value={st}>{st}</option>)}
+                </select>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 // ── Events tab ───────────────────────────────────────────────
 const CATEGORIES = ['Festival', 'Sport', 'Business', 'Global', 'Convention']
 const PRIORITIES  = ['MEGA', 'LARGE', 'MEDIUM']
@@ -832,6 +890,7 @@ export default function Admin() {
   const [promoForm,      setPromoForm]      = useState({})
   const [creatingPromo,  setCreatingPromo]  = useState(false)
   const [savingPromo,    setSavingPromo]    = useState(false)
+  const [groupRequests, setGroupRequests] = useState([])
   const [events,         setEvents]         = useState([])
   const [eventForm,      setEventForm]      = useState({})
   const [creatingEvent,  setCreatingEvent]  = useState(false)
@@ -848,7 +907,7 @@ export default function Admin() {
   async function fetchAll() {
     setLoading(true)
 
-    const [bookingsRes, staticCountRes, waitlistRes, contactsRes, membersRes, compRes, corporatesRes, corporateRequestsRes, reviewsRes, promosRes, eventsRes] = await Promise.all([
+    const [bookingsRes, staticCountRes, waitlistRes, contactsRes, membersRes, compRes, corporatesRes, corporateRequestsRes, reviewsRes, promosRes, eventsRes, groupRes] = await Promise.all([
       supabase.from('hg_bookings').select('*').order('created_at', { ascending: false }),
       supabase.from('hg_property_static').select('hotel_id', { count: 'exact', head: true }),
       supabase.from('waitlist').select('*').order('created_at', { ascending: false }),
@@ -860,6 +919,7 @@ export default function Admin() {
       supabase.from('reviews').select('*').order('created_at', { ascending: false }),
       supabase.from('promo_codes').select('*').order('created_at', { ascending: false }),
       supabase.from('events').select('*').order('year').order('month'),
+      supabase.from('group_requests').select('*').order('created_at', { ascending: false }),
     ])
 
     let enrichedBookings = bookingsRes.data || []
@@ -886,6 +946,7 @@ export default function Admin() {
     if (reviewsRes.data) setReviews(reviewsRes.data)
     if (promosRes.data)  setPromos(promosRes.data)
     if (eventsRes.data)  setEvents(eventsRes.data)
+    if (groupRes.data)   setGroupRequests(groupRes.data)
 
     if (membersRes.data) {
       setMemberships(membersRes.data)
@@ -1009,6 +1070,12 @@ export default function Admin() {
     if (!error && data) setPromos(prev => prev.map(p => p.id === promo.id ? data : p))
   }
 
+  async function setGroupStatus(r, status) {
+    const { error } = await supabase.from('group_requests').update({ status }).eq('id', r.id)
+    if (error) { alert('Could not update status: ' + error.message); return }
+    setGroupRequests(list => list.map(x => x.id === r.id ? { ...x, status } : x))
+  }
+
   async function createEvent() {
     const { name, date_label, month, year, city, category, priority, slug } = eventForm
     if (!name || !date_label || !month || !year || !city || !slug) {
@@ -1106,7 +1173,8 @@ export default function Admin() {
   })
   const propertiesList = Object.values(propertiesMap).sort((a, b) => b.bookingCount - a.bookingCount)
 
-  const TABS = ['overview', 'properties', 'bookings', 'waitlist', 'memberships', 'contacts', 'competition', 'corporates', 'reviews', 'promos', 'events']
+  const newGroups = groupRequests.filter(r => r.status === 'new').length
+  const TABS = ['overview', 'properties', 'bookings', 'waitlist', 'memberships', 'contacts', 'competition', 'corporates', 'reviews', 'promos', 'events', 'groups']
 
   return (
     <div style={s.page}>
@@ -1143,10 +1211,16 @@ export default function Admin() {
               {t === 'reviews'     && '⭐ '}
               {t === 'promos'      && '🏷️ '}
               {t === 'events'      && '🗓️ '}
+              {t === 'groups'      && '👥 '}
               {t.charAt(0).toUpperCase() + t.slice(1)}
               {t === 'memberships' && pendingMembers > 0 && (
                 <span style={{ marginLeft: 6, background: '#ef4056', color: '#fff', borderRadius: 99, padding: '1px 7px', fontSize: 11 }}>
                   {pendingMembers}
+                </span>
+              )}
+              {t === 'groups' && newGroups > 0 && (
+                <span style={{ marginLeft: 6, background: '#ef4056', color: '#fff', borderRadius: 99, padding: '1px 7px', fontSize: 11 }}>
+                  {newGroups}
                 </span>
               )}
               {t === 'reviews' && pendingReviews > 0 && (
@@ -1183,6 +1257,7 @@ export default function Admin() {
                 <StatCard icon="🏢" label="Corporate accounts" value={corporates.length} sub={`${corporateRequests.filter(r => r.status === 'pending').length} requests pending`} />
                 <StatCard icon="⭐" label="Reviews" value={reviews.length} sub={`${pendingReviews} pending approval`} />
                 <StatCard icon="🏷️" label="Promo codes" value={promos.length} sub={`${promos.filter(p => p.active).length} active`} />
+                <StatCard icon="👥" label="Group requests" value={groupRequests.length} sub={`${newGroups} new`} />
                 <StatCard icon="🗓️" label="Events" value={events.length} sub={`${events.filter(e => e.active).length} live`} />
               </div>
             )}
@@ -1286,6 +1361,14 @@ export default function Admin() {
                 setForm={setEventForm}
                 saving={savingEvent}
               />
+            )}
+
+            {/* Group requests */}
+            {tab === 'groups' && (
+              <>
+                <p style={s.note}>Requests submitted via the Group requests page. Change the status as you work through them.</p>
+                <GroupRequestsTab requests={groupRequests} onStatus={setGroupStatus} />
+              </>
             )}
 
             {/* Promo codes */}
