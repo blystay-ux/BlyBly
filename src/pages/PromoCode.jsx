@@ -6,7 +6,8 @@ const s = {
   page: {
     minHeight: '100vh', background: '#F8F7F5',
     padding: '60px 20px 80px', display: 'flex',
-    alignItems: 'flex-start', justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'flex-start',
+    flexDirection: 'column', gap: 32,
   },
   card: {
     width: '100%', maxWidth: 480, background: '#fff',
@@ -50,6 +51,66 @@ const s = {
     background: 'transparent', color: '#888', fontWeight: 600, fontSize: 14,
     border: '1.5px solid #e2e0db', cursor: 'pointer',
   },
+}
+
+// Featured events with a partner-hotel offer. Add new entries here.
+const EVENT_OFFERS = [
+  {
+    id: 'praise-the-loud',
+    title: 'Praise the Loud Fest',
+    image: '/images/events/praise-the-loud.jpg',
+    imageAlt: 'Praise the Loud Fest poster: Ac/Es, Black Heidi, BOO!, Fuzigish, Cutting Jade and #SOZLOL, 24 October at Sognage, doors open 4PM',
+    date: 'Saturday 24 October 2026',
+    venue: 'Sognage',
+    doors: 'Doors open 4PM',
+    lineup: ['Ac/Es', 'Black Heidi', 'BOO!', 'Fuzigish', 'Cutting Jade', '#SOZLOL'],
+    hotel: 'Hotel Sky Sandton',
+    code: 'PROMF0',
+    url: 'https://direct-book.com/properties/HotelSkySandtonDIRECT?locale=en&items[0][adults]=2&items[0][children]=0&items[0][infants]=0&currency=ZAR&checkInDate=2026-10-23&checkOutDate=2026-10-24&trackPage=yes&promocode=PROMF0',
+  },
+]
+
+function EventOffer({ ev }) {
+  const [copied, setCopied] = useState(false)
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(ev.code)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (e) { /* clipboard unavailable: the code is shown on screen anyway */ }
+  }
+  return (
+    <section style={{ width: '100%', maxWidth: 720, background: '#fff', borderRadius: 24, overflow: 'hidden', boxShadow: '0 4px 32px rgba(0,0,0,0.08)' }}>
+      <img src={ev.image} alt={ev.imageAlt} style={{ display: 'block', width: '100%', height: 'auto' }} />
+      <div style={{ padding: '28px 32px 32px' }}>
+        <div style={s.eyebrow}>Event offer</div>
+        <h2 style={{ ...s.heading, fontSize: 28, margin: '0 0 6px' }}>
+          {ev.title}<span style={{ color: '#ef4056' }}>.</span>
+        </h2>
+        <div style={{ fontSize: 15, color: '#1a1a2e', fontWeight: 600 }}>{ev.date} · {ev.venue}</div>
+        <div style={{ fontSize: 14, color: '#888', marginTop: 2 }}>{ev.doors}</div>
+        <div style={{ fontSize: 14, color: '#555', marginTop: 14, lineHeight: 1.6 }}>
+          Live: {ev.lineup.join(', ')}.
+        </div>
+        <div style={{ marginTop: 22, padding: '16px 18px', borderRadius: 16, background: '#F8F7F5', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <div>
+            <div style={{ fontSize: 12, color: '#888', fontWeight: 600 }}>Promo code for {ev.hotel}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: '0.1em', color: '#1a1a2e' }}>{ev.code}</div>
+          </div>
+          <button type="button" onClick={copy} style={{ padding: '10px 20px', borderRadius: 99, border: '1.5px solid #1a1a2e', background: 'transparent', color: '#1a1a2e', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'var(--font-body)' }}>
+            {copied ? 'Copied' : 'Copy code'}
+          </button>
+        </div>
+        <a href={ev.url} target="_blank" rel="noopener noreferrer"
+          style={{ display: 'block', marginTop: 16, textAlign: 'center', padding: '15px', borderRadius: 99, background: '#ef4056', color: '#fff', fontWeight: 700, fontSize: 15, textDecoration: 'none', fontFamily: 'var(--font-display)' }}>
+          Check availability at {ev.hotel} →
+        </a>
+        <div style={{ marginTop: 10, fontSize: 12, color: '#888', textAlign: 'center', lineHeight: 1.5 }}>
+          Opens the hotel&apos;s own booking page in a new tab. Example search: 23 to 24 October, 2 adults. Change the dates there if needed.
+        </div>
+      </div>
+    </section>
+  )
 }
 
 export default function PromoCode() {
@@ -171,6 +232,8 @@ export default function PromoCode() {
           </>
         )}
       </div>
+
+      {EVENT_OFFERS.map(ev => <EventOffer key={ev.id} ev={ev} />)}
     </main>
   )
 }
