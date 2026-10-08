@@ -73,6 +73,7 @@ export default function Navbar() {
           <Link to="/destinations" style={styles.link}>Destinations</Link>
           <Link to="/manage-booking" style={styles.link}>Manage booking</Link>
           {user && <Link to="/my-bookings" style={styles.link}>My stays</Link>}
+          <Link to="/group-request" style={styles.link}>Groups</Link>
           <Link to="/corporate/login" style={{ ...styles.link, fontWeight: 600, color: '#1a1a2e', borderBottom: '1.5px solid #1a1a2e', paddingBottom: 1, lineHeight: 1 }}>Corporate</Link>
           <Link to="/events/south-africa" style={styles.link}>Events</Link>
           <Link to="/promo" style={styles.linkAccent}>Promotions</Link>
