@@ -155,6 +155,7 @@ export default function Search() {
   const [searchParams] = useSearchParams()
 
   const city = searchParams.get('city') || 'Cape Town'
+  const country = searchParams.get('country') || ''
   const checkIn = searchParams.get('checkIn')
   const nights = Number(searchParams.get('nights') || 1)
   const adults = Number(searchParams.get('adults') || 2)
@@ -172,7 +173,7 @@ export default function Search() {
       setError(null)
       try {
         const { data, error: fnError } = await supabase.functions.invoke('hyperguest-city-search', {
-          body: { city, checkIn, nights, adults, customerNationality: 'ZA', currency: 'ZAR' },
+          body: { city, country, checkIn, nights, adults, customerNationality: 'ZA', currency: 'ZAR' },
         })
         if (fnError) throw fnError
         const withAvailability = (data?.results ?? []).filter(p => p.rooms?.length > 0)
@@ -193,7 +194,7 @@ export default function Search() {
       setLoading(false)
     }
     if (checkIn) runSearch()
-  }, [city, checkIn, nights, adults])
+  }, [city, country, checkIn, nights, adults])
 
   return (
     <div style={{ minHeight: 'calc(100vh - var(--nav-height))', background: 'var(--bg)' }}>
@@ -218,7 +219,7 @@ export default function Search() {
         background: 'var(--bg-card)', borderBottom: '1px solid var(--border)',
         display: 'flex', justifyContent: 'center',
       }}>
-        <SearchBar initialCity={city} initialCheckIn={checkIn} initialCheckOut={addNights(checkIn, nights)} initialAdults={adults} initialRooms={rooms} />
+        <SearchBar initialCity={city} initialCountry={country} initialCheckIn={checkIn} initialCheckOut={addNights(checkIn, nights)} initialAdults={adults} initialRooms={rooms} />
       </div>
 
       <div className="bly-search-results" style={{ maxWidth: 1280, margin: '0 auto' }}>

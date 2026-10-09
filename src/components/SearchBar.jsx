@@ -53,7 +53,7 @@ function nightsBetween(checkIn, checkOut) {
 }
 
 function buildFallbackGroups() {
-  return [{ label: 'South Africa', cities: FALLBACK_SA_CITIES }]
+  return [{ label: 'South Africa', code: 'ZA', cities: FALLBACK_SA_CITIES }]
 }
 
 // Converts an ISO country code (e.g. "ZA") to a readable name (e.g. "South
@@ -139,11 +139,14 @@ const s = {
   notice: { width: '100%', color: '#8a8580', fontSize: 11, padding: '4px 20px 0' },
 }
 
-export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut, initialAdults, initialRooms }) {
+export default function SearchBar({ initialCity, initialCountry, initialCheckIn, initialCheckOut, initialAdults, initialRooms }) {
   const navigate = useNavigate()
 
   const [cityGroups, setCityGroups] = useState(CERT_RESTRICTED ? [] : buildFallbackGroups())
   const [city, setCity] = useState(initialCity || (CERT_RESTRICTED ? CERT_RESTRICTED_CITIES[0] : PRIORITY_CITIES[0]))
+  // ISO country code of the selected city (e.g. 'ZA'). Sent with the search so
+  // 'George' means George, South Africa, not every place with 'George' in its name.
+  const [country, setCountry] = useState(initialCountry || (initialCity ? '' : 'ZA'))
   const [cityQuery, setCityQuery] = useState('')
   const [cityOpen, setCityOpen] = useState(false)
   const cityRef = useRef(null)
@@ -174,9 +177,11 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
       if (!data.length) return
 
       const byCountry = {}
+      const codeByLabel = {}
       for (const row of data) {
         if (!row.city || PRIORITY_CITIES.includes(row.city)) continue
         const label = countryName(row.country)
+        codeByLabel[label] = row.country
         if (!byCountry[label]) byCountry[label] = new Set()
         byCountry[label].add(row.city)
       }
@@ -190,6 +195,7 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
         .filter(([label]) => label !== saLabel)
         .map(([label, citySet]) => ({
           label,
+          code: codeByLabel[label],
           cities: Array.from(citySet).sort((a, b) => a.localeCompare(b)),
         }))
         .sort((a, b) => a.label.localeCompare(b.label))
@@ -197,7 +203,7 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
       // South Africa first (pinned, right after "Popular" above), then
       // every other country alphabetically.
       const groups = [
-        { label: saLabel, cities: Array.from(byCountry[saLabel]).sort((a, b) => a.localeCompare(b)) },
+        { label: saLabel, code: 'ZA', cities: Array.from(byCountry[saLabel]).sort((a, b) => a.localeCompare(b)) },
         ...otherGroups,
       ]
 
@@ -235,21 +241,22 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
         const result = []
         // Check popular first
         const popMatches = PRIORITY_CITIES.filter(c => c.toLowerCase().includes(q))
-        if (popMatches.length) result.push({ label: 'Popular', cities: popMatches })
+        if (popMatches.length) result.push({ label: 'Popular', code: 'ZA', cities: popMatches })
         // Then country groups
         for (const g of cityGroups) {
           const cityMatches = g.cities.filter(c => c.toLowerCase().includes(q))
           const countryMatches = g.label.toLowerCase().includes(q)
           if (cityMatches.length || countryMatches) {
-            result.push({ label: g.label, cities: countryMatches && !cityMatches.length ? g.cities : cityMatches })
+            result.push({ label: g.label, code: g.code, cities: countryMatches && !cityMatches.length ? g.cities : cityMatches })
           }
         }
         return result
       })()
-    : [{ label: 'Popular', cities: PRIORITY_CITIES }, ...cityGroups]
+    : [{ label: 'Popular', code: 'ZA', cities: PRIORITY_CITIES }, ...cityGroups]
 
-  function selectCity(c) {
+  function selectCity(c, code) {
     setCity(c)
+    setCountry(code || '')
     setCityQuery('')
     setCityOpen(false)
   }
@@ -270,6 +277,7 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
     }
     const params = new URLSearchParams({
       city,
+      ...(country ? { country } : {}),
       checkIn,
       nights: String(nightsBetween(checkIn, checkOut)),
       adults: String(adults),
@@ -322,8 +330,8 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
               onKeyDown={e => {
                 if (e.key === 'Escape') { setCityOpen(false); setCityQuery('') }
                 if (e.key === 'Enter') {
-                  const flat = filteredGroups.flatMap(g => g.cities)
-                  if (flat.length) selectCity(flat[0])
+                  const first = filteredGroups.find(g => g.cities.length)
+                  if (first) selectCity(first.cities[0], first.code)
                 }
               }}
               autoComplete="off"
@@ -346,7 +354,7 @@ export default function SearchBar({ initialCity, initialCheckIn, initialCheckOut
                   {group.cities.map(c => (
                     <div
                       key={c}
-                      onMouseDown={() => selectCity(c)}
+                      onMouseDown={() => selectCity(c, group.code)}
                       style={{
                         padding: '9px 16px', fontSize: 14, cursor: 'pointer',
                         background: c === city ? '#f4f2ef' : 'transparent',
