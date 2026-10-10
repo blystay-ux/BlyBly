@@ -40,6 +40,17 @@ export default function SeoManager() {
     setMeta('name', 'twitter:card', 'summary_large_image')
     setMeta('property', 'og:type', 'website')
     setMeta('property', 'og:site_name', 'BLY.')
+    setMeta('property', 'og:locale', 'en_ZA')
+
+    // South African language/region signal (self-referencing hreflang)
+    document.head.querySelectorAll('link[rel="alternate"][hreflang]').forEach((el) => el.remove())
+    for (const lang of ['en-za', 'x-default']) {
+      const alt = document.createElement('link')
+      alt.setAttribute('rel', 'alternate')
+      alt.setAttribute('hreflang', lang)
+      alt.setAttribute('href', seo.canonical)
+      document.head.appendChild(alt)
+    }
 
     // Remove build-time JSON-LD that belongs to a different page
     document.querySelectorAll('script[data-prerender]').forEach((el) => {
