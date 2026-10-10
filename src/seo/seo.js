@@ -131,7 +131,49 @@ function seoForPath(rawPath) {
 // Filled by scripts/prerender-seo.mjs at build time (empty in the browser)
 export const eventRegistry = new Map()
 
-const CITY_DEST = { 'cape town': 'cape-town', johannesburg: 'johannesburg', durban: 'durban', knysna: 'knysna' }
+// Which event cities (as stored in the events table, lower case) belong to which destination page.
+// One list drives both directions: event page -> city guide, and city guide -> its upcoming events.
+// Order matters for CITY_DEST: the first destination that lists a city is the one its event pages link to.
+const DEST_EVENT_CITIES = {
+  'cape-town': ['cape town'],
+  johannesburg: ['johannesburg'],
+  durban: ['durban'],
+  pretoria: ['pretoria', 'tshwane'],
+  knysna: ['knysna'],
+  'garden-route': ['knysna', 'george', 'plettenberg bay', 'mossel bay', 'wilderness', 'oudtshoorn'],
+  winelands: ['paarl', 'stellenbosch', 'franschhoek'],
+  'sun-city': ['sun city'],
+  dubai: ['dubai'],
+  thailand: ['bangkok', 'phuket'],
+  mauritius: ['mauritius'],
+  zanzibar: ['zanzibar'],
+  lisbon: ['lisbon'],
+  istanbul: ['istanbul'],
+  bali: ['bali'],
+  greece: ['athens'],
+  london: ['london'],
+  kenya: ['nairobi', 'mombasa'],
+}
+const CITY_DEST = {}
+for (const [slug, cities] of Object.entries(DEST_EVENT_CITIES)) {
+  for (const c of cities) if (!CITY_DEST[c]) CITY_DEST[c] = slug
+}
+
+export const eventCitiesForDestination = (slug) => DEST_EVENT_CITIES[slug] || []
+
+// Upcoming events for a destination page, soonest first. `events` = rows from the events table.
+export function eventsForDestination(slug, events, max = 8) {
+  const cities = eventCitiesForDestination(slug)
+  if (!cities.length) return []
+  const today = new Date().toISOString().slice(0, 10)
+  return (events || [])
+    .filter((e) => {
+      const last = e.event_end || e.event_start
+      return e.slug && e.name && cities.includes(String(e.city).toLowerCase()) && !(last && last < today)
+    })
+    .sort((a, b) => String(a.event_start || '9999').localeCompare(String(b.event_start || '9999')))
+    .slice(0, max)
+}
 const CITY_GUIDE = {
   'cape town': ['/blog/hotels-cape-town-guide', 'Hotels in Cape Town: where to stay'],
   johannesburg: ['/blog/hotels-johannesburg-guide', 'Hotels in Johannesburg: where to stay in Jozi'],

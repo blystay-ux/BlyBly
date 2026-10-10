@@ -22,7 +22,7 @@ import { fileURLToPath } from 'node:url'
 import { DESTINATIONS } from '../src/data/destinations.js'
 import {
   SITE, STATIC_PAGES, getSeoForPath, isFullDestination, DEFAULT_OG_IMAGE,
-  eventRegistry, eventHeading, eventSearchUrl, relatedForEvent,
+  eventRegistry, eventHeading, eventSearchUrl, relatedForEvent, eventsForDestination,
 } from '../src/seo/seo.js'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -135,6 +135,9 @@ function destinationBody(d) {
     .join('')
   const tips = (d.insiderTips || []).map((t) => `<li>${esc(t)}</li>`).join('')
   const travel = (d.travelTips || []).map((t) => `<li><strong>${esc(t.title)}:</strong> ${esc(t.copy)}</li>`).join('')
+  const destEvents = eventsForDestination(d.slug, EVENTS)
+    .map((e) => `<li><a href="/events/${esc(e.slug)}">${esc(eventHeading(e))}</a> - ${esc(e.date_label || '')}</li>`)
+    .join('')
   const others = DESTINATIONS.filter((x) => x.slug !== d.slug && isFullDestination(x))
     .map((x) => `<a href="/accommodation/${x.slug}">${esc(x.name)}</a>`)
     .join(' &middot; ')
@@ -148,6 +151,7 @@ ${d.bestTime?.copy ? `<h2>Best time to visit ${esc(d.name)}</h2><p><strong>${esc
 ${things ? `<h2>Things to do in ${esc(d.name)}</h2><ul>${things}</ul>` : ''}
 ${tips ? `<h2>Insider tips</h2><ul>${tips}</ul>` : ''}
 ${travel ? `<h2>Travel tips</h2><ul>${travel}</ul>` : ''}
+${destEvents ? `<h2>Upcoming events in ${esc(d.name)}</h2><ul>${destEvents}</ul><p><a href="/events/south-africa">See the full events calendar</a></p>` : ''}
 <h2>${esc(d.bookNow?.heading || `Book your ${d.name} stay`)}</h2>
 <p>${esc(d.bookNow?.copy || '')} <a href="${searchUrl}">Search stays in ${esc(d.name)}</a></p>
 <p>More destinations: ${others}</p>`)

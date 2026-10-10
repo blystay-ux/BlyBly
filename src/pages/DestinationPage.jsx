@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
 import { getDestinationBySlug, getSADestinations, getInternationalDestinations } from '../data/destinations'
+import DestinationEvents from '../components/DestinationEvents'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Bly — Individual Destination Landing Page
@@ -450,6 +451,9 @@ export default function DestinationPage() {
               ))}
             </div>
           </section>
+
+          {/* ── UPCOMING EVENTS (only shown when this destination has any) ── */}
+          <DestinationEvents dest={dest} />
 
           {/* ── BOOK NOW ──────────────────────────────────────────────── */}
           <section style={{
