@@ -457,6 +457,39 @@ export const DESTINATIONS = [
       { title: 'Whale Calendar',     copy: 'Southern right whales calve in Plettenberg Bay from June to November. September–October is peak season — they come incredibly close to shore from the Robberg Peninsula trail.' },
       { title: 'Oyster Season',      copy: "The Knysna Oyster Festival runs every July. It's the best and worst time to visit — brilliant atmosphere, but accommodation doubles in price and the town is very busy. Book 6+ months ahead." },
     ],
+    // Search-result title/description for this page (overrides the default city pattern in seo.js)
+    seo: {
+      title: 'Garden Route Accommodation: Where to Stay | BLY. Travel',
+      description: 'Places to stay on the Garden Route, town by town: Mossel Bay, George, Wilderness, Knysna, Plettenberg Bay and Tsitsikamma. Compare the bases, then book on BLY.',
+    },
+    // "Where to stay" guide: this is the MAIN page for Garden Route accommodation searches.
+    // Give a town a searchCity only when BLY. has stays there (it becomes a search link).
+    whereToStay: {
+      heading: 'Where to stay on the Garden Route',
+      intro: "Most people pick two or three bases and day-trip from them rather than moving every night. Here is what each town is like to stay in, from west to east.",
+      towns: [
+        { name: 'Mossel Bay', bestFor: 'Warm-water beaches and families', searchCity: 'Mossel Bay',
+          copy: "The western start of the route. Santos Beach is sheltered and north-facing, the Point has tidal pools and surf, and whales pass from June to November. A good first or last night if you are driving from Cape Town." },
+        { name: 'George', bestFor: 'Flying in and golf', searchCity: 'George',
+          copy: "Home to the route's main airport and its biggest town, about 9km inland. Practical rather than pretty, but well placed: Wilderness and Victoria Bay are a short drive, and the Outeniqua Pass to Oudtshoorn starts here." },
+        { name: 'Wilderness', bestFor: 'Quiet beach stays', searchCity: 'Wilderness',
+          copy: "A long, wild beach with the Touw River lagoon behind it. Fewer people than Knysna or Plett, with kayaking and forest walks on the doorstep. Mostly guesthouses and self-catering rather than big hotels." },
+        { name: 'Sedgefield', bestFor: 'Slow weekends',
+          copy: "A small lagoon-and-beach town between Wilderness and Knysna, known for its Saturday morning markets. There are very few hotels, so most visitors stay in Wilderness or Knysna and stop in for the morning." },
+        { name: 'Knysna', bestFor: 'First-time visitors', searchCity: 'Knysna', guideSlug: 'knysna',
+          copy: "The most popular base on the route: the lagoon and the Heads, Thesen Island and the waterfront for restaurants, and indigenous forest behind the town. It has the widest choice of places to stay, from lagoon-view hotels to forest lodges." },
+        { name: 'Plettenberg Bay', bestFor: 'Beach holidays', searchCity: 'Plettenberg Bay',
+          copy: "Central and Lookout beaches for swimming, Robberg for hiking and seals, and Keurbooms for a quieter lagoon. Busy and expensive in December and January, so book well ahead for the school holidays." },
+        { name: "Nature's Valley and Tsitsikamma", bestFor: 'Forest and hiking',
+          copy: "The eastern end of the route. Nature's Valley is a tiny beach village of holiday houses with almost no hotels. Storms River has the suspension bridge, the national park and forest lodges. For more choice, stay in Plettenberg Bay and drive in for the day." },
+      ],
+      byType: [
+        { name: 'Beachfront', copy: 'Wilderness, Plettenberg Bay and Mossel Bay have the most places directly on or above the beach.' },
+        { name: 'Lagoon and waterfront', copy: 'Knysna, around Thesen Island, Leisure Isle and the Heads.' },
+        { name: 'Forest', copy: 'The hills behind Knysna, and Storms River in Tsitsikamma.' },
+        { name: 'Self-catering', copy: "Wilderness, Sedgefield and Nature's Valley are mostly self-catering houses and apartments." },
+      ],
+    },
     bookNow: {
       heading: 'Book your Garden Route stop',
       copy: 'Wilderness, Knysna, Plett, or Storms River — find your Garden Route base on Bly.',
@@ -547,6 +580,12 @@ export const DESTINATIONS = [
       { title: 'Base Your Trip',    copy: "Knysna makes the best base for exploring the Garden Route. George (airport) is 1hr west, Plett is 30min east, Tsitsikamma is 1.5hrs. You can do day trips without repacking your bags." },
       { title: 'Swim Carefully',    copy: "The lagoon looks calm but currents at the Heads can be powerful. Swim inside the lagoon proper — not at the Heads mouth. Brenton and Sedgefield beaches are safer surf options." },
     ],
+    // Link up to the main Garden Route page
+    partOf: {
+      slug: 'garden-route',
+      text: 'Knysna is one stop on the Garden Route.',
+      linkText: 'Compare all the Garden Route towns and where to stay',
+    },
     bookNow: {
       heading: 'Book your Knysna stay',
       copy: 'Lagoon view or forest retreat — Knysna stays book fast. Lock in your rate on Bly.',

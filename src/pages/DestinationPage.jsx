@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
 import { getDestinationBySlug, getSADestinations, getInternationalDestinations } from '../data/destinations'
 import DestinationEvents from '../components/DestinationEvents'
+import DestinationStayGuide from '../components/DestinationStayGuide'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Bly — Individual Destination Landing Page
@@ -278,6 +279,9 @@ export default function DestinationPage() {
               </div>
             </div>
           </section>
+
+          {/* ── WHERE TO STAY, TOWN BY TOWN (only for destinations that have it) ── */}
+          <DestinationStayGuide dest={dest} />
 
           {/* ── THINGS TO DO ──────────────────────────────────────────── */}
           <section style={{

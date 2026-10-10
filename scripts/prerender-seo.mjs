@@ -52,7 +52,7 @@ const intlDests = DESTINATIONS.filter((d) => d.region !== 'south-africa')
 const BLOG = [
   ['/blog/hotels-cape-town-guide', 'Hotels in Cape Town: where to stay'],
   ['/blog/hotels-johannesburg-guide', 'Hotels in Johannesburg: where to stay in Jozi'],
-  ['/blog/garden-route-hotels-guide', 'Garden Route road trip: best hotels along the way'],
+  ['/blog/garden-route-hotels-guide', 'Garden Route road trip: 7 stops from Mossel Bay to Tsitsikamma'],
   ['/blog/stellenbosch-vs-franschhoek', 'Stellenbosch vs Franschhoek: which Winelands town to stay in'],
 ]
 
@@ -135,6 +135,24 @@ function destinationBody(d) {
     .join('')
   const tips = (d.insiderTips || []).map((t) => `<li>${esc(t)}</li>`).join('')
   const travel = (d.travelTips || []).map((t) => `<li><strong>${esc(t.title)}:</strong> ${esc(t.copy)}</li>`).join('')
+  const w = d.whereToStay
+  const whereToStay = w
+    ? `<h2>${esc(w.heading)}</h2><p>${esc(w.intro)}</p>${w.towns
+        .map(
+          (t) =>
+            `<h3>${esc(t.name)}: ${esc(t.bestFor)}</h3><p>${esc(t.copy)}${
+              t.searchCity ? ` <a href="/search?city=${encodeURIComponent(t.searchCity)}">Search stays in ${esc(t.searchCity)}</a>` : ''
+            }${t.guideSlug ? ` &middot; <a href="/accommodation/${t.guideSlug}">${esc(t.name)} accommodation guide</a>` : ''}</p>`
+        )
+        .join('')}${
+        w.byType && w.byType.length
+          ? `<h3>${esc(d.name)} accommodation by type</h3><ul>${w.byType.map((b) => `<li><strong>${esc(b.name)}:</strong> ${esc(b.copy)}</li>`).join('')}</ul>`
+          : ''
+      }`
+    : ''
+  const partOf = d.partOf
+    ? `<p>${esc(d.partOf.text)} <a href="/accommodation/${d.partOf.slug}">${esc(d.partOf.linkText)}</a>.</p>`
+    : ''
   const destEvents = eventsForDestination(d.slug, EVENTS)
     .map((e) => `<li><a href="/events/${esc(e.slug)}">${esc(eventHeading(e))}</a> - ${esc(e.date_label || '')}</li>`)
     .join('')
@@ -146,6 +164,8 @@ function destinationBody(d) {
 <h1>${esc(d.name)} accommodation</h1>
 <p><em>${esc(d.heroTagline)}</em></p>
 ${d.overview.map((p) => `<p>${esc(p)}</p>`).join('')}
+${partOf}
+${whereToStay}
 ${facts ? `<h2>${esc(d.name)} quick facts</h2><ul>${facts}</ul>` : ''}
 ${d.bestTime?.copy ? `<h2>Best time to visit ${esc(d.name)}</h2><p><strong>${esc(d.bestTime.badge || '')}.</strong> ${esc(d.bestTime.copy)}</p>` : ''}
 ${things ? `<h2>Things to do in ${esc(d.name)}</h2><ul>${things}</ul>` : ''}

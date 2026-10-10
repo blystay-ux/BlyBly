@@ -80,8 +80,11 @@ export const isFullDestination = (d) => Array.isArray(d.overview) && d.overview.
 
 export function destinationSeo(dest) {
   return {
-    title: `Hotels & Guesthouses in ${dest.name} | BLY. Travel`,
-    description: `Find hotels, guesthouses and stays in ${dest.name}. ${dest.cardTagline} Book on BLY., the South African travel platform.`,
+    // A destination can override the default pattern with its own `seo` block in destinations.js
+    title: dest.seo?.title || `Hotels & Guesthouses in ${dest.name} | BLY. Travel`,
+    description:
+      dest.seo?.description ||
+      `Find hotels, guesthouses and stays in ${dest.name}. ${dest.cardTagline} Book on BLY., the South African travel platform.`,
     // Stub destinations (no copy yet) stay out of Google until content is written.
     robots: isFullDestination(dest) ? 'index,follow' : 'noindex,follow',
   }
@@ -177,7 +180,7 @@ export function eventsForDestination(slug, events, max = 8) {
 const CITY_GUIDE = {
   'cape town': ['/blog/hotels-cape-town-guide', 'Hotels in Cape Town: where to stay'],
   johannesburg: ['/blog/hotels-johannesburg-guide', 'Hotels in Johannesburg: where to stay in Jozi'],
-  knysna: ['/blog/garden-route-hotels-guide', 'Garden Route road trip: best hotels along the way'],
+  knysna: ['/blog/garden-route-hotels-guide', 'Garden Route road trip: 7 stops from Mossel Bay to Tsitsikamma'],
   paarl: ['/blog/stellenbosch-vs-franschhoek', 'Stellenbosch vs Franschhoek: which Winelands town to stay in'],
 }
 const SEARCH_CITY = { tshwane: 'Pretoria', 'kugompo city (east london)': 'East London' }
