@@ -28,7 +28,7 @@
       ]
     },
     {
-      "source": "/(search|checkout|manage-booking|my-bookings|extranet|manage-hotel|auth|admin|app-shell\\.html)",
+      "source": "/(search|checkout|manage-booking|my-bookings|extranet|manage-hotel|auth|admin|win|partners|list-hotel|app-shell\\.html)",
       "headers": [
         {
           "key": "X-Robots-Tag",
@@ -37,7 +37,7 @@
       ]
     },
     {
-      "source": "/(booking|review|corporate)/(.*)",
+      "source": "/(booking|review|corporate|hotel)/(.*)",
       "headers": [
         {
           "key": "X-Robots-Tag",

@@ -16,12 +16,14 @@ export const SITE = 'https://blytravel.co.za'
 export const DEFAULT_OG_IMAGE =
   'https://images.unsplash.com/photo-1580060839134-75a5edca2e99?auto=format&fit=crop&w=1200&q=75'
 
-// City pages use their own hero photo when it is hosted on Unsplash (sized for previews).
+// City pages use their own hero photo for link previews:
+// Unsplash heroes are resized for previews, local heroes (/images/...) become absolute URLs.
 export function ogImageFor(dest) {
   const u = dest && dest.heroImage
   if (typeof u === 'string' && u.startsWith('https://images.unsplash.com/')) {
     return u.replace(/w=\d+/, 'w=1200').replace(/q=\d+/, 'q=75')
   }
+  if (typeof u === 'string' && u.startsWith('/images/')) return `${SITE}${u}`
   return DEFAULT_OG_IMAGE
 }
 
@@ -37,8 +39,12 @@ const HOME = {
 const NOINDEX_EXACT = [
   '/search', '/checkout', '/manage-booking', '/my-bookings', '/extranet',
   '/manage-hotel', '/auth', '/admin',
+  '/win', // giveaway page: the draw has closed
+  '/partners', '/list-hotel', // old property sign-up pages (inventory now comes from HyperGuest)
 ]
-const NOINDEX_PREFIX = ['/booking/', '/review/', '/corporate/']
+// '/hotel/' stays out of Google for now: a hotel page opened from a direct link has
+// no dates or rates to show yet, so Google would only see an empty page.
+const NOINDEX_PREFIX = ['/booking/', '/review/', '/corporate/', '/hotel/']
 
 export const STATIC_PAGES = {
   '/destinations': {
@@ -56,6 +62,16 @@ export const STATIC_PAGES = {
     description:
       'A members-only programme for travel agents, airline staff and hotel staff. Unlock Insider rates across BLY. properties.',
   },
+  '/group-request': {
+    title: 'Group Bookings & Group Accommodation Requests | BLY. Travel',
+    description:
+      'Travelling as a group? Send one request with your dates, destination and group size, and a BLY. consultant replies with hotel options. Free to send.',
+  },
+  '/promo': {
+    title: 'Promo Codes & Special Offers | BLY. Travel',
+    description:
+      'Have a BLY. promo code? Enter it here and your saving is applied at checkout. Plus current event offers for South African travellers.',
+  },
   '/terms': { title: 'Terms & Conditions | BLY. Travel', description: 'Terms and conditions for booking with Bly Travel (Pty) Ltd.' },
   '/contact': { title: 'Contact BLY. Travel', description: 'Get in touch with the BLY. Travel team in Centurion, Pretoria.' },
 }
@@ -70,6 +86,10 @@ export function destinationSeo(dest) {
     robots: isFullDestination(dest) ? 'index,follow' : 'noindex,follow',
   }
 }
+
+// Browser-tab title for a hotel page (set by HotelDetail once the hotel has loaded)
+export const hotelTitle = (name, city) =>
+  `${name}${city && !String(name).toLowerCase().includes(String(city).toLowerCase()) ? `, ${city}` : ''} | BLY. Travel`
 
 // Returns { title?, description?, canonical, robots, image }
 // title/description are omitted for routes that set their own (e.g. hotel pages).
@@ -101,7 +121,7 @@ function seoForPath(rawPath) {
     return { title: eventTitle(ev), description: eventDescription(ev), canonical: `${SITE}${path}`, robots: 'index,follow' }
   }
 
-  // Default (e.g. /hotel/:slug): self-referencing canonical, never the homepage
+  // Default: self-referencing canonical, never the homepage
   return { canonical: `${SITE}${path}`, robots: 'index,follow' }
 }
 // -----------------------------------------------------------------------------

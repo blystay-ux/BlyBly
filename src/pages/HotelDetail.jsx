@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { calculateGuestPrice, calculateGuestPriceZAR, prefetchZARRates, formatDisplayPrice } from '../lib/pricing'
 import { useAuth } from '../contexts/AuthContext'
+import { hotelTitle } from '../seo/seo.js'
 const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80'
 function addNights(dateStr, nights) {
   const d = new Date(dateStr)
@@ -308,6 +309,11 @@ export default function HotelDetail() {
     }
     loadLegacy()
   }, [slug, isHyperGuest])
+  // Browser-tab title: hotel name and city
+  useEffect(() => {
+    const name = property?.propertyInfo?.name || legacyProperty?.name
+    if (name) document.title = hotelTitle(name, property?.propertyInfo?.cityName || legacyProperty?.city)
+  }, [property, legacyProperty])
   // Prefetch ZAR rates whenever property changes
   useEffect(() => {
     if (!property) return

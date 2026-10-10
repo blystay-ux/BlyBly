@@ -36,7 +36,12 @@ if (!fs.existsSync(indexPath)) {
 
 const template = fs.readFileSync(indexPath, 'utf8')
 // Keep a pristine SPA shell for every non-prerendered route (checkout, admin, hotel pages...)
-fs.writeFileSync(path.join(dist, 'app-shell.html'), template)
+// The shell carries NO canonical tag: the homepage canonical must never be served on other
+// routes. SeoManager adds the correct canonical in the browser.
+fs.writeFileSync(
+  path.join(dist, 'app-shell.html'),
+  template.replace(/[ \t]*<link rel="canonical"[^>]*>\r?\n?/, '')
+)
 
 const esc = (s = '') =>
   String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -164,6 +169,25 @@ const insidersBody = () =>
 <li><strong>Instant access</strong> &mdash; once verified, Insider rates appear automatically every time you browse and book.</li>
 </ul>`)
 
+const groupRequestBody = () =>
+  main(`
+<h1>Group bookings: travelling with a crowd? Tell us once.</h1>
+<p>Weddings, family reunions, teams, conferences and clubs. Share the plan and a BLY. consultant will come back with hotel options for your whole group.</p>
+<h2>What happens next</h2>
+<ol>
+<li>A BLY. consultant reviews your request.</li>
+<li>We send hotel options that fit your dates and group size.</li>
+<li>You choose, and we handle the booking for the whole group.</li>
+</ol>
+<p>Sending a request is free and does not commit you to a booking.</p>
+<p><a href="/destinations">Browse destinations</a> &middot; <a href="/events/south-africa">Events calendar</a></p>`)
+
+const promoBody = () =>
+  main(`
+<h1>Enter promo code.</h1>
+<p>Have a discount code? Enter it on this page and your saving will be applied automatically at checkout.</p>
+<p><a href="/destinations">Browse destinations</a> &middot; <a href="/events/south-africa">Events calendar</a></p>`)
+
 // -- Head + body injection -----------------------------------------------------
 function build(urlPath, body, extraHead = '') {
   const seo = getSeoForPath(urlPath)
@@ -227,6 +251,8 @@ tryWrite('/destinations', destinationsBody, () =>
 )
 if (STATIC_PAGES['/events/south-africa']) tryWrite('/events/south-africa', eventsBody)
 if (STATIC_PAGES['/insiders']) tryWrite('/insiders', insidersBody)
+if (STATIC_PAGES['/group-request']) tryWrite('/group-request', groupRequestBody)
+if (STATIC_PAGES['/promo']) tryWrite('/promo', promoBody)
 
 // One page per destination
 for (const d of DESTINATIONS) {
@@ -327,7 +353,7 @@ try {
     if (loc) lastmods[loc.trim()] = lm
   }
   const urls = [
-    '/', '/destinations', '/events/south-africa', '/insiders', '/blog',
+    '/', '/destinations', '/events/south-africa', '/insiders', '/group-request', '/blog',
     ...DESTINATIONS.filter(isFullDestination).map((d) => `/accommodation/${d.slug}`),
     ...BLOG.map(([u]) => u),
     ...EVENTS.map((e) => `/events/${e.slug}`),
