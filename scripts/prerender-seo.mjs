@@ -22,7 +22,7 @@ import { fileURLToPath } from 'node:url'
 import { DESTINATIONS } from '../src/data/destinations.js'
 import {
   SITE, STATIC_PAGES, getSeoForPath, isFullDestination, DEFAULT_OG_IMAGE,
-  eventRegistry, eventHeading, eventSearchUrl, relatedForEvent, eventsForDestination,
+  eventRegistry, eventHeading, eventSearchUrl, relatedForEvent, eventsForDestination, absoluteUrl,
 } from '../src/seo/seo.js'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -290,7 +290,7 @@ for (const d of DESTINATIONS) {
         name: d.name,
         description: d.overview[0] || d.cardTagline,
         url: `${SITE}${p}`,
-        image: d.heroImage,
+        image: absoluteUrl(d.heroImage),
         touristType: 'Leisure travellers',
         includesAttraction: (d.thingsToDo || []).map((a) => ({ '@type': 'TouristAttraction', name: a.name, description: a.desc })),
       }),

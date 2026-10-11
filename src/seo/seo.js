@@ -16,6 +16,10 @@ export const SITE = 'https://blytravel.co.za'
 export const DEFAULT_OG_IMAGE =
   'https://images.unsplash.com/photo-1580060839134-75a5edca2e99?auto=format&fit=crop&w=1200&q=75'
 
+// Turns a site-relative path (/images/...) into a full URL; leaves full URLs alone.
+// Structured data and link previews need full URLs.
+export const absoluteUrl = (u) => (typeof u === 'string' && u.startsWith('/') ? `${SITE}${u}` : u)
+
 // City pages use their own hero photo for link previews:
 // Unsplash heroes are resized for previews, local heroes (/images/...) become absolute URLs.
 export function ogImageFor(dest) {

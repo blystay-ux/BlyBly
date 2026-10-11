@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
 import { getDestinationBySlug, getSADestinations, getInternationalDestinations } from '../data/destinations'
+import { absoluteUrl } from '../seo/seo.js'
 import DestinationEvents from '../components/DestinationEvents'
 import DestinationStayGuide from '../components/DestinationStayGuide'
 
@@ -31,7 +32,7 @@ export default function DestinationPage() {
       name: dest.name,
       description: dest.overview[0] || dest.cardTagline,
       url: `https://blytravel.co.za/accommodation/${dest.slug}`,
-      image: dest.heroImage,
+      image: absoluteUrl(dest.heroImage),
       touristType: 'Leisure travellers',
       includesAttraction: dest.thingsToDo.map((a) => ({
         '@type': 'TouristAttraction',
