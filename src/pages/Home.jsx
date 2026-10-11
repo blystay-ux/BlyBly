@@ -97,8 +97,9 @@ function EmailStrip() {
     try {
       const { error } = await supabase
         .from('waitlist')
-        .upsert({ email: email.trim().toLowerCase() }, { onConflict: 'email' })
-      if (error) throw error
+        .insert({ email: email.trim().toLowerCase() })
+      // 23505 = email already on the list, which is fine
+      if (error && error.code !== '23505') throw error
 
       const klaviyoKey  = import.meta.env.VITE_KLAVIYO_PUBLIC_KEY
       const klaviyoList = import.meta.env.VITE_KLAVIYO_LIST_ID
