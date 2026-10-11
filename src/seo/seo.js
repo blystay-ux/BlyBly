@@ -46,9 +46,9 @@ const NOINDEX_EXACT = [
   '/win', // giveaway page: the draw has closed
   '/partners', '/list-hotel', // old property sign-up pages (inventory now comes from HyperGuest)
 ]
-// '/hotel/' stays out of Google for now: a hotel page opened from a direct link has
-// no dates or rates to show yet, so Google would only see an empty page.
-const NOINDEX_PREFIX = ['/booking/', '/review/', '/corporate/', '/hotel/']
+// Hotel pages (/hotel/...) are handled separately in seoForPath: only hotels with a
+// build-time page (see hotelRegistry) are indexable, every other hotel URL is noindex.
+const NOINDEX_PREFIX = ['/booking/', '/review/', '/corporate/']
 
 export const STATIC_PAGES = {
   '/destinations': {
@@ -115,6 +115,18 @@ function seoForPath(rawPath) {
 
   if (STATIC_PAGES[path]) return { ...STATIC_PAGES[path], canonical: `${SITE}${path}`, robots: 'index,follow' }
 
+  if (path.startsWith('/hotel/')) {
+    const h = hotelRegistry.get(path)
+    if (!h) return { canonical: `${SITE}${path}`, robots: 'noindex,follow' }
+    return {
+      title: hotelTitle(h.name, h.city),
+      description: hotelDescription(h),
+      canonical: `${SITE}${path}`,
+      robots: 'index,follow',
+      image: (h.photos && h.photos[0]) || DEFAULT_OG_IMAGE,
+    }
+  }
+
   const m = path.match(/^\/accommodation\/([^/]+)$/)
   if (m) {
     const dest = DESTINATIONS.find((d) => d.slug === m[1])
@@ -138,13 +150,64 @@ function seoForPath(rawPath) {
 // Filled by scripts/prerender-seo.mjs at build time (empty in the browser)
 export const eventRegistry = new Map()
 
+// -----------------------------------------------------------------------------
+// Hotels: only hotels with enough saved content get a build-time page and are indexable.
+// The list comes from the Supabase view `hg_hotel_pages` (3+ photos, 200+ character description),
+// currently limited to South Africa in scripts/prerender-seo.mjs.
+// -----------------------------------------------------------------------------
+
+// path ('/hotel/hg-123') -> hotel row. Filled at build time (empty in the browser).
+export const hotelRegistry = new Map()
+
+export const hotelPath = (h) => `/hotel/hg-${h.hotel_id}`
+
+export const countryName = (code) => {
+  if (!code) return ''
+  try {
+    return new Intl.DisplayNames(['en'], { type: 'region' }).of(code) || code
+  } catch {
+    return code
+  }
+}
+
+// Supplier descriptions arrive with line breaks and sometimes HTML tags.
+export const plainText = (t) =>
+  String(t || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+
+export function hotelDescription(h) {
+  const place = [h.city, countryName(h.country)].filter(Boolean).join(', ')
+  const head = `${h.name} in ${place}.`
+  const tail = ' Check availability and book on BLY.'
+  const room = 158 - head.length - tail.length - 1
+  const text = plainText(h.description)
+  const mid = room > 40 && text ? ' ' + (text.length <= room ? text : text.slice(0, room - 1).replace(/\s+\S*$/, '') + '...') : ''
+  return `${head}${mid}${tail}`
+}
+
+// Hotels to list on a destination page: best-rated first, then by name.
+export function hotelsForDestination(slug, hotels, max = 60) {
+  const cities = eventCitiesForDestination(slug)
+  if (!cities.length) return []
+  return (hotels || [])
+    .filter((h) => h.name && cities.includes(String(h.city).trim().toLowerCase()))
+    .sort((a, b) => (Number(b.star_rating) || 0) - (Number(a.star_rating) || 0) || String(a.name).localeCompare(String(b.name)))
+    .slice(0, max)
+}
+
+// City guide for a hotel's city, when BLY. has one
+export function destinationForCity(city) {
+  const dest = DESTINATIONS.find((d) => d.slug === CITY_DEST[String(city).trim().toLowerCase()] && isFullDestination(d))
+  return dest ? { slug: dest.slug, name: dest.name } : null
+}
+
 // Which event cities (as stored in the events table, lower case) belong to which destination page.
 // One list drives both directions: event page -> city guide, and city guide -> its upcoming events.
 // Order matters for CITY_DEST: the first destination that lists a city is the one its event pages link to.
 const DEST_EVENT_CITIES = {
-  'cape-town': ['cape town'],
-  johannesburg: ['johannesburg'],
-  durban: ['durban'],
+  'cape-town': ['cape town', 'kaapstad', 'cape town, western cape'],
+  johannesburg: ['johannesburg', 'sandton', 'rosebank', 'midrand'],
+  durban: ['durban', 'umhlanga', 'umhlanga rocks', 'ballito'],
+  kruger: ['kruger national park', 'hoedspruit', 'hazyview', 'skukuza', 'kapama private game reserve'],
   pretoria: ['pretoria', 'tshwane'],
   knysna: ['knysna'],
   'garden-route': ['knysna', 'george', 'plettenberg bay', 'mossel bay', 'wilderness', 'oudtshoorn'],

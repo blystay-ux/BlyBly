@@ -3,6 +3,7 @@ import { useParams, Link, Navigate } from 'react-router-dom'
 import { getDestinationBySlug, getSADestinations, getInternationalDestinations } from '../data/destinations'
 import { absoluteUrl } from '../seo/seo.js'
 import DestinationEvents from '../components/DestinationEvents'
+import DestinationHotels from '../components/DestinationHotels'
 import DestinationStayGuide from '../components/DestinationStayGuide'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -458,6 +459,9 @@ export default function DestinationPage() {
           </section>
 
           {/* ── UPCOMING EVENTS (only shown when this destination has any) ── */}
+          {/* ── HOTELS IN THIS DESTINATION (only shown when there are hotel pages) ── */}
+          <DestinationHotels dest={dest} />
+
           <DestinationEvents dest={dest} />
 
           {/* ── BOOK NOW ──────────────────────────────────────────────── */}

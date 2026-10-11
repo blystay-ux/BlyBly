@@ -23,6 +23,7 @@ import { DESTINATIONS } from '../src/data/destinations.js'
 import {
   SITE, STATIC_PAGES, getSeoForPath, isFullDestination, DEFAULT_OG_IMAGE,
   eventRegistry, eventHeading, eventSearchUrl, relatedForEvent, eventsForDestination, absoluteUrl,
+  hotelRegistry, hotelPath, hotelsForDestination, destinationForCity, countryName, plainText,
 } from '../src/seo/seo.js'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -85,6 +86,41 @@ async function loadEvents() {
   }
 }
 const EVENTS = await loadEvents()
+
+// -- Hotels with a public page - fetched from Supabase at build time ------------
+// Source: the view `hg_hotel_pages` (hotels with 3+ photos and a 200+ character description).
+// HOTEL_COUNTRIES limits which countries get indexable pages. Start: South Africa only.
+// For local testing, point SEO_HOTELS_FILE at a JSON file instead. Never fails the deploy.
+const HOTEL_COUNTRIES = ['ZA']
+async function loadHotels() {
+  try {
+    let rows = []
+    if (process.env.SEO_HOTELS_FILE) {
+      rows = JSON.parse(fs.readFileSync(process.env.SEO_HOTELS_FILE, 'utf8'))
+    } else {
+      const url = process.env.VITE_SUPABASE_URL
+      const key = process.env.VITE_SUPABASE_ANON_KEY
+      if (!url || !key) { console.warn('[seo-prerender] no Supabase env vars - skipping hotel pages'); return [] }
+      const PAGE = 500
+      for (let offset = 0; offset < 20000; offset += PAGE) {
+        const res = await fetch(
+          `${url}/rest/v1/hg_hotel_pages?select=*&country=in.(${HOTEL_COUNTRIES.join(',')})&order=hotel_id.asc&limit=${PAGE}&offset=${offset}`,
+          { headers: { apikey: key, Authorization: `Bearer ${key}` } }
+        )
+        if (!res.ok) throw new Error(`Supabase responded ${res.status}`)
+        const page = await res.json()
+        rows.push(...page)
+        if (page.length < PAGE) break
+      }
+    }
+    return rows.filter((h) => h.hotel_id && h.name && h.city && h.description)
+  } catch (err) {
+    console.warn(`[seo-prerender] hotels skipped: ${err.message}`)
+    return []
+  }
+}
+const HOTELS = await loadHotels()
+for (const h of HOTELS) hotelRegistry.set(hotelPath(h), h)
 for (const e of EVENTS) eventRegistry.set(e.slug, e)
 
 function eventLinksHtml() {
@@ -156,6 +192,9 @@ function destinationBody(d) {
   const destEvents = eventsForDestination(d.slug, EVENTS)
     .map((e) => `<li><a href="/events/${esc(e.slug)}">${esc(eventHeading(e))}</a> - ${esc(e.date_label || '')}</li>`)
     .join('')
+  const destHotels = hotelsForDestination(d.slug, HOTELS)
+    .map((h) => `<li><a href="${hotelPath(h)}">${esc(h.name)}</a>${h.city ? ` - ${esc(h.city)}` : ''}</li>`)
+    .join('')
   const others = DESTINATIONS.filter((x) => x.slug !== d.slug && isFullDestination(x))
     .map((x) => `<a href="/accommodation/${x.slug}">${esc(x.name)}</a>`)
     .join(' &middot; ')
@@ -171,6 +210,7 @@ ${d.bestTime?.copy ? `<h2>Best time to visit ${esc(d.name)}</h2><p><strong>${esc
 ${things ? `<h2>Things to do in ${esc(d.name)}</h2><ul>${things}</ul>` : ''}
 ${tips ? `<h2>Insider tips</h2><ul>${tips}</ul>` : ''}
 ${travel ? `<h2>Travel tips</h2><ul>${travel}</ul>` : ''}
+${destHotels ? `<h2>Hotels in ${esc(d.name)}</h2><ul>${destHotels}</ul>` : ''}
 ${destEvents ? `<h2>Upcoming events in ${esc(d.name)}</h2><ul>${destEvents}</ul><p><a href="/events/south-africa">See the full events calendar</a></p>` : ''}
 <h2>${esc(d.bookNow?.heading || `Book your ${d.name} stay`)}</h2>
 <p>${esc(d.bookNow?.copy || '')} <a href="${searchUrl}">Search stays in ${esc(d.name)}</a></p>
@@ -364,6 +404,95 @@ function eventLd(ev) {
 
 for (const ev of EVENTS) tryWrite(`/events/${ev.slug}`, () => eventBody(ev), () => eventLd(ev))
 console.log(`[seo-prerender] event pages: ${EVENTS.length}`)
+
+// -- Hotel pages (one per hotel in HOTELS) --------------------------------------
+function hotelBody(h) {
+  const p = hotelPath(h)
+  const dest = destinationForCity(h.city)
+  const place = [h.city, countryName(h.country)].filter(Boolean).join(', ')
+  const stars = Math.round(Number(h.star_rating) || 0)
+  const paras = String(h.description || '').replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n').replace(/<[^>]+>/g, '')
+    .split(/\n+/).map((x) => x.trim()).filter(Boolean)
+  const sameCity = HOTELS.filter((x) => String(x.city).toLowerCase() === String(h.city).toLowerCase())
+  const at = sameCity.findIndex((x) => x.hotel_id === h.hotel_id)
+  const more = []
+  for (let k = 1; k < sameCity.length && more.length < 8; k++) more.push(sameCity[(at + k) % sameCity.length])
+  const searchUrl = `/search?city=${encodeURIComponent(h.city)}${h.country ? `&amp;country=${esc(h.country)}` : ''}`
+  return main(`
+<p><a href="/">Home</a> &rsaquo; ${dest ? `<a href="/accommodation/${dest.slug}">${esc(dest.name)}</a> &rsaquo; ` : ''}${esc(h.name)}</p>
+<h1>${esc(h.name)}</h1>
+<p>${stars > 0 ? `${stars}-star stay in ` : ''}${esc(place)}</p>
+${h.photos && h.photos[0] ? `<p><img src="${esc(h.photos[0])}" alt="${esc(h.name)}" style="max-width:100%;border-radius:12px" /></p>` : ''}
+<p><a href="${p}">Check availability and rates for ${esc(h.name)}</a></p>
+<h2>About ${esc(h.name)}</h2>
+${paras.map((x) => `<p>${esc(x)}</p>`).join('')}
+${h.facilities && h.facilities.length ? `<h2>Facilities</h2><ul>${h.facilities.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}
+${h.room_types && h.room_types.length ? `<h2>Room types</h2><ul>${h.room_types.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>` : ''}
+${h.check_in || h.check_out ? `<h2>Good to know</h2><p>${h.check_in ? `Check-in from ${esc(h.check_in)}. ` : ''}${h.check_out ? `Check-out by ${esc(h.check_out)}.` : ''}</p>` : ''}
+${more.length ? `<h2>More hotels in ${esc(h.city)}</h2><ul>${more.map((x) => `<li><a href="${hotelPath(x)}">${esc(x.name)}</a></li>`).join('')}</ul>` : ''}
+<p><a href="${searchUrl}">All stays in ${esc(h.city)}</a>${dest ? ` &middot; <a href="/accommodation/${dest.slug}">${esc(dest.name)} travel guide</a>` : ''} &middot; <a href="/destinations">Destinations</a></p>`)
+}
+
+function hotelLd(h) {
+  const p = hotelPath(h)
+  const dest = destinationForCity(h.city)
+  const stars = Number(h.star_rating) || 0
+  const crumbs = [{ name: 'Home', item: `${SITE}/` }]
+  if (dest) crumbs.push({ name: dest.name, item: `${SITE}/accommodation/${dest.slug}` })
+  crumbs.push({ name: h.name, item: `${SITE}${p}` })
+  const hotel = {
+    '@context': 'https://schema.org',
+    '@type': 'Hotel',
+    name: h.name,
+    url: `${SITE}${p}`,
+    description: plainText(h.description).slice(0, 500),
+    address: { '@type': 'PostalAddress', addressLocality: h.city, addressCountry: h.country },
+  }
+  if (h.photos && h.photos.length) hotel.image = h.photos
+  if (h.latitude != null && h.longitude != null) {
+    hotel.geo = { '@type': 'GeoCoordinates', latitude: Number(h.latitude), longitude: Number(h.longitude) }
+  }
+  if (stars > 0) hotel.starRating = { '@type': 'Rating', ratingValue: stars }
+  if (h.check_in) hotel.checkinTime = h.check_in
+  if (h.check_out) hotel.checkoutTime = h.check_out
+  if (h.facilities && h.facilities.length) {
+    hotel.amenityFeature = h.facilities.map((f) => ({ '@type': 'LocationFeatureSpecification', name: f, value: true }))
+  }
+  return [
+    ld('bly-hotel-schema', p, hotel),
+    ld('bly-breadcrumb-schema', p, {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: crumbs.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c.name, item: c.item })),
+    }),
+  ].join('\n    ')
+}
+{
+  let written = 0
+  for (const h of HOTELS) {
+    try {
+      const p = hotelPath(h)
+      const out = path.join(dist, p.replace(/^\//, ''), 'index.html')
+      fs.mkdirSync(path.dirname(out), { recursive: true })
+      fs.writeFileSync(out, build(p, hotelBody(h), hotelLd(h)))
+      written++
+    } catch (err) {
+      console.warn(`[seo-prerender] SKIPPED hotel ${h.hotel_id}: ${err.message}`)
+    }
+  }
+  console.log(`[seo-prerender] hotel pages: ${written}`)
+}
+
+// Hotel sitemap (always written, so the URL in robots.txt never breaks)
+try {
+  const xml = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+  for (const h of HOTELS) xml.push('  <url>', `    <loc>${SITE}${hotelPath(h)}</loc>`, '  </url>')
+  xml.push('</urlset>', '')
+  fs.writeFileSync(path.join(dist, 'sitemap-hotels.xml'), xml.join('\n'))
+  console.log(`[seo-prerender] sitemap-hotels.xml  ->  ${HOTELS.length} URLs`)
+} catch (err) {
+  console.warn(`[seo-prerender] hotel sitemap skipped: ${err.message}`)
+}
 
 // -- Sitemap (rebuilt on every deploy from the same data as the pages) ---------
 // Only indexable pages are listed. Blog lastmod dates are kept from public/sitemap.xml.

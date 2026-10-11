@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://blytravel.co.za/sitemap.xml
+Sitemap: https://blytravel.co.za/sitemap-hotels.xml

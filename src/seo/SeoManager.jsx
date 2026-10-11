@@ -31,7 +31,12 @@ export default function SeoManager() {
     }
     link.setAttribute('href', seo.canonical)
 
-    setMeta('name', 'robots', seo.robots)
+    // Hotel pages: a page that was generated at build time carries its own schema tag for
+    // this path, which marks it as indexable. Any other hotel URL stays noindex.
+    const prerenderedHotel =
+      pathname.startsWith('/hotel/') &&
+      document.head.querySelector(`script[data-prerender][data-path="${pathname.replace(/\/+$/, '').replace(/"/g, '')}"]`)
+    setMeta('name', 'robots', prerenderedHotel ? 'index,follow' : seo.robots)
 
     if (seo.title) setMeta('property', 'og:title', seo.title)
     if (seo.description) setMeta('property', 'og:description', seo.description)
