@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { calculateGuestPrice, calculateGuestPriceZAR, prefetchZARRates, formatDisplayPrice } from '../lib/pricing'
 import { useAuth } from '../contexts/AuthContext'
 import { hotelTitle } from '../seo/seo.js'
+import HotelStandalone from '../components/HotelStandalone'
 const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80'
 function addNights(dateStr, nights) {
   const d = new Date(dateStr)
@@ -228,7 +229,14 @@ const s = {
   }),
   lightboxCounter: { color: 'rgba(255,255,255,0.7)', fontSize: 13, marginTop: 16, fontFamily: 'var(--font-body)' },
 }
+// Each navigation to a hotel page starts from a clean slate (the page keeps its search
+// details in component state, so "check availability" on the same URL must remount it).
 export default function HotelDetail() {
+  const { slug } = useParams()
+  const location = useLocation()
+  return <HotelDetailInner key={`${slug}:${location.key}`} />
+}
+function HotelDetailInner() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
@@ -428,17 +436,10 @@ export default function HotelDetail() {
       </div>
     )
   }
+  // Opened without a search (direct link, refresh, shared link): show the hotel's saved
+  // content with a "check availability" form instead of live rooms and rates.
   if (isHyperGuest && !stateProperty && !isCertDirectLink) {
-    return (
-      <div style={{ padding: 80, textAlign: 'center' }}>
-        <p style={{ fontSize: 16, color: 'var(--text-muted)', marginBottom: 20 }}>
-          This page needs search details (dates, guests) that aren't available on a direct link or refresh yet.
-        </p>
-        <button onClick={() => navigate('/')} style={{ background: '#ef4056', color: '#fff', borderRadius: 99, padding: '12px 28px', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
-          ← Search again
-        </button>
-      </div>
-    )
+    return <HotelStandalone slug={slug} />
   }
   if (!isHyperGuest && legacyLoading) {
     return <div style={{ padding: 80, textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div>
