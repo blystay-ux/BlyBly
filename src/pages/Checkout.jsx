@@ -152,7 +152,7 @@ export default function Checkout() {
   const info          = property.propertyInfo
   const zarRate       = sell?.currency ? (zarRates[sell.currency?.toUpperCase()] ?? null) : null
   const guestPrice    = sell
-    ? calculateGuestPriceZAR(net?.price ?? sell.price, sell.price, sell.currency, isInsider, zarRate)
+    ? calculateGuestPriceZAR(net?.price ?? sell.price, sell.price, sell.currency, isInsider && !isAdmin, zarRate) // admins always see the PUBLIC rate
     : null
   // For multi-room bookings multiply every price figure by room count
   const multiRoomPrice = guestPrice && rooms > 1
@@ -545,7 +545,7 @@ export default function Checkout() {
             <div style={{ border: '2px dashed #ef4056', borderRadius: 12, padding: 16, margin: '24px 0', background: '#fff7f8' }}>
               <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 6 }}>Admin: book on card on file</div>
               <div style={{ fontSize: 12, color: '#666', marginBottom: 10 }}>
-                Books straight with the hotel using the card in Supabase. No iKhokha link is created. Collect payment from the guest yourself.
+                Books straight with the hotel using the card in Supabase. No iKhokha link is created. Collect payment from the guest yourself. The price shown is the public rate.
               </div>
               <label style={{ fontSize: 12, display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
                 <input type="checkbox" checked={adminSendEmail} onChange={e => setAdminSendEmail(e.target.checked)} />
