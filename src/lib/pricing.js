@@ -28,6 +28,8 @@
 
 export const COMMISSION_RATE = 0.10         // public rate: 10% when Net === Sell
 export const INSIDER_COMMISSION_RATE = 0.06 // Bly Insiders rate: flat 6% on Net, always (raised from 3% on 2026-09-22, "for now")
+// 2026-10-15: Insiders pay the PUBLIC rate for now. Set to true to bring the Net + INSIDER_COMMISSION_RATE price back.
+export const INSIDER_PRICING_ENABLED = false
 const SAME_RATE_TOLERANCE = 0.01            // treat net/sell as "the same" if they differ by less than 1 cent (floating point safety)
 
 function round2(n) {
@@ -54,7 +56,7 @@ export function calculateGuestPrice(netAmount, sellAmount, currency, isInsider =
   const net = Number(netAmount) || 0
   const sell = Number(sellAmount) || 0
 
-  if (isInsider) {
+  if (isInsider && INSIDER_PRICING_ENABLED) {
     const total = net * (1 + INSIDER_COMMISSION_RATE)
     return {
       currency,
