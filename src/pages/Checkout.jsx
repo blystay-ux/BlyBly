@@ -95,7 +95,8 @@ const s = {
 export default function Checkout() {
   const navigate   = useNavigate()
   const location   = useLocation()
-  const { isInsider } = useAuth()
+  const { isInsider, role } = useAuth()
+  const isAdmin = role === 'admin'
 
   const { property, selectedOffer, prebookResult, checkIn, nights, adults, rooms = 1 } = location.state || {}
 
@@ -118,6 +119,8 @@ export default function Checkout() {
   const [redirecting, setRedirecting]         = useState(false)
   const [bookingError, setBookingError]       = useState(null)
   const [zarRates, setZarRates]               = useState({})
+  const [adminSendEmail, setAdminSendEmail]   = useState(true)
+  const [adminBooking, setAdminBooking]       = useState(false)
 
   // Prefetch ZAR rates for the booking currency + the 3 estimate currencies
   useEffect(() => {
@@ -199,16 +202,12 @@ export default function Checkout() {
   // 3. Redirect guest to iKhokha's hosted payment page
   // 4. iKhokha webhook fires on payment → webhook calls hyperguest-book
   // ─────────────────────────────────────────────────────────────────────────
-  async function handleProceedToPayment() {
-    setRedirecting(true)
-    setBookingError(null)
-
+  // Builds + saves the pending hg_bookings row (shared by web checkout and admin booking)
+  async function createPendingBooking(extraMeta = {}) {
     const priceForHyperGuest = net || sell
     const agencyReference    = `BLY-${Date.now()}`
     const checkOut           = addNights(checkIn, nights)
-
-    try {
-      // ── Step 1: Save pending booking ────────────────────────────────────
+    {
       const { data: hgBooking, error: dbErr } = await supabase
         .from('hg_bookings')
         .insert({
@@ -227,6 +226,7 @@ export default function Checkout() {
             roomName:     selectedOffer.room.roomName,
             ratePlanName: selectedOffer.plan.ratePlanName,
             ...(promo ? { promo_code: promo.code, promo_discount_pct: promo.discount_pct } : {}),
+            ...extraMeta,
           },
           checkout_payload: {
             propertyId:       property.propertyId,
@@ -252,6 +252,38 @@ export default function Checkout() {
         .single()
 
       if (dbErr) throw new Error(dbErr.message)
+      return hgBooking
+    }
+  }
+
+  // ADMIN ONLY: book on the card on file, no iKhokha payment link.
+  async function handleAdminBook() {
+    if (!window.confirm('Book this on the card on file? This books with the hotel immediately and does NOT go through iKhokha.')) return
+    setAdminBooking(true)
+    setBookingError(null)
+    try {
+      const hgBooking = await createPendingBooking({ booked_by_admin: true })
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/admin-book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ bookingId: hgBooking.id, sendEmail: adminSendEmail }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Admin booking failed')
+      navigate('/admin', { state: { adminBooked: data.bookingId, emailed: data.emailed } })
+    } catch (err) {
+      console.error('[Checkout] Admin booking failed:', err)
+      setBookingError(err.message || 'Admin booking failed')
+      setAdminBooking(false)
+    }
+  }
+
+  async function handleProceedToPayment() {
+    setRedirecting(true)
+    setBookingError(null)
+    try {
+      const hgBooking = await createPendingBooking()
 
       // ── Increment promo code usage count ────────────────────────────────────
       if (promo?.code) {
@@ -507,6 +539,27 @@ export default function Checkout() {
               placeholder="e.g. Non-smoking room, high floor, late check-in"
             />
           </div>
+
+          {/* ADMIN ONLY — book on card on file, bypasses iKhokha */}
+          {isAdmin && (
+            <div style={{ border: '2px dashed #ef4056', borderRadius: 12, padding: 16, margin: '24px 0', background: '#fff7f8' }}>
+              <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 6 }}>Admin: book on card on file</div>
+              <div style={{ fontSize: 12, color: '#666', marginBottom: 10 }}>
+                Books straight with the hotel using the card in Supabase. No iKhokha link is created. Collect payment from the guest yourself.
+              </div>
+              <label style={{ fontSize: 12, display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
+                <input type="checkbox" checked={adminSendEmail} onChange={e => setAdminSendEmail(e.target.checked)} />
+                Email the booking confirmation to the guest
+              </label>
+              <button
+                style={{ ...s.ctaBtn, width: '100%', ...(!leadGuestValid() || !roomGuestsValid() || adminBooking ? s.ctaBtnDisabled : {}) }}
+                disabled={!leadGuestValid() || !roomGuestsValid() || adminBooking}
+                onClick={handleAdminBook}
+              >
+                {adminBooking ? 'Booking…' : 'Book on card on file →'}
+              </button>
+            </div>
+          )}
 
           {/* Payment note */}
           <div style={s.paymentNote}>

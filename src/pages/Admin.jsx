@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 
@@ -867,10 +867,12 @@ function EventsTab({ events, onCreate, onSave, onToggle, onDelete, creating, set
 export default function Admin() {
   const { user, role, signOut } = useAuth()
   const navigate = useNavigate()
+  const adminBooked  = useLocation().state?.adminBooked
+  const adminEmailed = useLocation().state?.emailed
 
   const isAdmin = role === 'admin'
 
-  const [tab,      setTab]      = useState('overview')
+  const [tab,      setTab]      = useState(adminBooked ? 'newbooking' : 'overview')
   const [bookings, setBookings] = useState([])
   const [propertyCount, setPropertyCount] = useState(0)
   const [waitlist, setWaitlist] = useState([])
@@ -1174,7 +1176,7 @@ export default function Admin() {
   const propertiesList = Object.values(propertiesMap).sort((a, b) => b.bookingCount - a.bookingCount)
 
   const newGroups = groupRequests.filter(r => r.status === 'new').length
-  const TABS = ['overview', 'properties', 'bookings', 'waitlist', 'memberships', 'contacts', 'competition', 'corporates', 'reviews', 'promos', 'events', 'groups']
+  const TABS = ['overview', 'properties', 'bookings', 'waitlist', 'memberships', 'contacts', 'competition', 'corporates', 'reviews', 'promos', 'events', 'groups', 'newbooking']
 
   return (
     <div style={s.page}>
@@ -1212,6 +1214,7 @@ export default function Admin() {
               {t === 'promos'      && '🏷️ '}
               {t === 'events'      && '🗓️ '}
               {t === 'groups'      && '👥 '}
+              {t === 'newbooking'  && '➕ '}
               {t.charAt(0).toUpperCase() + t.slice(1)}
               {t === 'memberships' && pendingMembers > 0 && (
                 <span style={{ marginLeft: 6, background: '#ef4056', color: '#fff', borderRadius: 99, padding: '1px 7px', fontSize: 11 }}>
@@ -1364,6 +1367,22 @@ export default function Admin() {
             )}
 
             {/* Group requests */}
+            {tab === 'newbooking' && (
+              <div style={{ background: '#fff', borderRadius: 16, padding: 28, maxWidth: 640, boxShadow: '0 1px 8px rgba(0,0,0,0.05)' }}>
+                <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 8 }}>Make a booking for a guest</div>
+                <p style={{ fontSize: 14, color: '#555', lineHeight: 1.6, marginBottom: 16 }}>
+                  Search and pick the room as normal. On the checkout page you will see an <b>Admin: book on card on file</b> box.
+                  It books straight with the hotel using the card in Supabase. No iKhokha link is created. You collect payment from the guest yourself.
+                </p>
+                <button style={s.btn('accent')} onClick={() => navigate('/')}>Start a booking →</button>
+                {adminBooked && (
+                  <div style={{ marginTop: 18, fontSize: 13, color: '#16a34a', fontWeight: 700 }}>
+                    Booked ✓ {adminEmailed ? 'Confirmation email sent to the guest.' : 'No confirmation email was sent.'} See it in the Bookings tab.
+                  </div>
+                )}
+              </div>
+            )}
+
             {tab === 'groups' && (
               <>
                 <p style={s.note}>Requests submitted via the Group requests page. Change the status as you work through them.</p>
