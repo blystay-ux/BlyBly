@@ -192,8 +192,17 @@ export default function Checkout() {
     )
   }
 
+  // Guest 1 is the lead guest ("Your details"). Only additional guests (2+) get their own name fields.
   function roomGuestsValid() {
-    return roomGuests.every(g => g.firstName && g.lastName)
+    return roomGuests.slice(1).every(g => g.firstName && g.lastName)
+  }
+
+  // Guest list sent to HyperGuest: lead guest first, then any additional guests
+  function allRoomGuests() {
+    return [
+      { firstName: leadGuest.firstName, lastName: leadGuest.lastName },
+      ...roomGuests.slice(1),
+    ]
   }
 
   // ── PAYMENT FLOW ──────────────────────────────────────────────────────────
@@ -243,7 +252,7 @@ export default function Checkout() {
                 amount:   priceForHyperGuest.price,
                 currency: priceForHyperGuest.currency,
               },
-              guests: roomGuests,
+              guests: allRoomGuests(),
               ...(specialRequests ? { specialRequests: [specialRequests] } : {}),
             }],
           },
@@ -502,12 +511,12 @@ export default function Checkout() {
             </div>
           </div>
 
-          {/* Room guests */}
-          <div style={s.guestBlock}>
+          {/* Additional guests (guest 1 = the lead guest above) */}
+          {roomGuests.length > 1 && <div style={s.guestBlock}>
             <div style={{ ...s.sectionTitle, marginTop: 0, fontSize: 16 }}>
-              Guest names ({roomGuests.length})
+              Additional guests
             </div>
-            {roomGuests.map((g, i) => (
+            {roomGuests.map((g, i) => i === 0 ? null : (
               <div key={i} style={s.formRow}>
                 <div style={{ flex: 1 }}>
                   <label style={s.formLabel}>Guest {i + 1} first name</label>
@@ -527,7 +536,7 @@ export default function Checkout() {
                 </div>
               </div>
             ))}
-          </div>
+          </div>}
 
           {/* Special requests */}
           <div style={s.guestBlock}>
