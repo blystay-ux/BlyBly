@@ -1,16 +1,19 @@
-import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { hotelTitle, relatedForEvent } from '../seo/seo.js'
+import { calculateGuestPriceZAR, prefetchZARRates, formatDisplayPrice } from '../lib/pricing'
+import { useAuth } from '../contexts/AuthContext'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Bly — Hotel page opened WITHOUT a search (direct link, refresh, shared link)
-// Route: /hotel/hg-<propertyId>, rendered by HotelDetail when there is no search state.
+// Bly — THE hotel page. Route: /hotel/hg-<propertyId>
 //
-// Shows the hotel's saved content (hg_property_index + hg_property_static) and a
-// "Check availability" form. A successful check navigates to the same URL WITH
-// search state, and HotelDetail then shows live rooms and rates as usual.
-// No prices are shown here: BLY. holds no stored rates, only live ones.
+// Search results link here with ?checkIn=&nights=&adults= . When those are present the
+// form is pre-filled and availability is checked straight away; live rooms and rates then
+// list below the form (grouped by room, Booking.com style). "Select" pre-books the rate
+// and moves the guest to /checkout. Opened without dates (direct link, shared link) it
+// shows the saved hotel content and the form, and checks availability on submit.
+// No prices are stored: BLY. only ever shows live ones.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PINK = '#EF4056'
@@ -42,6 +45,51 @@ function toParagraphs(text) {
     .filter(Boolean)
 }
 
+function addNights(dateStr, nights) {
+  const d = new Date(dateStr)
+  d.setDate(d.getDate() + nights)
+  return d.toISOString().split('T')[0]
+}
+
+const BOARD_LABEL = { RO: 'Room only', BB: 'Breakfast included', HB: 'Half board', FB: 'Full board', AI: 'All inclusive' }
+
+function describeCancellationPolicy(p) {
+  const penalty = p.penaltyType === 'percent' ? `${p.amount}%`
+    : p.penaltyType === 'nights' ? `${p.amount} night(s)`
+    : `${p.currency} ${p.amount}`
+  const when = p.daysBefore >= 999 ? 'always (non-refundable)' : `${p.daysBefore} day(s) before check-in`
+  const deadline = p.cancellationDeadlineHour ? `, deadline ${p.cancellationDeadlineHour}` : ''
+  return `Penalty: ${penalty} — applies ${when}${deadline}`
+}
+
+// { refundable, label } from HyperGuest's cancellation policies.
+function cancellationSummary(policies, checkIn) {
+  const list = (policies || []).filter((p) => Number(p.amount) > 0)
+  if (!policies || policies.length === 0) return { refundable: null, label: 'Cancellation terms apply' }
+  if (list.some((p) => Number(p.daysBefore) >= 999)) return { refundable: false, label: 'Non-refundable' }
+  if (list.length === 0) return { refundable: true, label: 'Free cancellation' }
+  const days = Math.max(...list.map((p) => Number(p.daysBefore) || 0))
+  const until = new Date(addNights(checkIn, -days) + 'T00:00:00')
+  if (until < new Date(new Date().toDateString())) return { refundable: false, label: 'Cancellation charges apply' }
+  return { refundable: true, label: `Free cancellation until ${until.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' })}` }
+}
+
+function flattenByRoom(property) {
+  const rooms = []
+  for (const room of property?.rooms ?? []) {
+    const plans = (room.ratePlans ?? []).filter((pl) => pl.prices?.sell)
+    if (plans.length === 0) continue
+    plans.sort((a, b) => (a.prices.sell.price ?? 0) - (b.prices.sell.price ?? 0))
+    rooms.push({ room, plans })
+  }
+  return rooms.sort((a, b) => (a.plans[0].prices.sell.price ?? 0) - (b.plans[0].prices.sell.price ?? 0))
+}
+
+function bedText(room) {
+  const beds = (room.settings?.beddingConfigurations || []).map((b) => `${b.quantity || 1} ${String(b.type || 'bed').toLowerCase()}`)
+  return beds.join(', ')
+}
+
 const s = {
   page: { maxWidth: 1000, margin: '0 auto', padding: '20px 24px 72px' },
   back: { display: 'inline-block', fontSize: 14, fontWeight: 500, color: 'var(--text-muted)', textDecoration: 'none', marginBottom: 16 },
@@ -67,6 +115,23 @@ const s = {
   chip: { padding: '6px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 99, fontSize: 13, color: '#2a2a2a' },
   rooms: { margin: 0, paddingLeft: 18, fontSize: 15, lineHeight: 1.8, color: '#2a2a2a' },
   muted: { padding: 80, textAlign: 'center', color: 'var(--text-muted)' },
+  ratesTitle: { fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 22, margin: '8px 0 6px' },
+  ratesSub: { fontSize: 14, color: 'var(--text-muted)', margin: '0 0 16px' },
+  roomCard: { border: '1px solid var(--border)', borderRadius: 16, background: 'var(--bg-card)', marginBottom: 16, overflow: 'hidden' },
+  roomHead: { padding: '16px 18px 12px', borderBottom: '1px solid var(--border)' },
+  roomName: { fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 17, margin: 0 },
+  roomMeta: { fontSize: 13, color: 'var(--text-muted)', marginTop: 4 },
+  planRow: { display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderTop: '1px solid var(--border)' },
+  planInfo: { flex: '1 1 220px', minWidth: 0, fontSize: 14, lineHeight: 1.6 },
+  planBoard: { fontWeight: 700 },
+  tagGood: { color: '#15803d', fontWeight: 600 },
+  tagBad: { color: '#b45309', fontWeight: 600 },
+  planBuy: { textAlign: 'right', flex: '0 1 220px', marginLeft: 'auto' },
+  price: { fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20 },
+  priceNote: { fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 },
+  selectBtn: (busy) => ({ background: PINK, color: '#fff', border: 'none', borderRadius: 99, padding: '10px 22px', fontSize: 14, fontWeight: 700, cursor: busy ? 'wait' : 'pointer', opacity: busy ? 0.7 : 1 }),
+  details: { fontSize: 12, color: 'var(--text-muted)', marginTop: 2 },
+  skeleton: { height: 110, borderRadius: 16, background: 'linear-gradient(90deg,#eee,#f6f6f6,#eee)', marginBottom: 16 },
 }
 
 export default function HotelStandalone({ slug }) {
@@ -77,11 +142,24 @@ export default function HotelStandalone({ slug }) {
   const [hotel, setHotel] = useState(null)     // row from hg_property_index
   const [detail, setDetail] = useState(null)   // row from hg_property_static
 
-  const [checkIn, setCheckIn] = useState(isoDate(14))
-  const [nights, setNights] = useState(2)
-  const [adults, setAdults] = useState(2)
-  const [checking, setChecking] = useState(false)
+  const location = useLocation()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const { isInsider, corporateAccount, role } = useAuth()
+  const effectiveIsInsider = isInsider && role !== 'admin'
+
+  // Search details come from the URL (search results link), then router state, then defaults.
+  const urlCheckIn = searchParams.get('checkIn') || location.state?.checkIn || null
+  const [checkIn, setCheckIn] = useState(urlCheckIn || isoDate(14))
+  const [nights, setNights] = useState(Number(searchParams.get('nights') || location.state?.nights || 2))
+  const [adults, setAdults] = useState(Number(searchParams.get('adults') || location.state?.adults || 2))
+  const [checking, setChecking] = useState(!!urlCheckIn)
   const [notice, setNotice] = useState(null)
+  const [property, setProperty] = useState(null)   // live availability result
+  const [searched, setSearched] = useState(null)   // { checkIn, nights, adults } the results are for
+  const [zarRates, setZarRates] = useState({})
+  const [prebookingKey, setPrebookingKey] = useState(null)
+  const [prebookError, setPrebookError] = useState(null)
+  const ratesRef = useRef(null)
 
   useEffect(() => {
     let cancelled = false
@@ -115,17 +193,16 @@ export default function HotelStandalone({ slug }) {
     if (hotel?.name) document.title = hotelTitle(hotel.name, city)
   }, [hotel, city])
 
-  async function checkAvailability(e) {
-    e.preventDefault()
-    if (checking) return
+  async function runSearch(ci, n, a) {
     setChecking(true)
     setNotice(null)
+    setPrebookError(null)
     try {
       const { data, error } = await supabase.functions.invoke('hyperguest-search', {
         body: {
-          checkIn,
-          nights: Number(nights),
-          rooms: [{ adults: Number(adults) }],
+          checkIn: ci,
+          nights: Number(n),
+          rooms: [{ adults: Number(a) }],
           hotelIds: [propertyId],
           customerNationality: 'ZA',
           currency: 'ZAR',
@@ -135,24 +212,77 @@ export default function HotelStandalone({ slug }) {
       const result = (data?.results || []).find((r) => Number(r.propertyId) === propertyId) || data?.results?.[0]
       const hasRates = (result?.rooms || []).some((r) => (r.ratePlans || []).length > 0)
       if (!result || !hasRates) {
+        setProperty(null)
+        setSearched(null)
         setNotice('No rooms are available for these dates. Try different dates or fewer nights.')
-        setChecking(false)
-        return
+      } else {
+        const currencies = (result.rooms || []).flatMap((r) => (r.ratePlans || []).map((pl) => pl.prices?.sell?.currency)).filter(Boolean)
+        prefetchZARRates([...new Set([...currencies, 'USD', 'EUR', 'GBP'])]).then(setZarRates)
+        setProperty(result)
+        setSearched({ checkIn: ci, nights: Number(n), adults: Number(a) })
+        setTimeout(() => ratesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80)
       }
+    } catch (err) {
+      console.error('Availability check failed:', err)
+      setNotice('We could not check availability just now. Please try again in a moment.')
+    }
+    setChecking(false)
+  }
+
+  function checkAvailability(e) {
+    e.preventDefault()
+    if (checking) return
+    setSearchParams({ checkIn, nights: String(nights), adults: String(adults) }, { replace: true })
+    runSearch(checkIn, nights, adults)
+  }
+
+  // Arrived from search results (or a link with dates): check availability straight away.
+  useEffect(() => {
+    if (urlCheckIn && Number.isInteger(propertyId) && propertyId > 0) runSearch(urlCheckIn, nights, adults)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [propertyId])
+
+  async function handleSelect(room, plan) {
+    if (prebookingKey || !property || !searched) return
+    const key = `${room.roomId}:${plan.ratePlanId}`
+    setPrebookingKey(key)
+    setPrebookError(null)
+    const net = plan.prices?.net
+    const sell = plan.prices?.sell
+    const priceForHyperGuest = net || sell
+    try {
+      const { data, error } = await supabase.functions.invoke('hyperguest-prebook', {
+        body: {
+          propertyId: property.propertyId,
+          checkIn: searched.checkIn,
+          checkOut: addNights(searched.checkIn, searched.nights),
+          nationality: 'ZA',
+          pax: [{ adults: searched.adults, children: [] }],
+          rooms: [{
+            roomId: room.roomId,
+            ratePlanId: plan.ratePlanId,
+            expectedPrice: { amount: priceForHyperGuest.price, currency: priceForHyperGuest.currency },
+          }],
+        },
+      })
+      if (error) throw error
+      if (data?.error) throw new Error(data.error)
       const photos = (detail?.images || []).filter((i) => i.type === 'photo' && i.uri)
-      navigate(`/hotel/${slug}`, {
+      navigate('/checkout', {
         state: {
-          property: { ...result, thumbnailImage: result.thumbnailImage || photos[0]?.uri || null },
-          checkIn,
-          nights: Number(nights),
-          adults: Number(adults),
+          property: { ...property, thumbnailImage: property.thumbnailImage || photos[0]?.uri || null },
+          selectedOffer: { room, plan },
+          prebookResult: data,
+          checkIn: searched.checkIn,
+          nights: searched.nights,
+          adults: searched.adults,
           rooms: 1,
         },
       })
     } catch (err) {
-      console.error('Availability check failed:', err)
-      setNotice('We could not check availability just now. Please try again in a moment.')
-      setChecking(false)
+      console.error('Pre-book failed:', err)
+      setPrebookError(err.message || 'Something went wrong confirming this price. Please try again.')
+      setPrebookingKey(null)
     }
   }
 
@@ -224,6 +354,69 @@ export default function HotelStandalone({ slug }) {
             </button>
           </form>
           {notice && <p style={s.notice}>{notice}</p>}
+        </div>
+
+        {/* ── LIVE ROOMS & RATES (below the search, Booking.com style) ── */}
+        <div ref={ratesRef} style={{ scrollMarginTop: 90 }}>
+          {checking && !property && (
+            <>
+              <div style={s.skeleton} /><div style={s.skeleton} />
+            </>
+          )}
+          {property && searched && (
+            <>
+              <h2 style={s.ratesTitle}>Choose your room</h2>
+              <p style={s.ratesSub}>
+                {new Date(searched.checkIn + 'T00:00:00').toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short' })}
+                {' → '}
+                {new Date(addNights(searched.checkIn, searched.nights) + 'T00:00:00').toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short' })}
+                {' · '}{searched.nights} night{searched.nights > 1 ? 's' : ''} · {searched.adults} adult{searched.adults > 1 ? 's' : ''}
+              </p>
+              {prebookError && <p style={{ ...s.notice, marginBottom: 14 }}>{prebookError}</p>}
+              {flattenByRoom(property).map(({ room, plans }) => (
+                <div key={room.roomId} style={s.roomCard}>
+                  <div style={s.roomHead}>
+                    <h3 style={s.roomName}>{room.roomName}</h3>
+                    <div style={s.roomMeta}>
+                      {[bedText(room), room.settings?.maxOccupancy ? `Sleeps ${room.settings.maxOccupancy}` : '', room.settings?.roomSize ? `${room.settings.roomSize} m²` : ''].filter(Boolean).join(' · ')}
+                    </div>
+                  </div>
+                  {plans.map((plan) => {
+                    const net = plan.prices?.net
+                    const sell = plan.prices?.sell
+                    const zarRate = zarRates[sell.currency?.toUpperCase()] ?? null
+                    const guestPrice = calculateGuestPriceZAR(net?.price ?? sell.price, sell.price, sell.currency, effectiveIsInsider, zarRate, corporateAccount?.commission_pct ?? 0)
+                    const cx = cancellationSummary(plan.cancellationPolicies, searched.checkIn)
+                    const key = `${room.roomId}:${plan.ratePlanId}`
+                    return (
+                      <div key={key} style={s.planRow}>
+                        <div style={s.planInfo}>
+                          <div style={s.planBoard}>{BOARD_LABEL[plan.board] || plan.board}</div>
+                          <div style={cx.refundable === false ? s.tagBad : cx.refundable ? s.tagGood : undefined}>{cx.label}</div>
+                          <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Pay online{plan.isImmediate ? ' · Instant confirmation' : ''}</div>
+                          {(plan.cancellationPolicies || []).length > 0 && (
+                            <details style={s.details}>
+                              <summary style={{ cursor: 'pointer' }}>Cancellation policy</summary>
+                              {plan.cancellationPolicies.map((p, i) => <div key={i}>{describeCancellationPolicy(p)}</div>)}
+                            </details>
+                          )}
+                        </div>
+                        <div style={s.planBuy}>
+                          <div style={s.price}>{formatDisplayPrice(guestPrice)}</div>
+                          <div style={s.priceNote}>
+                            for {searched.nights} night{searched.nights > 1 ? 's' : ''} · taxes and fees included{guestPrice.isInsiderRate ? ' · Bly Insiders rate' : ''}
+                          </div>
+                          <button type="button" style={s.selectBtn(prebookingKey === key)} disabled={!!prebookingKey} onClick={() => handleSelect(room, plan)}>
+                            {prebookingKey === key ? 'Checking price…' : 'Select'}
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              ))}
+            </>
+          )}
         </div>
 
         {description && (

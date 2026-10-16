@@ -46,9 +46,8 @@ function ResultCard({ property, checkIn, nights, adults, rooms, zarRates = {} })
   const info = property.propertyInfo
 
   const handleView = () => {
-    navigate(`/hotel/hg-${property.propertyId}`, {
-      state: { property, checkIn, nights, adults, rooms },
-    })
+    // The hotel page re-runs the availability check from these dates and guests
+    navigate(`/hotel/hg-${property.propertyId}?checkIn=${checkIn}&nights=${nights}&adults=${adults}&rooms=${rooms}`)
   }
 
   return (

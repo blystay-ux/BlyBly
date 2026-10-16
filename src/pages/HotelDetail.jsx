@@ -234,6 +234,8 @@ const s = {
 export default function HotelDetail() {
   const { slug } = useParams()
   const location = useLocation()
+  // HyperGuest hotels: one page for everything (search form, live rates, select -> checkout).
+  if (slug?.startsWith('hg-')) return <HotelStandalone key={slug} slug={slug} />
   return <HotelDetailInner key={`${slug}:${location.key}`} />
 }
 function HotelDetailInner() {
