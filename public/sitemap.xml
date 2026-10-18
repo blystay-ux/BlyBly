@@ -25,7 +25,7 @@
     <loc>https://blytravel.co.za/blog</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
-    <lastmod>2026-09-04</lastmod>
+    <lastmod>2026-10-18</lastmod>
   </url>
 
   <!-- Blog articles -->
@@ -55,6 +55,13 @@
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <lastmod>2026-10-10</lastmod>
+  </url>
+
+  <url>
+    <loc>https://blytravel.co.za/blog/new-year-cape-town-2026</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-10-18</lastmod>
   </url>
 
 </urlset>
