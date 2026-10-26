@@ -323,8 +323,8 @@ export default async function handler(req, res) {
     return res.status(200).json({ received: true })
   }
 
-  const rawRef   = String(externalTransactionID || '').trim()
-  const bookingId = rawRef.startsWith('BLY-') ? rawRef.slice(4) : rawRef
+  // externalTransactionID is our agency_reference (e.g. BLY-1793012767925), set when the pay link is created
+  const bookingId = String(externalTransactionID || '').trim()
   if (!bookingId) {
     console.error('[iKhokha webhook] No externalTransactionID in payload')
     return res.status(200).json({ received: true })
@@ -336,11 +336,17 @@ export default async function handler(req, res) {
   )
 
   // ── Look up the booking ───────────────────────────────────────────────────
-  const { data: booking, error: lookupErr } = await supabase
+  const bookingCols = 'id, agency_reference, status, payment_status, checkout_payload, meta, check_in, check_out, total_price_zar, lead_guest, guest_email'
+  let { data: booking, error: lookupErr } = await supabase
     .from('hg_bookings')
-    .select('id, agency_reference, checkout_payload, meta, check_in, check_out, total_price_zar, lead_guest, guest_email')
-    .eq('id', bookingId)
+    .select(bookingCols)
+    .eq('agency_reference', bookingId)
     .maybeSingle()
+  // Fallback for any older link that carried the row UUID instead of the reference
+  if (!booking && /^[0-9a-f-]{36}$/i.test(bookingId)) {
+    ;({ data: booking, error: lookupErr } = await supabase
+      .from('hg_bookings').select(bookingCols).eq('id', bookingId).maybeSingle())
+  }
 
   if (lookupErr || !booking) {
     console.error('[iKhokha webhook] Booking not found for id:', bookingId, lookupErr)
@@ -349,10 +355,19 @@ export default async function handler(req, res) {
 
   // ── Payment SUCCESS ───────────────────────────────────────────────────────
   if (status === 'SUCCESS') {
-    await supabase
+    // iKhokha delivers every callback twice. Atomically claim the booking so only the first one
+    // books with HyperGuest and sends the email; the duplicate sees it is already paid and stops.
+    const { data: claimed, error: claimErr } = await supabase
       .from('hg_bookings')
       .update({ payment_status: 'paid', status: 'Confirmed', ik_paylink_id: paylinkID })
       .eq('id', booking.id)
+      .neq('payment_status', 'paid')
+      .select('id')
+    if (claimErr) console.error('[iKhokha webhook] Could not mark booking paid:', claimErr)
+    if (!claimed || claimed.length === 0) {
+      console.log('[iKhokha webhook] Duplicate/already-paid callback ignored for', booking.agency_reference)
+      return res.status(200).json({ received: true, duplicate: true })
+    }
 
     if (booking.checkout_payload) {
       try {
