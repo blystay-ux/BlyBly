@@ -47,6 +47,13 @@ function signatureCandidates(urlPath, rawBody, host) {
   try { reStringified = JSON.stringify(JSON.parse(rawBody)) } catch { /* not JSON */ }
   const bodies = [['raw', rawBody]]
   if (reStringified && reStringified !== rawBody) bodies.push(['restringified', reStringified])
+  // iKhokha signs the callback body WITHOUT null fields (their "text":null is not part of
+  // what they sign). Confirmed 2026-10-26 against a live callback.
+  try {
+    const o = JSON.parse(rawBody)
+    const noNulls = JSON.stringify(Object.fromEntries(Object.entries(o).filter(([, v]) => v !== null && v !== undefined)))
+    bodies.unshift(['nonulls', noNulls])
+  } catch { /* not JSON */ }
   const h = host || 'blytravel.co.za'
   const apex = h.replace(/^www\./, '')
   const paths = [
