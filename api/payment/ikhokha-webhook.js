@@ -39,11 +39,35 @@ function jsStringEscape(str) {
   return JSON.stringify(str).slice(1, -1)
 }
 
-// `rawBody` must be the exact raw request body STRING -- never an object
-// that's been through JSON.parse() and re-stringified.
-function computeSignature(urlPath, rawBody) {
-  const payload = jsStringEscape(urlPath + rawBody)
-  return crypto.createHmac('sha256', IK_APP_SECRET.trim()).update(payload).digest('hex')
+// Candidate signing strings. iKhokha's docs are loose on exactly what is signed for
+// callbacks, so we accept any of the plausible variants (all are HMAC-SHA256 with our
+// app secret, so accepting several does not weaken verification) and log which one hit.
+function signatureCandidates(urlPath, rawBody, host) {
+  let reStringified = null
+  try { reStringified = JSON.stringify(JSON.parse(rawBody)) } catch { /* not JSON */ }
+  const bodies = [['raw', rawBody]]
+  if (reStringified && reStringified !== rawBody) bodies.push(['restringified', reStringified])
+  const paths = [['path', urlPath], ['fullurl', `https://${host || 'blytravel.co.za'}${urlPath}`], ['nopath', '']]
+  const out = []
+  for (const [bn, b] of bodies) {
+    for (const [pn, pth] of paths) {
+      out.push([`${pn}+${bn}+escaped`, jsStringEscape(pth + b)])
+      out.push([`${pn}+${bn}+plain`, pth + b])
+    }
+  }
+  return out
+}
+
+function hmac(str) {
+  return crypto.createHmac('sha256', IK_APP_SECRET.trim()).update(str).digest('hex')
+}
+
+function matchSignature(received, urlPath, rawBody, host) {
+  for (const [name, str] of signatureCandidates(urlPath, rawBody, host)) {
+    const sig = hmac(str)
+    if (sig.length === received.length && crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(received))) return name
+  }
+  return null
 }
 
 // ── Mailer ────────────────────────────────────────────────────────────────────
@@ -243,11 +267,15 @@ export default async function handler(req, res) {
   const rawBody = await getRawBody(req)
 
   const receivedSign = req.headers['ik-sign'] || ''
-  const expectedSign = computeSignature(CALLBACK_PATH, rawBody)
-  if (!receivedSign || receivedSign !== expectedSign) {
-    console.error('[iKhokha webhook] Signature mismatch — received:', receivedSign, '| expected:', expectedSign)
+  const matched = receivedSign ? matchSignature(receivedSign, CALLBACK_PATH, rawBody, req.headers.host) : null
+  if (!matched) {
+    console.error('[iKhokha webhook] Signature mismatch — received:', receivedSign,
+      '| path:', CALLBACK_PATH, '| host:', req.headers.host, '| bodyLen:', rawBody.length,
+      '| body:', rawBody.slice(0, 600))
     return res.status(403).json({ error: 'Signature mismatch' })
   }
+
+  console.log('[iKhokha webhook] Signature OK via variant:', matched)
 
   // Only parse into an object AFTER signature verification has passed.
   let body
