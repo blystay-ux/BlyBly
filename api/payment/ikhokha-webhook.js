@@ -47,7 +47,19 @@ function signatureCandidates(urlPath, rawBody, host) {
   try { reStringified = JSON.stringify(JSON.parse(rawBody)) } catch { /* not JSON */ }
   const bodies = [['raw', rawBody]]
   if (reStringified && reStringified !== rawBody) bodies.push(['restringified', reStringified])
-  const paths = [['path', urlPath], ['fullurl', `https://${host || 'blytravel.co.za'}${urlPath}`], ['nopath', '']]
+  const h = host || 'blytravel.co.za'
+  const apex = h.replace(/^www\./, '')
+  const paths = [
+    ['path', urlPath],
+    ['path/', urlPath + '/'],
+    ['//path', '/' + urlPath],
+    ['nopath', ''],
+    ['https-apex', `https://${apex}${urlPath}`],
+    ['https-www', `https://www.${apex}${urlPath}`],
+    ['https-apex/', `https://${apex}/${urlPath}`],
+    ['http-apex', `http://${apex}${urlPath}`],
+    ['paymentpath', '/public-api/v1/api/payment'],
+  ]
   const out = []
   for (const [bn, b] of bodies) {
     for (const [pn, pth] of paths) {
@@ -58,14 +70,24 @@ function signatureCandidates(urlPath, rawBody, host) {
   return out
 }
 
-function hmac(str) {
-  return crypto.createHmac('sha256', IK_APP_SECRET.trim()).update(str).digest('hex')
+function hmac(str, key) {
+  return crypto.createHmac('sha256', key).update(str).digest('hex')
+}
+
+function secretVariants() {
+  const raw = IK_APP_SECRET
+  const t = raw.trim()
+  const unq = t.replace(/^["']|["']$/g, '')
+  return [...new Set([t, raw, unq])].filter(Boolean)
 }
 
 function matchSignature(received, urlPath, rawBody, host) {
+  const keys = secretVariants()
   for (const [name, str] of signatureCandidates(urlPath, rawBody, host)) {
-    const sig = hmac(str)
-    if (sig.length === received.length && crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(received))) return name
+    for (let i = 0; i < keys.length; i++) {
+      const sig = hmac(str, keys[i])
+      if (sig.length === received.length && crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(received))) return `${name}+key${i}`
+    }
   }
   return null
 }
@@ -270,7 +292,7 @@ export default async function handler(req, res) {
   const matched = receivedSign ? matchSignature(receivedSign, CALLBACK_PATH, rawBody, req.headers.host) : null
   if (!matched) {
     console.error('[iKhokha webhook] Signature mismatch — received:', receivedSign,
-      '| path:', CALLBACK_PATH, '| host:', req.headers.host, '| bodyLen:', rawBody.length,
+      '| secretLen:', IK_APP_SECRET.length, '| appIdLen:', IK_APP_ID.length, '| path:', CALLBACK_PATH, '| host:', req.headers.host, '| bodyLen:', rawBody.length,
       '| body:', rawBody.slice(0, 600))
     return res.status(403).json({ error: 'Signature mismatch' })
   }
