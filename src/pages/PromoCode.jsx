@@ -55,19 +55,7 @@ const s = {
 
 // Featured events with a partner-hotel offer. Add new entries here.
 const EVENT_OFFERS = [
-  {
-    id: 'praise-the-loud',
-    title: 'Praise the Loud Fest',
-    image: '/images/events/praise-the-loud.jpg',
-    imageAlt: 'Praise the Loud Fest poster: Ac/Es, Black Heidi, BOO!, Fuzigish, Cutting Jade and #SOZLOL, 24 October at Sognage, doors open 4PM',
-    date: 'Saturday 24 October 2026',
-    venue: 'Sognage',
-    doors: 'Doors open 4PM',
-    lineup: ['Ac/Es', 'Black Heidi', 'BOO!', 'Fuzigish', 'Cutting Jade', '#SOZLOL'],
-    hotel: 'Hotel Sky Sandton',
-    code: 'PROMF0',
-    url: 'https://direct-book.com/properties/HotelSkySandtonDIRECT?locale=en&items[0][adults]=2&items[0][children]=0&items[0][infants]=0&currency=ZAR&checkInDate=2026-10-23&checkOutDate=2026-10-24&trackPage=yes&promocode=PROMF0',
-  },
+  // No featured events right now. Praise the Loud Fest (24 Oct 2026) was removed 27 Oct 2026.
 ]
 
 function EventOffer({ ev }) {
