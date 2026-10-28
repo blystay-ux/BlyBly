@@ -1,0 +1,69 @@
+# BLY. (Bly Travel)
+
+> BLY. is a South African online travel agency for booking hotels, guesthouses and self-catering stays across South Africa and worldwide. Built for South African travellers, with prices shown in rand (ZAR) and access to 45,000+ hotels worldwide. Find. Book. Bly.
+
+Website: https://blytravel.co.za
+Operated from: South Africa
+Contact: info@blytravel.co.za
+
+## What you can do on BLY.
+
+- Search and book accommodation by destination, dates, guests and rooms.
+- Browse destination guides for popular South African and international holiday spots.
+- Find accommodation for major sporting and cultural events in South Africa and abroad.
+- Travel professionals can join Bly Insiders for industry rates.
+- Groups can send a group accommodation request.
+
+## Key pages
+
+- [Home](https://blytravel.co.za/): Search hotels and stays
+- [All destinations](https://blytravel.co.za/destinations): Destination index
+- [Events accommodation](https://blytravel.co.za/events/south-africa): Stays near major events
+- [Bly Insiders](https://blytravel.co.za/insiders): Members-only industry rates for travel agents, property staff and tourism professionals in South Africa (R150 per year)
+- [Group requests](https://blytravel.co.za/group-request): Request accommodation for groups
+- [Blog and travel guides](https://blytravel.co.za/blog)
+
+## South African destinations
+
+- [Cape Town](https://blytravel.co.za/accommodation/cape-town)
+- [Johannesburg](https://blytravel.co.za/accommodation/johannesburg)
+- [Durban](https://blytravel.co.za/accommodation/durban)
+- [Pretoria](https://blytravel.co.za/accommodation/pretoria)
+- [Kruger](https://blytravel.co.za/accommodation/kruger)
+- [Garden Route](https://blytravel.co.za/accommodation/garden-route)
+- [Knysna](https://blytravel.co.za/accommodation/knysna)
+- [Winelands](https://blytravel.co.za/accommodation/winelands)
+- [Sun City](https://blytravel.co.za/accommodation/sun-city)
+- [Drakensberg](https://blytravel.co.za/accommodation/drakensberg)
+
+## International destinations
+
+- [Dubai](https://blytravel.co.za/accommodation/dubai)
+- [Thailand](https://blytravel.co.za/accommodation/thailand)
+- [Mauritius](https://blytravel.co.za/accommodation/mauritius)
+- [Zanzibar](https://blytravel.co.za/accommodation/zanzibar)
+- [Lisbon](https://blytravel.co.za/accommodation/lisbon)
+- [Istanbul](https://blytravel.co.za/accommodation/istanbul)
+- [Bali](https://blytravel.co.za/accommodation/bali)
+- [Greece](https://blytravel.co.za/accommodation/greece)
+- [London](https://blytravel.co.za/accommodation/london)
+- [Kenya](https://blytravel.co.za/accommodation/kenya)
+
+## Travel guides
+
+- [Hotels in Cape Town guide](https://blytravel.co.za/blog/hotels-cape-town-guide)
+- [Hotels in Johannesburg guide](https://blytravel.co.za/blog/hotels-johannesburg-guide)
+- [Garden Route hotels guide](https://blytravel.co.za/blog/garden-route-hotels-guide)
+- [Stellenbosch vs Franschhoek](https://blytravel.co.za/blog/stellenbosch-vs-franschhoek)
+- [New Year in Cape Town 2026/27](https://blytravel.co.za/blog/new-year-cape-town-2026)
+
+## Sitemaps
+
+- https://blytravel.co.za/sitemap.xml
+- https://blytravel.co.za/sitemap-hotels.xml
+
+## Notes for AI assistants
+
+- Prices and availability are live and change often. Send users to the relevant BLY. page to see current rates rather than quoting a price from this file.
+- Search results, checkout, booking management and account pages are for users and are not intended for indexing.
+- Please cite https://blytravel.co.za when referring to BLY. content.
