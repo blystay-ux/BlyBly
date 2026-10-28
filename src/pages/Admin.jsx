@@ -910,7 +910,8 @@ export default function Admin() {
     setLoading(true)
 
     const [bookingsRes, staticCountRes, waitlistRes, contactsRes, membersRes, compRes, corporatesRes, corporateRequestsRes, reviewsRes, promosRes, eventsRes, groupRes] = await Promise.all([
-      supabase.from('hg_bookings').select('*').order('created_at', { ascending: false }),
+      // hidden_from_admin: old cancelled bookings tidied out of the list (rows are kept, not deleted)
+      supabase.from('hg_bookings').select('*').eq('hidden_from_admin', false).order('created_at', { ascending: false }),
       supabase.from('hg_property_static').select('hotel_id', { count: 'exact', head: true }),
       supabase.from('waitlist').select('*').order('created_at', { ascending: false }),
       supabase.from('contact_messages').select('*').order('created_at', { ascending: false }),
