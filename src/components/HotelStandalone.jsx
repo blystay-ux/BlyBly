@@ -134,8 +134,8 @@ const s = {
   skeleton: { height: 110, borderRadius: 16, background: 'linear-gradient(90deg,#eee,#f6f6f6,#eee)', marginBottom: 16 },
 }
 
-// All property photos in a grid (every photo shown, extra rows stack under the first eight),
-// click any photo to open it large; arrows / keyboard to move, Esc to close.
+// Always at most 8 photos (2 rows of 4); photo 8 shows "+N photos" when there are more.
+// Click any photo to open the full set large; arrows / keyboard to move, Esc to close.
 function PhotoGallery({ photos, name }) {
   const [open, setOpen] = useState(null)
   const count = photos.length
@@ -157,17 +157,29 @@ function PhotoGallery({ photos, name }) {
 
   return (
     <>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 200px), 1fr))', gap: 8, marginBottom: 24 }}>
-        {photos.map((img, i) => (
-          <img
-            key={img.uri}
-            src={img.uri}
-            alt={`${name} photo ${i + 1}`}
-            loading={i < 4 ? 'eager' : 'lazy'}
-            onClick={() => setOpen(i)}
-            style={{ width: '100%', height: 170, objectFit: 'cover', borderRadius: 14, display: 'block', cursor: 'zoom-in' }}
-          />
-        ))}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 24 }}>
+        {photos.slice(0, 8).map((img, i) => {
+          const extra = i === 7 ? count - 8 : 0
+          return (
+            <div
+              key={img.uri}
+              onClick={() => setOpen(i)}
+              style={{ position: 'relative', cursor: 'zoom-in', borderRadius: 14, overflow: 'hidden', aspectRatio: '4 / 3' }}
+            >
+              <img
+                src={img.uri}
+                alt={`${name} photo ${i + 1}`}
+                loading={i < 4 ? 'eager' : 'lazy'}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+              {extra > 0 && (
+                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 'clamp(16px, 3vw, 26px)' }}>
+                  +{extra} photos
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
       {open !== null && (
         <div
