@@ -134,6 +134,69 @@ const s = {
   skeleton: { height: 110, borderRadius: 16, background: 'linear-gradient(90deg,#eee,#f6f6f6,#eee)', marginBottom: 16 },
 }
 
+// All property photos in a grid (every photo shown, extra rows stack under the first eight),
+// click any photo to open it large; arrows / keyboard to move, Esc to close.
+function PhotoGallery({ photos, name }) {
+  const [open, setOpen] = useState(null)
+  const count = photos.length
+
+  useEffect(() => {
+    if (open === null) return undefined
+    const onKey = (e) => {
+      if (e.key === 'Escape') setOpen(null)
+      else if (e.key === 'ArrowRight') setOpen((i) => (i + 1) % count)
+      else if (e.key === 'ArrowLeft') setOpen((i) => (i - 1 + count) % count)
+    }
+    window.addEventListener('keydown', onKey)
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = prev }
+  }, [open, count])
+
+  const btn = { position: 'absolute', background: 'rgba(0,0,0,0.55)', color: '#fff', border: 'none', borderRadius: '50%', width: 44, height: 44, fontSize: 24, cursor: 'pointer', lineHeight: 1 }
+
+  return (
+    <>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 200px), 1fr))', gap: 8, marginBottom: 24 }}>
+        {photos.map((img, i) => (
+          <img
+            key={img.uri}
+            src={img.uri}
+            alt={`${name} photo ${i + 1}`}
+            loading={i < 4 ? 'eager' : 'lazy'}
+            onClick={() => setOpen(i)}
+            style={{ width: '100%', height: 170, objectFit: 'cover', borderRadius: 14, display: 'block', cursor: 'zoom-in' }}
+          />
+        ))}
+      </div>
+      {open !== null && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${name} photos`}
+          onClick={() => setOpen(null)}
+          style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          <img
+            src={photos[open].uri}
+            alt={`${name} photo ${open + 1}`}
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '92vw', maxHeight: '88vh', objectFit: 'contain', borderRadius: 8 }}
+          />
+          <button type="button" aria-label="Close" onClick={() => setOpen(null)} style={{ ...btn, top: 16, right: 16 }}>×</button>
+          {count > 1 && (
+            <>
+              <button type="button" aria-label="Previous photo" onClick={(e) => { e.stopPropagation(); setOpen((open - 1 + count) % count) }} style={{ ...btn, left: 16, top: '50%', transform: 'translateY(-50%)' }}>‹</button>
+              <button type="button" aria-label="Next photo" onClick={(e) => { e.stopPropagation(); setOpen((open + 1) % count) }} style={{ ...btn, right: 16, top: '50%', transform: 'translateY(-50%)' }}>›</button>
+              <div style={{ position: 'absolute', bottom: 16, left: 0, right: 0, textAlign: 'center', color: '#fff', fontSize: 14 }}>{open + 1} / {count}</div>
+            </>
+          )}
+        </div>
+      )}
+    </>
+  )
+}
+
 export default function HotelStandalone({ slug }) {
   const navigate = useNavigate()
   const propertyId = Number(String(slug || '').replace(/^hg-/, ''))
@@ -299,7 +362,8 @@ export default function HotelStandalone({ slug }) {
     )
   }
 
-  const photos = (detail?.images || []).filter((i) => i.type === 'photo' && i.uri).slice(0, 6)
+  const photos = (detail?.images || []).filter((i) => i.type === 'photo' && i.uri)
+    .filter((i, idx, arr) => arr.findIndex((o) => o.uri === i.uri) === idx)
   const description = (detail?.descriptions || []).find((d) => d.type === 'general')?.description
   const facilities = (detail?.facilities || [])
     .filter((f) => f.name)
@@ -323,11 +387,7 @@ export default function HotelStandalone({ slug }) {
           <span>📍 {[city, countryName(country)].filter(Boolean).join(', ')}</span>
         </div>
 
-        <div style={s.gallery}>
-          {(photos.length ? photos : [{ uri: PLACEHOLDER_IMG }]).map((img, i) => (
-            <img key={i} src={img.uri} alt={`${hotel.name} photo ${i + 1}`} style={s.galleryImg} loading={i === 0 ? 'eager' : 'lazy'} />
-          ))}
-        </div>
+        <PhotoGallery photos={photos.length ? photos : [{ uri: PLACEHOLDER_IMG }]} name={hotel.name} />
 
         <div style={s.card}>
           <h2 style={s.cardTitle}>Check availability</h2>
