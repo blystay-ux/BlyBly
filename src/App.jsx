@@ -26,6 +26,7 @@ import CorporateRequest from './pages/CorporateRequest'
 import WriteReview from './pages/WriteReview'
 import PromoCode from './pages/PromoCode'
 import GroupRequest from './pages/GroupRequest'
+import FlightRequest from './pages/FlightRequest'
 import EventsCalendar from './pages/EventsCalendar'
 import EventPage from './pages/EventPage'
 import SeoManager from './seo/SeoManager'
@@ -67,6 +68,7 @@ export default function App() {
         {/* Promo code redemption */}
         <Route path="/promo" element={<PromoCode />} />
         <Route path="/group-request" element={<GroupRequest />} />
+        <Route path="/flights" element={<FlightRequest />} />
 
         {/* Events calendar */}
         <Route path="/events/south-africa" element={<EventsCalendar />} />

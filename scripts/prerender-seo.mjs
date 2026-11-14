@@ -246,6 +246,19 @@ const groupRequestBody = () =>
 <p>Sending a request is free and does not commit you to a booking.</p>
 <p><a href="/destinations">Browse destinations</a> &middot; <a href="/events/south-africa">Events calendar</a></p>`)
 
+const flightsBody = () =>
+  main(`
+<h1>Flights, on request.</h1>
+<p>Tell us where you're flying and when. The BLY. team finds the fares, emails you a quote within 24 hours, and books it once you're happy. Domestic and international, with no booking fee.</p>
+<h2>How it works</h2>
+<ol>
+<li>Send your request with your route, dates and who's travelling.</li>
+<li>Get your quote by email within 24 hours.</li>
+<li>Accept, pay through a secure link and receive your e-ticket.</li>
+</ol>
+<p>Add accommodation to your request and we'll match a stay to your flight times.</p>
+<p><a href="/destinations">Browse destinations</a> &middot; <a href="/group-request">Group requests</a></p>`)
+
 const promoBody = () =>
   main(`
 <h1>Enter promo code.</h1>
@@ -316,6 +329,7 @@ tryWrite('/destinations', destinationsBody, () =>
 if (STATIC_PAGES['/events/south-africa']) tryWrite('/events/south-africa', eventsBody)
 if (STATIC_PAGES['/insiders']) tryWrite('/insiders', insidersBody)
 if (STATIC_PAGES['/group-request']) tryWrite('/group-request', groupRequestBody)
+if (STATIC_PAGES['/flights']) tryWrite('/flights', flightsBody)
 if (STATIC_PAGES['/promo']) tryWrite('/promo', promoBody)
 
 // One page per destination
@@ -506,7 +520,7 @@ try {
     if (loc) lastmods[loc.trim()] = lm
   }
   const urls = [
-    '/', '/destinations', '/events/south-africa', '/insiders', '/group-request', '/blog',
+    '/', '/destinations', '/events/south-africa', '/insiders', '/group-request', '/flights', '/blog',
     ...DESTINATIONS.filter(isFullDestination).map((d) => `/accommodation/${d.slug}`),
     ...BLOG.map(([u]) => u),
     ...EVENTS.map((e) => `/events/${e.slug}`),

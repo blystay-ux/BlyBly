@@ -71,6 +71,7 @@ export default function Navbar() {
         <div style={styles.actions}>
           <Link to="/" style={styles.link}>Home</Link>
           <Link to="/destinations" style={styles.link}>Destinations</Link>
+          <Link to="/flights" style={styles.link}>Flights</Link>
           <Link to="/manage-booking" style={styles.link}>Manage booking</Link>
           {user && <Link to="/my-bookings" style={styles.link}>My stays</Link>}
           <Link to="/group-request" style={styles.link}>Groups</Link>

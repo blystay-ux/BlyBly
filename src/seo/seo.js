@@ -71,6 +71,11 @@ export const STATIC_PAGES = {
     description:
       'Travelling as a group? Send one request with your dates, destination and group size, and a BLY. consultant replies with hotel options. Free to send.',
   },
+  '/flights': {
+    title: 'Flights on Request | Domestic & International Flight Quotes | BLY. Travel',
+    description:
+      'Tell us your route and dates and the BLY. team emails you a flight quote within 24 hours. Domestic and international, no booking fee, and add your stay too.',
+  },
   '/promo': {
     title: 'Promo Codes & Special Offers | BLY. Travel',
     description:
