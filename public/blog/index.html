@@ -287,6 +287,8 @@
     overflow: hidden;
   }
   .card-image-emoji { font-size: 56px; }
+  .card-image, .featured-image { background-size: cover; background-position: center; }
+  .featured-image[style*="url("]::before { display: none; }
   .card-content {
     padding: 22px;
     flex: 1;
@@ -473,9 +475,8 @@
 
   <!-- FEATURED ARTICLE -->
   <a href="/blog/hotels-cape-town-guide" class="featured-card">
-    <div class="featured-image">
+    <div class="featured-image" style="background-image: linear-gradient(180deg, rgba(0,0,0,0.05) 50%, rgba(0,0,0,0.5) 100%), url('https://images.unsplash.com/photo-1770988966522-4eea7f83dbe9?w=1200&q=80&auto=format&fit=crop');">
       <div class="img-destination-badge">📍 Cape Town</div>
-      <div class="img-emoji">🏔️</div>
     </div>
     <div class="featured-body">
       <div class="card-tag">Hotels · Cape Town</div>
@@ -494,8 +495,7 @@
   <div class="articles-grid">
 
     <a class="article-card" href="/blog/new-year-cape-town-2026">
-      <div class="card-image" style="background: linear-gradient(135deg, #1a0d12 0%, #2b1220 40%, #3d1a2b 100%);">
-        <div class="card-image-emoji">🎆</div>
+      <div class="card-image" style="background-image: linear-gradient(180deg, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.55) 100%), url('https://images.unsplash.com/photo-1770988966522-4eea7f83dbe9?w=800&q=80&auto=format&fit=crop');">
         <div class="img-destination-badge">Cape Town</div>
       </div>
       <div class="card-content">
@@ -512,8 +512,7 @@
     </a>
 
     <a class="article-card" href="/blog/hotels-johannesburg-guide">
-      <div class="card-image" style="background: linear-gradient(135deg, #1c1209 0%, #2d1f0e 40%, #3d2a14 100%);">
-        <div class="card-image-emoji">🌇</div>
+      <div class="card-image" style="background-image: linear-gradient(180deg, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.55) 100%), url('https://images.unsplash.com/photo-1577948000111-9c970dfe3743?w=800&q=80&auto=format&fit=crop');">
         <div class="img-destination-badge">Johannesburg</div>
       </div>
       <div class="card-content">
@@ -530,8 +529,7 @@
     </a>
 
     <a class="article-card" href="/blog/garden-route-hotels-guide">
-      <div class="card-image" style="background: linear-gradient(135deg, #0d1a0f 0%, #162b18 40%, #1e3d20 100%);">
-        <div class="card-image-emoji">🌿</div>
+      <div class="card-image" style="background-image: linear-gradient(180deg, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.55) 100%), url('https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Garden_Route_South_Africa.jpg/960px-Garden_Route_South_Africa.jpg');">
         <div class="img-destination-badge">Garden Route</div>
       </div>
       <div class="card-content">
@@ -548,8 +546,7 @@
     </a>
 
     <a class="article-card" href="/blog/stellenbosch-vs-franschhoek">
-      <div class="card-image" style="background: linear-gradient(135deg, #150d1a 0%, #221330 40%, #2e1a3d 100%);">
-        <div class="card-image-emoji">🍷</div>
+      <div class="card-image" style="background-image: linear-gradient(180deg, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.55) 100%), url('/images/destinations/winelands.jpg');">
         <div class="img-destination-badge">Winelands</div>
       </div>
       <div class="card-content">
@@ -566,8 +563,7 @@
     </a>
 
     <a class="article-card" href="/blog/best-safari-lodges-south-africa">
-      <div class="card-image" style="background: linear-gradient(135deg, #1a140a 0%, #2b2110 40%, #3d2e16 100%);">
-        <div class="card-image-emoji">🐘</div>
+      <div class="card-image" style="background-image: linear-gradient(180deg, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.55) 100%), url('https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Kruger_National_Park_%28ZA%29%2C_Landschaft_--_2024_--_0031.jpg/960px-Kruger_National_Park_%28ZA%29%2C_Landschaft_--_2024_--_0031.jpg');">
         <div class="img-destination-badge">Safari</div>
       </div>
       <div class="card-content">
@@ -583,8 +579,7 @@
       </div>
     </a>
     <a class="article-card" href="/blog/best-beach-hotels-south-africa">
-      <div class="card-image" style="background: linear-gradient(135deg, #0a1520 0%, #10243a 40%, #163552 100%);">
-        <div class="card-image-emoji">🏖️</div>
+      <div class="card-image" style="background-image: linear-gradient(180deg, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.55) 100%), url('https://images.unsplash.com/photo-1515404929826-76fff9fef6fe?w=800&q=80&auto=format&fit=crop');">
         <div class="img-destination-badge">Beach Escapes</div>
       </div>
       <div class="card-content">
@@ -600,8 +595,7 @@
       </div>
     </a>
     <a class="article-card" href="/blog/best-budget-hotels-south-africa">
-      <div class="card-image" style="background: linear-gradient(135deg, #0d1a14 0%, #13291f 40%, #1a3a2b 100%);">
-        <div class="card-image-emoji">💸</div>
+      <div class="card-image" style="background-image: linear-gradient(180deg, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.55) 100%), url('/images/destinations/pretoria.jpg');">
         <div class="img-destination-badge">Budget Picks</div>
       </div>
       <div class="card-content">
@@ -617,8 +611,7 @@
       </div>
     </a>
     <a class="article-card" href="/blog/weekend-getaways-from-johannesburg-pretoria">
-      <div class="card-image" style="background: linear-gradient(135deg, #1a100d 0%, #2b1a14 40%, #3d241b 100%);">
-        <div class="card-image-emoji">🚗</div>
+      <div class="card-image" style="background-image: linear-gradient(180deg, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.55) 100%), url('/images/destinations/sun-city.jpg');">
         <div class="img-destination-badge">Gauteng</div>
       </div>
       <div class="card-content">
@@ -634,8 +627,7 @@
       </div>
     </a>
     <a class="article-card" href="/blog/winelands-hotels-stellenbosch-franschhoek-paarl">
-      <div class="card-image" style="background: linear-gradient(135deg, #1a0d14 0%, #2b1320 40%, #3d1a2d 100%);">
-        <div class="card-image-emoji">🍇</div>
+      <div class="card-image" style="background-image: linear-gradient(180deg, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.55) 100%), url('/images/destinations/winelands.jpg');">
         <div class="img-destination-badge">Winelands</div>
       </div>
       <div class="card-content">
