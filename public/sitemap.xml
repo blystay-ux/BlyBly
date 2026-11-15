@@ -25,7 +25,7 @@
     <loc>https://blytravel.co.za/blog</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-11-15</lastmod>
   </url>
 
   <!-- Blog articles -->
@@ -62,6 +62,41 @@
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <lastmod>2026-10-18</lastmod>
+  </url>
+
+  <url>
+    <loc>https://blytravel.co.za/blog/best-safari-lodges-south-africa</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-11-15</lastmod>
+  </url>
+
+  <url>
+    <loc>https://blytravel.co.za/blog/best-beach-hotels-south-africa</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-11-15</lastmod>
+  </url>
+
+  <url>
+    <loc>https://blytravel.co.za/blog/best-budget-hotels-south-africa</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-11-15</lastmod>
+  </url>
+
+  <url>
+    <loc>https://blytravel.co.za/blog/weekend-getaways-from-johannesburg-pretoria</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-11-15</lastmod>
+  </url>
+
+  <url>
+    <loc>https://blytravel.co.za/blog/winelands-hotels-stellenbosch-franschhoek-paarl</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-11-15</lastmod>
   </url>
 
 </urlset>
