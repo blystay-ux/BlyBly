@@ -216,8 +216,8 @@ const DEST_EVENT_CITIES = {
   pretoria: ['pretoria', 'tshwane'],
   knysna: ['knysna'],
   'garden-route': ['knysna', 'george', 'plettenberg bay', 'mossel bay', 'wilderness', 'oudtshoorn'],
-  winelands: ['paarl', 'stellenbosch', 'franschhoek'],
-  'sun-city': ['sun city'],
+  winelands: ['paarl', 'stellenbosch', 'franschhoek', 'drakenstein', 'wellington', 'somerset west', 'riebeek-kasteel'],
+  'sun-city': ['sun city', 'ledig', 'pilanesberg', 'rustenburg'],
   dubai: ['dubai'],
   thailand: ['bangkok', 'phuket'],
   mauritius: ['mauritius'],
@@ -263,9 +263,19 @@ const cityInName = (ev) => ev.name.toLowerCase().includes(String(ev.city).toLowe
 export const eventHeading = (ev) =>
   cityInName(ev) ? `${ev.name}: where to stay` : `${ev.name}: where to stay in ${ev.city}`
 
-export const eventTitle = (ev) => `${eventHeading(ev)} | BLY. Travel`
+// Hand-written search titles/descriptions for individual events, keyed by slug.
+// Use when the generated title is too long or misses what people search for.
+const EVENT_SEO = {
+  'accommodation-iccmenscricketworldcup-kugompocityeastlondon-2027': {
+    title: 'ICC Cricket World Cup 2027, East London: Where to Stay | BLY. Travel',
+    description: 'Where to stay in East London (KuGompo City) for ICC Cricket World Cup 2027 matches at Buffalo Park, October to November 2027. Book on BLY.',
+  },
+}
+
+export const eventTitle = (ev) => EVENT_SEO[ev.slug]?.title || `${eventHeading(ev)} | BLY. Travel`
 
 export function eventDescription(ev) {
+  if (EVENT_SEO[ev.slug]?.description) return EVENT_SEO[ev.slug].description
   const label = ev.date_label || ''
   const when = label ? (label.includes('(') ? `, ${label}` : ` (${label})`) : ''
   const first = String(ev.description || '').split(/(?<=\.)\s/)[0]

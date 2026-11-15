@@ -766,6 +766,36 @@ export const DESTINATIONS = [
       { title: 'Combine With Cape Town', copy: "Stellenbosch and Franschhoek work as day trips from the city, but a night or two in the valley lets you taste, eat and unwind without watching the clock. Then head back via the Atlantic Seaboard for sunset." },
       { title: 'Dress for the Weather', copy: "Summer days are hot and dry, autumn and winter mornings are cold, and spring brings wind. Pack layers, flat shoes for cobbles and gravel, and a hat for outdoor tastings." },
     ],
+    // Search-result title/description (overrides the default city pattern in seo.js)
+    seo: {
+      title: 'Cape Winelands Accommodation: Where to Stay | BLY. Travel',
+      description: 'Where to stay in the Cape Winelands, town by town: Stellenbosch, Franschhoek, Paarl, Somerset West and the Riebeek Valley. Farm stays and guesthouses on BLY.',
+    },
+    // "Where to stay" guide. Give an area a searchCity only when BLY. has stays there.
+    whereToStay: {
+      heading: 'Where to stay in the Cape Winelands',
+      intro: 'Most people pick one town as a base and drive, or take the Wine Tram, to the farms. Here is what each area is like to stay in.',
+      towns: [
+        { name: 'Stellenbosch', bestFor: 'First-time visitors', searchCity: 'Stellenbosch',
+          copy: 'The university town: oak-lined streets, restaurants and bars within walking distance, and more than 150 wine farms around it. The widest choice of places to stay, from town guesthouses to estate hotels.' },
+        { name: 'Bottelary Road and Devon Valley', bestFor: 'Farm stays near town', searchCity: 'Stellenbosch',
+          copy: "The farm roads just outside Stellenbosch, 10 to 20 minutes from town. Guest cottages and farm stays among the vines, quieter than town but close to its restaurants." },
+        { name: 'Franschhoek', bestFor: 'Food lovers and couples', searchCity: 'Franschhoek',
+          copy: "One valley with mountains on three sides and one of South Africa's best restaurant scenes. The Wine Tram links the farms, so you can taste without driving. Places to stay lean towards boutique and luxury." },
+        { name: 'Paarl, Simondium and Wellington', bestFor: 'Space and views', searchCity: 'Paarl',
+          copy: 'Quieter and more spread out, with large farm estates, Babylonstoren near Simondium and big mountain views. Good for families, groups and longer stays.' },
+        { name: 'Somerset West and the Helderberg', bestFor: 'Wine and the beach', searchCity: 'Somerset West',
+          copy: 'On the Helderberg slopes between the vineyards and False Bay, a short drive from the beach at Strand and from Cape Town International Airport.' },
+        { name: 'Riebeek Valley (Swartland)', bestFor: 'Small-town weekends', searchCity: 'Riebeek-Kasteel',
+          copy: 'About an hour north of Cape Town: two small towns, Riebeek-Kasteel and Riebeek West, with relaxed wine bars and olive farms. Swartland wines are a different style from Stellenbosch and Franschhoek, and the crowds are smaller.' },
+      ],
+      byType: [
+        { name: 'Wine farm stays', copy: 'Estates around Stellenbosch, along Bottelary Road and in the Franschhoek valley.' },
+        { name: 'Boutique guesthouses', copy: 'Franschhoek main road and the old centre of Stellenbosch.' },
+        { name: 'Self-catering cottages', copy: 'Paarl, Wellington and the Riebeek Valley.' },
+        { name: 'Close to Cape Town', copy: 'Somerset West and Stellenbosch are both well under an hour from the city and the airport.' },
+      ],
+    },
     bookNow: {
       heading: 'Book your Winelands stay',
       copy: 'Wine farms, boutique guesthouses, vine-view cottages — book on BLY.',
@@ -856,11 +886,37 @@ export const DESTINATIONS = [
       { title: 'Dress for the Evening', copy: "Sun City runs smart-casual after dark, especially at the Palace and the casino. Pack one smart outfit even if the rest of the trip is shorts and sandals." },
       { title: 'Bring Sun Protection', copy: "Even in winter the Highveld sun is strong. Pack a hat, SPF and plenty of water for game drives and the water park." },
     ],
+    // Search-result title/description (overrides the default city pattern in seo.js)
+    seo: {
+      title: 'Sun City Accommodation & Hotels Near Sun City | BLY. Travel',
+      description: 'Where to stay at and near Sun City: the resort hotels, safari lodges in Pilanesberg, and stays in Ledig and Rustenburg, including self-catering. Book on BLY.',
+    },
+    // "Where to stay" guide. Give an area a searchCity only when BLY. has stays there.
+    whereToStay: {
+      heading: 'Where to stay at and near Sun City',
+      intro: "You can stay inside the resort, in a lodge inside Pilanesberg National Park, at the edge of the park in Ledig, or in Rustenburg, under an hour's drive away. Here is what each is like.",
+      towns: [
+        { name: 'Inside the Sun City resort', bestFor: 'Walking to everything',
+          copy: "The resort's own hotels: the Palace of the Lost City, the Cascades, the Sun City Hotel (called the Soho for some years), the Cabanas and the self-catering Sun City Vacation Club. Valley of the Waves, the casino and the golf courses are a walk or shuttle ride away. These hotels are not on BLY. yet; for the nearest BLY. stays, see Ledig and Pilanesberg." },
+        { name: 'Inside Pilanesberg National Park', bestFor: 'Safari stays', searchCity: 'Pilanesberg',
+          copy: "Lodges inside the Big Five reserve, with game drives from the door and waterholes close by. The park is malaria-free and right next to the resort, so a morning game drive and an afternoon at the pool fit into one day." },
+        { name: 'Ledig', bestFor: 'Closest to the resort', searchCity: 'Ledig',
+          copy: "The village at Pilanesberg's Bakubung Gate, a few minutes' drive from Sun City. A quieter base with resort and bush-lodge options, close to both the resort and the park." },
+        { name: 'Rustenburg', bestFor: 'Business and budget stays', searchCity: 'Rustenburg',
+          copy: "The nearest big town, under an hour's drive from the resort. Hotels and guesthouses here suit business travellers and anyone keeping costs down, with Sun City and the park as a day trip." },
+      ],
+      byType: [
+        { name: 'Family stays', copy: 'The Cascades and the Cabanas are closest to Valley of the Waves; resorts in Ledig give families more space at the park edge.' },
+        { name: 'Self-catering', copy: 'The Sun City Vacation Club inside the resort, and guesthouses in Rustenburg and Ledig.' },
+        { name: 'Safari lodges', copy: 'Lodges inside Pilanesberg, and bush lodges in Ledig next to the park.' },
+        { name: 'Packages', copy: "Sun City's own packages bundle a room with resort extras. If you stay outside the resort, day visitors pay a gate fee to enter, so check what your stay includes." },
+      ],
+    },
     bookNow: {
       heading: 'Book your Sun City stay',
-      copy: 'Palace, casino, or Pilanesberg bush — lock in your rate on Bly.',
+      copy: 'Bush lodges at the Pilanesberg gate, safari stays in the park, or a base in Rustenburg. Book on BLY.',
     },
-    searchCity: 'Sun City',
+    searchCity: 'Ledig',
   },
   {
     slug: 'drakensberg',
@@ -1759,6 +1815,11 @@ export const DESTINATIONS = [
       { title: 'Pack for the Weather', copy: "London weather changes quickly. Pack layers, a compact umbrella and comfortable shoes you can walk in all day — even summer evenings can be cool." },
       { title: 'Book Ahead', copy: "Popular attractions, theatre shows and good restaurants fill up, especially in summer and around holidays. Book your must-dos before you travel and leave some days flexible." },
     ],
+    // Search-result title/description (overrides the default city pattern in seo.js)
+    seo: {
+      title: 'Hotels in London for South African Travellers | BLY. Travel',
+      description: 'Hotels in London priced in rand, with the best areas to stay, getting around and UK visa tips for South African travellers. Book on BLY.',
+    },
     bookNow: {
       heading: 'Book your London stay',
       copy: 'Shoreditch boutique, South Bank hotel, or Notting Hill guesthouse — find your stay on Bly.',

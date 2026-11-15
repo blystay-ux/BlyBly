@@ -55,6 +55,7 @@ const BLOG = [
   ['/blog/hotels-johannesburg-guide', 'Hotels in Johannesburg: where to stay in Jozi'],
   ['/blog/garden-route-hotels-guide', 'Garden Route road trip: 7 stops from Mossel Bay to Tsitsikamma'],
   ['/blog/stellenbosch-vs-franschhoek', 'Stellenbosch vs Franschhoek: which Winelands town to stay in'],
+  ['/blog/new-year-cape-town-2026', "New Year in Cape Town: where to stay for New Year's Eve"],
 ]
 
 // -- Events (active only) - fetched from Supabase at build time ----------------
