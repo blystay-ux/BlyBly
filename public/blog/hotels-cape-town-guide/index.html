@@ -323,11 +323,52 @@
     .hero-meta { flex-wrap: wrap; gap: 8px; }
     .nav-links { gap: 12px; }
   }
+  .hero-image-wrap {
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto 0;
+    padding: 0 24px 40px;
+  }
+  .hero-image-wrap figure {
+    margin: 0;
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+  }
+  .hero-image-wrap img {
+    width: 100%;
+    height: 420px;
+    object-fit: cover;
+    display: block;
+  }
+  .hero-image-wrap figcaption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 12px 16px;
+    background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 100%);
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .hero-image-wrap figcaption a {
+    color: rgba(255,255,255,0.5);
+    text-decoration: none;
+    font-size: 11px;
+  }
+  .hero-image-wrap figcaption a:hover { color: rgba(255,255,255,0.85); }
+  @media (max-width: 600px) {
+    .hero-image-wrap img { height: 240px; }
+  }
+
 </style>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<meta property="og:image" content="https://images.unsplash.com/photo-1580060839134-75a5edca2e99?auto=format&amp;fit=crop&amp;w=1200&amp;q=75">
+<meta property="og:image" content="https://images.unsplash.com/photo-1770988966522-4eea7f83dbe9?w=1920&amp;q=80&amp;auto=format&amp;fit=crop">
 <meta name="twitter:card" content="summary_large_image">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Hotels in Cape Town: The Complete Guide to Where to Stay in 2026","description":"Find hotels in Cape Town across every neighbourhood, from Camps Bay to the CBD.","author":{"@type":"Organization","name":"BLY. Travel","url":"https://blytravel.co.za"},"publisher":{"@type":"Organization","name":"BLY. Travel","url":"https://blytravel.co.za","logo":{"@type":"ImageObject","url":"https://blytravel.co.za/logo.png"}},"datePublished":"2026-08-01","dateModified":"2026-08-01","url":"https://blytravel.co.za/blog/hotels-cape-town-guide","mainEntityOfPage":"https://blytravel.co.za/blog/hotels-cape-town-guide","keywords":["Cape Town hotels","where to stay in Cape Town","Camps Bay hotels","Sea Point hotels","V&A Waterfront hotels","Cape Town accommodation"],"articleSection":"Travel Guide","inLanguage":"en-ZA"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article", "image": "https://images.unsplash.com/photo-1770988966522-4eea7f83dbe9?w=1920&q=80&auto=format&fit=crop","headline":"Hotels in Cape Town: The Complete Guide to Where to Stay in 2026","description":"Find hotels in Cape Town across every neighbourhood, from Camps Bay to the CBD.","author":{"@type":"Organization","name":"BLY. Travel","url":"https://blytravel.co.za"},"publisher":{"@type":"Organization","name":"BLY. Travel","url":"https://blytravel.co.za","logo":{"@type":"ImageObject","url":"https://blytravel.co.za/logo.png"}},"datePublished":"2026-08-01","dateModified":"2026-08-01","url":"https://blytravel.co.za/blog/hotels-cape-town-guide","mainEntityOfPage":"https://blytravel.co.za/blog/hotels-cape-town-guide","keywords":["Cape Town hotels","where to stay in Cape Town","Camps Bay hotels","Sea Point hotels","V&A Waterfront hotels","Cape Town accommodation"],"articleSection":"Travel Guide","inLanguage":"en-ZA"}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://blytravel.co.za/"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://blytravel.co.za/blog"},{"@type":"ListItem","position":3,"name":"Hotels in Cape Town","item":"https://blytravel.co.za/blog/hotels-cape-town-guide"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Where should I stay in Cape Town on a first visit?","acceptedAnswer":{"@type":"Answer","text":"The V&A Waterfront or Green Point. Both are central and walkable, with the Waterfront, restaurants and the Robben Island ferry close by."}},{"@type":"Question","name":"Which Cape Town area is best for a beach holiday?","acceptedAnswer":{"@type":"Answer","text":"Camps Bay or Sea Point. Camps Bay has the mountain-meets-beach backdrop and is the splurge option. Sea Point has a long beachside promenade and hotels that usually cost less."}},{"@type":"Question","name":"When is the best time to visit Cape Town for value?","acceptedAnswer":{"@type":"Answer","text":"April and May. The summer crowds have gone, the weather is still excellent and prices drop. Winter (June to August) has the cheapest rates, while December and January are the busiest and most expensive months."}},{"@type":"Question","name":"How much does a hotel in Cape Town cost?","acceptedAnswer":{"@type":"Answer","text":"Budget stays in the CBD or Sea Point start from around R600 to R900 per night, mid-range boutique hotels run about R1,200 to R2,500, and Camps Bay beachfront and Waterfront hotels start from around R2,500. Rates change with the season and your dates, so check the price for your trip."}},{"@type":"Question","name":"Is Constantia a good place to stay?","acceptedAnswer":{"@type":"Answer","text":"It suits families and couples who want a quieter, greener base. Constantia is wine farm country, about 20 to 30 minutes from the city action."}}]}</script>
 </head>
@@ -363,10 +404,20 @@
   </div>
 </div>
 
+<div class="hero-image-wrap">
+  <figure>
+    <img src="https://images.unsplash.com/photo-1770988966522-4eea7f83dbe9?w=1920&q=80&auto=format&fit=crop" alt="Cape Town and Table Mountain from the air" loading="eager">
+    <figcaption>
+      <span>Cape Town and Table Mountain</span>
+      <a href="https://unsplash.com" target="_blank" rel="noopener">Photo: Unsplash</a>
+    </figcaption>
+  </figure>
+</div>
+
 <!-- ARTICLE -->
 <article>
 
-  <p>Cape Town is one of the most searched destinations in South Africa — and for good reason. Whether you're heading to the Atlantic Seaboard, the Winelands, or the CBD, finding the right place to stay makes the whole trip. Here's how to navigate it.</p>
+  <p>Cape Town is one of South Africa's favourite places to stay — and for good reason. Whether you're heading to the Atlantic Seaboard, the Winelands, or the CBD, finding the right place to stay makes the whole trip. Here's how to navigate it.</p>
 
   <h2>Why Cape Town is Different from Every Other City</h2>
   <p>Cape Town doesn't have one centre — it has about seven. The Atlantic Seaboard runs from Sea Point down to Camps Bay and Hout Bay. The City Bowl sits beneath Table Mountain. Green Point and De Waterkant are walkable from the V&A Waterfront. Each area has a completely different feel, price point, and reason to be there. Getting your neighbourhood right is the first decision.</p>

@@ -55,7 +55,16 @@ const BLOG = [
   ['/blog/hotels-johannesburg-guide', 'Hotels in Johannesburg: where to stay in Jozi'],
   ['/blog/garden-route-hotels-guide', 'Garden Route road trip: 7 stops from Mossel Bay to Tsitsikamma'],
   ['/blog/stellenbosch-vs-franschhoek', 'Stellenbosch vs Franschhoek: which Winelands town to stay in'],
+<<<<<<< HEAD
   ['/blog/new-year-cape-town-2026', "New Year in Cape Town: where to stay for New Year's Eve"],
+=======
+  ['/blog/new-year-cape-town-2026', 'New Year in Cape Town 2026-27: where to stay and watch the fireworks'],
+  ['/blog/best-safari-lodges-south-africa', 'Best safari lodges in South Africa: Kruger to private reserves'],
+  ['/blog/best-beach-hotels-south-africa', 'Best beach hotels in South Africa: Indian Ocean vs Atlantic'],
+  ['/blog/best-budget-hotels-south-africa', 'Best budget hotels in South Africa under R1,000 a night'],
+  ['/blog/weekend-getaways-from-johannesburg-pretoria', 'Best weekend getaways from Johannesburg and Pretoria'],
+  ['/blog/winelands-hotels-stellenbosch-franschhoek-paarl', 'Best Winelands stays: Stellenbosch, Franschhoek and Paarl'],
+>>>>>>> fd8b888d1eb0722fdfc2a5da395192b3e8e20510
 ]
 
 // -- Events (active only) - fetched from Supabase at build time ----------------
