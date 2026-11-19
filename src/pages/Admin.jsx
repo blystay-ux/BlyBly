@@ -1,7 +1,10 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+
+// CRM is admin-only and loaded on demand, so its code is not part of the public site bundle
+const CrmTab = lazy(() => import('./crm/CrmTab.jsx'))
 
 // ── Styles ────────────────────────────────────────────────────
 const s = {
@@ -1177,7 +1180,7 @@ export default function Admin() {
   const propertiesList = Object.values(propertiesMap).sort((a, b) => b.bookingCount - a.bookingCount)
 
   const newGroups = groupRequests.filter(r => r.status === 'new').length
-  const TABS = ['overview', 'properties', 'bookings', 'waitlist', 'memberships', 'contacts', 'competition', 'corporates', 'reviews', 'promos', 'events', 'groups', 'newbooking']
+  const TABS = ['overview', 'properties', 'bookings', 'waitlist', 'memberships', 'contacts', 'competition', 'corporates', 'reviews', 'promos', 'events', 'groups', 'crm', 'newbooking']
 
   return (
     <div style={s.page}>
@@ -1216,7 +1219,8 @@ export default function Admin() {
               {t === 'events'      && '🗓️ '}
               {t === 'groups'      && '👥 '}
               {t === 'newbooking'  && '➕ '}
-              {t.charAt(0).toUpperCase() + t.slice(1)}
+              {t === 'crm'         && '🤝 '}
+              {t === 'crm' ? 'CRM' : t.charAt(0).toUpperCase() + t.slice(1)}
               {t === 'memberships' && pendingMembers > 0 && (
                 <span style={{ marginLeft: 6, background: '#ef4056', color: '#fff', borderRadius: 99, padding: '1px 7px', fontSize: 11 }}>
                   {pendingMembers}
@@ -1382,6 +1386,12 @@ export default function Admin() {
                   </div>
                 )}
               </div>
+            )}
+
+            {tab === 'crm' && (
+              <Suspense fallback={<div style={s.empty}>Loading CRM…</div>}>
+                <CrmTab />
+              </Suspense>
             )}
 
             {tab === 'groups' && (
